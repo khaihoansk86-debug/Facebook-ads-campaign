@@ -1,0 +1,1662 @@
+{
+  "campaignBundles": [
+    {
+      "code": "ENG_BASE",
+      "campaignType": "engagement",
+      "objectiveCode": "ENGAGEMENT",
+      "objectiveName": "Lượt tương tác (Engagement)",
+      "name": "Tương tác cơ bản (Engagement Base)",
+      "description": "Mẫu chiến dịch nền cho các kế hoạch tăng tương tác bài viết, video và tin nhắn.",
+      "creativeModes": [
+        "existing_post",
+        "new_creative"
+      ],
+      "campaignSettings": {
+        "buyingType": "Đấu giá",
+        "budgetStrategy": "Ngân sách chiến dịch Advantage+",
+        "budgetStrategyEnabled": true,
+        "budgetSharingEnabled": true,
+        "bidStrategy": "Mức cao nhất",
+        "abTestEnabled": false,
+        "specialAdCategory": "Không áp dụng"
+      },
+      "guidance": [
+        "Dùng khi cần triển khai nhanh một link ra nhiều nhóm quảng cáo tương tác khác nhau.",
+        "Ưu tiên cho bài cần social proof, tăng xem video hoặc kéo tin nhắn từ tệp ấm/lạnh.",
+        "Nếu cần kiểm soát ngân sách sát từng nhóm, sau này có thể tách thêm mẫu dùng ngân sách nhóm quảng cáo."
+      ],
+      "notionValues": {
+        "Tên chiến dịch": "Chiến dịch Tương tác Khải Hoàn",
+        "Mục tiêu chiến dịch": "Lượt tương tác",
+        "Chiến lược giá thầu": "Cost per result goal",
+        "Giới hạn giá thầu": 5
+      },
+      "allowedAdSetBundleCodes": [
+        "ENG_VIDEO_COLD",
+        "ENG_VIDEO_2S_CONTINUOUS",
+        "ENG_POST_COLD",
+        "ENG_EVENT_RESPONSES",
+        "ENG_EVENT_POST_ENGAGEMENT",
+        "ENG_EVENT_DAILY_REACH",
+        "ENG_EVENT_IMPRESSIONS",
+        "ENG_REMINDERS",
+        "ENG_MESSAGE_CONVERSATIONS",
+        "ENG_MESSAGE_LEADS",
+        "ENG_MESSAGE_PURCHASES",
+        "ENG_MESSAGE_LINK_CLICKS",
+        "ENG_CALLS",
+        "ENG_WEBSITE_CONVERSIONS",
+        "ENG_WEBSITE_LANDING_PAGE_VIEWS",
+        "ENG_WEBSITE_LINK_CLICKS",
+        "ENG_WEBSITE_DAILY_REACH",
+        "ENG_WEBSITE_IMPRESSIONS",
+        "ENG_APP_ENGAGEMENT",
+        "ENG_IG_FB_VISITS",
+        "ENG_IG_FB_PAGE_LIKES"
+      ],
+      "allowedAudiencePresetCodes": [
+        "AUD_BROAD_PHAN_THIET",
+        "AUD_ENGAGED_PAGE_365D",
+        "AUD_MESSAGE_365D"
+      ]
+    },
+    {
+      "code": "TRAFFIC_BASE",
+      "campaignType": "traffic",
+      "objectiveCode": "TRAFFIC",
+      "objectiveName": "Lưu lượng truy cập (Traffic)",
+      "name": "Lưu lượng truy cập cơ bản (Traffic Base)",
+      "description": "Mẫu chiến dịch nền cho các kế hoạch kéo lưu lượng về website, tin nhắn, trang Facebook/Instagram hoặc cuộc gọi.",
+      "creativeModes": [
+        "existing_post",
+        "new_creative"
+      ],
+      "campaignSettings": {
+        "buyingType": "Đấu giá",
+        "budgetStrategy": "Ngân sách chiến dịch hoặc ngân sách nhóm quảng cáo",
+        "budgetStrategyEnabled": true,
+        "budgetSharingEnabled": true,
+        "bidStrategy": "Mức cao nhất",
+        "abTestEnabled": false,
+        "specialAdCategory": "Không áp dụng"
+      },
+      "guidance": [
+        "Campaign này phải đi từ vị trí chuyển đổi rồi mới chọn mục tiêu hiệu quả phù hợp.",
+        "Website, Tin nhắn, Instagram/Facebook và Cuộc gọi là 4 nhánh logic khác nhau ở tầng nhóm quảng cáo.",
+        "Nên dùng chung hệ tệp đối tượng để tránh cồng kềnh khi nhân nhiều biến thể nhóm."
+      ],
+      "notionValues": {
+        "Tên chiến dịch": "Chiến dịch Traffic Khải Hoàn",
+        "Mục tiêu chiến dịch": "Lưu lượng truy cập",
+        "Chiến lược giá thầu": "Cost per result goal",
+        "Giới hạn giá thầu": 5
+      },
+      "allowedAdSetBundleCodes": [
+        "TRF_WEB_LPV",
+        "TRF_WEB_CLICK",
+        "TRF_WEB_DAILY_REACH",
+        "TRF_WEB_CONVERSATIONS",
+        "TRF_WEB_IMPRESSIONS",
+        "TRF_APP_EVENTS",
+        "TRF_MESSAGE_DAILY_REACH",
+        "TRF_MESSAGE_CONVO",
+        "TRF_MESSAGE_IMPRESSIONS",
+        "TRF_PAGE_VISIT",
+        "TRF_CALL"
+      ],
+      "allowedAudiencePresetCodes": [
+        "AUD_BROAD_PHAN_THIET",
+        "AUD_ENGAGED_PAGE_365D",
+        "AUD_MESSAGE_365D"
+      ]
+    },
+    {
+      "code": "AWARENESS_BASE",
+      "campaignType": "awareness",
+      "objectiveCode": "AWARENESS",
+      "objectiveName": "Mức độ nhận biết (Awareness)",
+      "name": "Mức độ nhận biết cơ bản (Awareness Base)",
+      "description": "Mẫu chiến dịch nền cho các kế hoạch tăng nhận biết thương hiệu, phạm vi tiếp cận, hiển thị và lượt xem video.",
+      "creativeModes": [
+        "existing_post",
+        "new_creative"
+      ],
+      "campaignSettings": {
+        "buyingType": "Đấu giá",
+        "budgetStrategy": "Ngân sách chiến dịch Advantage+",
+        "budgetStrategyEnabled": true,
+        "budgetSharingEnabled": true,
+        "bidStrategy": "Mức cao nhất",
+        "abTestEnabled": false,
+        "specialAdCategory": "Không áp dụng"
+      },
+      "guidance": [
+        "Dùng khi mục tiêu chính là phủ nhận diện, tăng tần suất xuất hiện hoặc tăng khả năng nhớ đến quảng cáo.",
+        "Các nhóm nhận biết dùng chung ngân sách, đối tượng và vị trí quảng cáo để chọn nhanh trong planner.",
+        "Nếu dùng video, ưu tiên nhóm ThruPlay hoặc 2 giây liên tục tùy cách Meta hiển thị mục tiêu hiệu quả trong tài khoản."
+      ],
+      "notionValues": {
+        "Tên chiến dịch": "Chiến dịch Mức độ nhận biết Khải Hoàn",
+        "Mục tiêu chiến dịch": "Mức độ nhận biết",
+        "Chiến lược giá thầu": "Cost per result goal",
+        "Giới hạn giá thầu": 5
+      },
+      "allowedAdSetBundleCodes": [
+        "AWR_REACH",
+        "AWR_IMPRESSIONS",
+        "AWR_AD_RECALL",
+        "AWR_VIDEO_THRUPLAY",
+        "AWR_VIDEO_2S_CONTINUOUS"
+      ],
+      "allowedAudiencePresetCodes": [
+        "AUD_BROAD_PHAN_THIET",
+        "AUD_ENGAGED_PAGE_365D",
+        "AUD_MESSAGE_365D"
+      ]
+    },
+    {
+      "code": "LEADS_BASE",
+      "campaignType": "leads",
+      "objectiveCode": "LEADS",
+      "objectiveName": "Khách hàng tiềm năng (Leads)",
+      "name": "Khách hàng tiềm năng cơ bản (Leads Base)",
+      "description": "Mẫu chiến dịch nền cho các kế hoạch tìm kiếm khách hàng tiềm năng qua website, mẫu phản hồi tức thì, tin nhắn, cuộc gọi và ứng dụng.",
+      "creativeModes": [
+        "existing_post",
+        "new_creative"
+      ],
+      "campaignSettings": {
+        "buyingType": "Đấu giá",
+        "budgetStrategy": "Ngân sách chiến dịch Advantage+",
+        "budgetStrategyEnabled": true,
+        "budgetSharingEnabled": true,
+        "bidStrategy": "Mức cao nhất",
+        "abTestEnabled": false,
+        "specialAdCategory": "Không áp dụng"
+      },
+      "guidance": [
+        "Vị trí chuyển đổi của Leads có hai nhóm: nhiều vị trí và một vị trí.",
+        "Nhiều vị trí là tổ hợp của các vị trí đơn, dùng khi muốn Meta tự phân phối đến nơi có khả năng tạo lead tốt nhất.",
+        "Ngân sách, đối tượng và vị trí quảng cáo vẫn dùng preset chung trong planner."
+      ],
+      "notionValues": {
+        "Tên chiến dịch": "Chiến dịch Khách hàng tiềm năng Khải Hoàn",
+        "Mục tiêu chiến dịch": "Khách hàng tiềm năng",
+        "Chiến lược giá thầu": "Cost per result goal",
+        "Giới hạn giá thầu": 5
+      },
+      "allowedAdSetBundleCodes": [
+        "LEAD_WEB_FORM",
+        "LEAD_WEB_CALL",
+        "LEAD_FORM_MESSENGER",
+        "LEAD_WEBSITE_MAX_LEADS",
+        "LEAD_WEBSITE_LPV",
+        "LEAD_WEBSITE_LINK_CLICKS",
+        "LEAD_WEBSITE_DAILY_REACH",
+        "LEAD_WEBSITE_IMPRESSIONS",
+        "LEAD_INSTANT_FORM_MAX_LEADS",
+        "LEAD_INSTANT_FORM_QUALIFIED",
+        "LEAD_MESSENGER",
+        "LEAD_INSTAGRAM",
+        "LEAD_WHATSAPP",
+        "LEAD_CALL",
+        "LEAD_APP"
+      ],
+      "allowedAudiencePresetCodes": [
+        "AUD_BROAD_PHAN_THIET",
+        "AUD_ENGAGED_PAGE_365D",
+        "AUD_MESSAGE_365D"
+      ]
+    },
+    {
+      "code": "SALES_BASE",
+      "campaignType": "sales",
+      "objectiveCode": "SALES",
+      "objectiveName": "Doanh số (Sales)",
+      "name": "Doanh số cơ bản (Sales Base)",
+      "description": "Mẫu chiến dịch nền cho doanh số qua nhiều vị trí hoặc một vị trí. Không tạo campaign Ứng dụng riêng.",
+      "creativeModes": [
+        "existing_post",
+        "new_creative"
+      ],
+      "campaignSettings": {
+        "buyingType": "Đấu giá",
+        "budgetStrategy": "Ngân sách chiến dịch Advantage+",
+        "budgetStrategyEnabled": true,
+        "budgetSharingEnabled": true,
+        "bidStrategy": "Mức cao nhất",
+        "abTestEnabled": false,
+        "specialAdCategory": "Không áp dụng"
+      },
+      "guidance": [
+        "Vị trí chuyển đổi của Sales có hai nhóm: nhiều vị trí và một vị trí.",
+        "Các lựa chọn nhiều vị trí có khối Tập dữ liệu trong flow; ba lựa chọn đầu yêu cầu đã có tập dữ liệu thu thập được trước.",
+        "Trang web và cuộc gọi có mục tiêu hiệu quả bị khóa là Tối đa hóa số lượt chuyển đổi.",
+        "Ngân sách, đối tượng và vị trí quảng cáo vẫn dùng preset chung trong planner."
+      ],
+      "notionValues": {
+        "Tên chiến dịch": "Chiến dịch Doanh số Khải Hoàn",
+        "Mục tiêu chiến dịch": "Doanh số",
+        "Chiến lược giá thầu": "Cost per result goal",
+        "Giới hạn giá thầu": 5
+      },
+      "allowedAdSetBundleCodes": [
+        "SALE_WEB_APP",
+        "SALE_WEB_SHOP",
+        "SALE_WEB_APP_STORE",
+        "SALE_WEB_CALL",
+        "SALE_WEBSITE_CONVERSIONS",
+        "SALE_WEBSITE_VALUE",
+        "SALE_WEBSITE_LPV",
+        "SALE_WEBSITE_LINK_CLICKS",
+        "SALE_WEBSITE_DAILY_REACH",
+        "SALE_WEBSITE_IMPRESSIONS",
+        "SALE_APP_PURCHASES",
+        "SALE_MESSAGE_CONVERSIONS",
+        "SALE_MESSAGE_CONVERSATIONS",
+        "SALE_MESSAGE_PURCHASES",
+        "SALE_MESSAGE_LINK_CLICKS",
+        "SALE_MESSAGE_DAILY_REACH",
+        "SALE_MESSAGE_IMPRESSIONS",
+        "SALE_CALL"
+      ],
+      "allowedAudiencePresetCodes": [
+        "AUD_BROAD_PHAN_THIET",
+        "AUD_ENGAGED_PAGE_365D",
+        "AUD_MESSAGE_365D"
+      ]
+    }
+  ],
+  "adSetBundles": [
+    {
+      "code": "SALE_WEB_APP",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Nhiều vị trí - Trang web và ứng dụng",
+      "summary": "Doanh số qua website và ứng dụng; yêu cầu đã có tập dữ liệu thu thập được trước.",
+      "conversionLocation": "Trang web và ứng dụng",
+      "conversionLocationGroup": "Nhiều vị trí",
+      "performanceGoal": "Tối đa hóa số lượt mua",
+      "requiresDataset": true,
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Nhiều vị trí | Web + Ứng dụng",
+        "Vị trí chuyển đổi": "Trang web và ứng dụng",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt mua",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEB_SHOP",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Nhiều vị trí - Trang web và tại cửa hàng",
+      "summary": "Doanh số qua website và cửa hàng; yêu cầu đã có tập dữ liệu thu thập được trước.",
+      "conversionLocation": "Trang web và tại cửa hàng",
+      "conversionLocationGroup": "Nhiều vị trí",
+      "performanceGoal": "Tối đa hóa số lượt mua",
+      "requiresDataset": true,
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Nhiều vị trí | Web + Cửa hàng",
+        "Vị trí chuyển đổi": "Trang web và tại cửa hàng",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt mua",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEB_APP_STORE",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Nhiều vị trí - Trang web, ứng dụng và tại cửa hàng thực",
+      "summary": "Doanh số qua website, ứng dụng và cửa hàng thực; yêu cầu đã có tập dữ liệu thu thập được trước.",
+      "conversionLocation": "Trang web, ứng dụng và tại cửa hàng thực",
+      "conversionLocationGroup": "Nhiều vị trí",
+      "performanceGoal": "Tối đa hóa số lượt mua",
+      "requiresDataset": true,
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Nhiều vị trí | Web + App + Cửa hàng",
+        "Vị trí chuyển đổi": "Trang web, ứng dụng và tại cửa hàng thực",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt mua",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEB_CALL",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Nhiều vị trí - Trang web và cuộc gọi",
+      "summary": "Doanh số qua website hoặc cuộc gọi, mục tiêu hiệu quả bị khóa là tối đa hóa số lượt chuyển đổi.",
+      "conversionLocation": "Trang web và cuộc gọi",
+      "conversionLocationGroup": "Nhiều vị trí",
+      "performanceGoal": "Tối đa hóa số lượt chuyển đổi",
+      "requiresDataset": true,
+      "simpleFlow": true,
+      "defaultCreativeType": "Call Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Nhiều vị trí | Web + Cuộc gọi",
+        "Vị trí chuyển đổi": "Trang web và cuộc gọi",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt chuyển đổi",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Call Ad"
+      }
+    },
+    {
+      "code": "SALE_WEBSITE_LPV",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Trang web - Tối đa hóa số lượt xem trang đích",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số lượt xem trang đích.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt xem trang đích",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Web | Xem trang đích",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt xem trang đích",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEBSITE_CONVERSIONS",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Trang web - Tối đa hóa số lượt chuyển đổi",
+      "summary": "Doanh số qua website, dùng mục tiêu chuyển đổi tổng quát.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt chuyển đổi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Web | Chuyển đổi",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt chuyển đổi",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEBSITE_VALUE",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Trang web - Tối đa hóa giá trị của lượt chuyển đổi",
+      "summary": "Doanh số qua website, ưu tiên giá trị của lượt chuyển đổi khi có đủ dữ liệu.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa giá trị của lượt chuyển đổi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Web | Giá trị lượt chuyển đổi",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa giá trị của lượt chuyển đổi",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEBSITE_LINK_CLICKS",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Trang web - Tối đa hóa số lượt click vào liên kết",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số lượt click vào liên kết.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt click vào liên kết",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Web | Click link",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt click vào liên kết",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEBSITE_DAILY_REACH",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Trang web - Tối đa hóa số người tiếp cận hằng ngày",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số người tiếp cận hằng ngày.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số người tiếp cận hằng ngày",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Web | Reach hằng ngày",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận hằng ngày",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_WEBSITE_IMPRESSIONS",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Trang web - Tối đa hóa số lượt hiển thị",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số lượt hiển thị.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Web | Hiển thị",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_APP_PURCHASES",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Ứng dụng - Tối đa hóa số lượt mua",
+      "summary": "Một vị trí là Ứng dụng trong campaign Doanh số; chỉ dùng khi sau này có ứng dụng.",
+      "conversionLocation": "Ứng dụng",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt mua",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Ứng dụng | Lượt mua",
+        "Vị trí chuyển đổi": "Ứng dụng",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt mua",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "SALE_MESSAGE_CONVERSIONS",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Đích đến của tin nhắn - Tối đa hóa số lượt chuyển đổi",
+      "summary": "Doanh số qua tin nhắn, tối ưu cho lượt chuyển đổi.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt chuyển đổi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Tin nhắn | Chuyển đổi",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt chuyển đổi",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "SALE_MESSAGE_CONVERSATIONS",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Đích đến của tin nhắn - Tối đa hóa số cuộc trò chuyện",
+      "summary": "Doanh số qua tin nhắn, tối ưu cho người có khả năng trò chuyện.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số cuộc trò chuyện",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Tin nhắn | Cuộc trò chuyện",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc trò chuyện",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "SALE_MESSAGE_PURCHASES",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Đích đến của tin nhắn - Mua hàng qua tin nhắn",
+      "summary": "Doanh số qua Messenger/Instagram/WhatsApp.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt mua qua tin nhắn",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Tin nhắn | Mua hàng",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt mua qua tin nhắn",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "SALE_MESSAGE_LINK_CLICKS",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Đích đến của tin nhắn - Tối đa hóa số lượt click vào liên kết",
+      "summary": "Doanh số qua tin nhắn, tối ưu cho lượt click vào liên kết.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt click vào liên kết",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Tin nhắn | Click link",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt click vào liên kết",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "SALE_MESSAGE_DAILY_REACH",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Đích đến của tin nhắn - Tối đa hóa số người tiếp cận hằng ngày",
+      "summary": "Doanh số qua tin nhắn, tối ưu cho tiếp cận hằng ngày.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số người tiếp cận hằng ngày",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Tin nhắn | Reach hằng ngày",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận hằng ngày",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "SALE_MESSAGE_IMPRESSIONS",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Đích đến của tin nhắn - Tối đa hóa số lượt hiển thị",
+      "summary": "Doanh số qua tin nhắn, tối ưu cho lượt hiển thị.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Tin nhắn | Hiển thị",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "SALE_CALL",
+      "campaignBundleCode": "SALES_BASE",
+      "name": "Cuộc gọi - Tối đa hóa số cuộc gọi",
+      "summary": "Doanh số qua cuộc gọi tư vấn/chốt đơn.",
+      "conversionLocation": "Cuộc gọi",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số cuộc gọi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Call Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Sales | Cuộc gọi",
+        "Vị trí chuyển đổi": "Cuộc gọi",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc gọi",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Call Ad"
+      }
+    },
+    {
+      "code": "LEAD_WEB_FORM",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Nhiều vị trí - Trang web và mẫu phản hồi tức thì",
+      "summary": "Chuyển đổi lead qua website hoặc mẫu phản hồi tức thì.",
+      "conversionLocation": "Trang web và mẫu phản hồi tức thì",
+      "conversionLocationGroup": "Nhiều vị trí",
+      "performanceGoal": "Tối đa hóa số lượt chuyển đổi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Lead Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Nhiều vị trí | Web + Mẫu phản hồi",
+        "Vị trí chuyển đổi": "Trang web và mẫu phản hồi tức thì",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt chuyển đổi",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Lead Ad"
+      }
+    },
+    {
+      "code": "LEAD_WEB_CALL",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Nhiều vị trí - Trang web và cuộc gọi",
+      "summary": "Chuyển đổi lead qua website hoặc cuộc gọi.",
+      "conversionLocation": "Trang web và cuộc gọi",
+      "conversionLocationGroup": "Nhiều vị trí",
+      "performanceGoal": "Tối đa hóa số lượt chuyển đổi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Call Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Nhiều vị trí | Web + Cuộc gọi",
+        "Vị trí chuyển đổi": "Trang web và cuộc gọi",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt chuyển đổi",
+        "Mô hình ghi nhận": "Tiêu chuẩn",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Call Ad"
+      }
+    },
+    {
+      "code": "LEAD_FORM_MESSENGER",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Nhiều vị trí - Mẫu phản hồi tức thì và Messenger",
+      "summary": "Chuyển đổi lead qua mẫu phản hồi tức thì hoặc Messenger.",
+      "conversionLocation": "Mẫu phản hồi tức thì và Messenger",
+      "conversionLocationGroup": "Nhiều vị trí",
+      "performanceGoal": "Tối đa hóa số khách hàng tiềm năng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Lead Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Nhiều vị trí | Mẫu phản hồi + Messenger",
+        "Vị trí chuyển đổi": "Mẫu phản hồi tức thì và Messenger",
+        "Mục tiêu tối ưu": "Tối đa hóa số khách hàng tiềm năng",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Lead Ad"
+      }
+    },
+    {
+      "code": "LEAD_WEBSITE_MAX_LEADS",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Trang web - Tăng tối đa khách hàng tiềm năng",
+      "summary": "Một vị trí là Trang web, mục tiêu là tăng tối đa số khách hàng tiềm năng.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tăng tối đa số khách hàng tiềm năng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Web | Khách hàng tiềm năng",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tăng tối đa số khách hàng tiềm năng",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_WEBSITE_LPV",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Trang web - Xem trang đích",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số lượt xem trang đích.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt xem trang đích",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Web | Xem trang đích",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt xem trang đích",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_WEBSITE_LINK_CLICKS",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Trang web - Click liên kết",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số lượt click vào liên kết.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt click vào liên kết",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Web | Click liên kết",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt click vào liên kết",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_WEBSITE_DAILY_REACH",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Trang web - Tiếp cận hằng ngày",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số người tiếp cận hằng ngày.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số người tiếp cận hằng ngày",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Web | Tiếp cận hằng ngày",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận hằng ngày",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_WEBSITE_IMPRESSIONS",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Trang web - Lượt hiển thị",
+      "summary": "Một vị trí là Trang web, mục tiêu là tối đa hóa số lượt hiển thị.",
+      "conversionLocation": "Trang web",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Web | Lượt hiển thị",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_INSTANT_FORM_MAX_LEADS",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Mẫu phản hồi tức thì - Khách hàng tiềm năng",
+      "summary": "Một vị trí là Mẫu phản hồi tức thì, mục tiêu là tối đa hóa số khách hàng tiềm năng.",
+      "conversionLocation": "Mẫu phản hồi tức thì",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số khách hàng tiềm năng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Lead Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Mẫu phản hồi | Khách hàng tiềm năng",
+        "Vị trí chuyển đổi": "Mẫu phản hồi tức thì",
+        "Mục tiêu tối ưu": "Tối đa hóa số khách hàng tiềm năng",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Lead Ad"
+      }
+    },
+    {
+      "code": "LEAD_INSTANT_FORM_QUALIFIED",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Mẫu phản hồi tức thì - Khách hàng tiềm năng đủ điều kiện",
+      "summary": "Một vị trí là Mẫu phản hồi tức thì, mục tiêu là tăng tối đa số khách hàng tiềm năng đủ điều kiện.",
+      "conversionLocation": "Mẫu phản hồi tức thì",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tăng tối đa số khách hàng tiềm năng đủ điều kiện",
+      "simpleFlow": true,
+      "defaultCreativeType": "Lead Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Mẫu phản hồi | Lead đủ điều kiện",
+        "Vị trí chuyển đổi": "Mẫu phản hồi tức thì",
+        "Mục tiêu tối ưu": "Tăng tối đa số khách hàng tiềm năng đủ điều kiện",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Lead Ad"
+      }
+    },
+    {
+      "code": "LEAD_MESSENGER",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Một vị trí - Messenger",
+      "summary": "Chuyển mọi người đến Messenger để tạo khách hàng tiềm năng.",
+      "conversionLocation": "Messenger",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số khách hàng tiềm năng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Messenger",
+        "Vị trí chuyển đổi": "Messenger",
+        "Mục tiêu tối ưu": "Tối đa hóa số khách hàng tiềm năng",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_INSTAGRAM",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Một vị trí - Instagram",
+      "summary": "Chuyển mọi người đến Instagram để tạo khách hàng tiềm năng.",
+      "conversionLocation": "Instagram",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số khách hàng tiềm năng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Instagram",
+        "Vị trí chuyển đổi": "Instagram",
+        "Mục tiêu tối ưu": "Tối đa hóa số khách hàng tiềm năng",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Instagram",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_WHATSAPP",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Một vị trí - WhatsApp",
+      "summary": "Chuyển mọi người đến WhatsApp để tạo khách hàng tiềm năng.",
+      "conversionLocation": "WhatsApp",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số khách hàng tiềm năng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | WhatsApp",
+        "Vị trí chuyển đổi": "WhatsApp",
+        "Mục tiêu tối ưu": "Tối đa hóa số khách hàng tiềm năng",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "WhatsApp",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "LEAD_CALL",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Một vị trí - Cuộc gọi",
+      "summary": "Thu hút cuộc gọi cho doanh nghiệp.",
+      "conversionLocation": "Cuộc gọi",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số cuộc gọi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Call Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Cuộc gọi",
+        "Vị trí chuyển đổi": "Cuộc gọi",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc gọi",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Call Ad"
+      }
+    },
+    {
+      "code": "LEAD_APP",
+      "campaignBundleCode": "LEADS_BASE",
+      "name": "Một vị trí - Ứng dụng",
+      "summary": "Chuyển mọi người đến ứng dụng để tạo khách hàng tiềm năng.",
+      "conversionLocation": "Ứng dụng",
+      "conversionLocationGroup": "Một vị trí",
+      "performanceGoal": "Tối đa hóa số khách hàng tiềm năng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Lead | Ứng dụng",
+        "Vị trí chuyển đổi": "Ứng dụng",
+        "Mục tiêu tối ưu": "Tối đa hóa số khách hàng tiềm năng",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "AWR_REACH",
+      "campaignBundleCode": "AWARENESS_BASE",
+      "name": "Người tiếp cận quảng cáo (Reach)",
+      "summary": "Mục tiêu hiệu quả là tối đa hóa số người tiếp cận quảng cáo.",
+      "conversionLocation": "Mức độ nhận biết",
+      "performanceGoal": "Tối đa hóa số người tiếp cận quảng cáo",
+      "simpleFlow": true,
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Nhận biết | Người tiếp cận quảng cáo",
+        "Vị trí chuyển đổi": "Mức độ nhận biết",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận quảng cáo",
+        "Kiểm soát tần suất": "Giới hạn 2 lần / 7 ngày",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "AWR_IMPRESSIONS",
+      "campaignBundleCode": "AWARENESS_BASE",
+      "name": "Lượt hiển thị (Impressions)",
+      "summary": "Mục tiêu hiệu quả là tối đa hóa số lượt hiển thị.",
+      "conversionLocation": "Mức độ nhận biết",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "simpleFlow": true,
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Nhận biết | Lượt hiển thị",
+        "Vị trí chuyển đổi": "Mức độ nhận biết",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Kiểm soát tần suất": "Giới hạn 2 lần / 7 ngày",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "AWR_AD_RECALL",
+      "campaignBundleCode": "AWARENESS_BASE",
+      "name": "Cải thiện khả năng nhớ đến quảng cáo (Ad Recall)",
+      "summary": "Mục tiêu hiệu quả là tối đa hóa độ cải thiện khả năng nhớ đến quảng cáo.",
+      "conversionLocation": "Mức độ nhận biết",
+      "performanceGoal": "Tối đa hóa độ cải thiện khả năng nhớ đến quảng cáo",
+      "simpleFlow": true,
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Nhận biết | Cải thiện khả năng nhớ",
+        "Vị trí chuyển đổi": "Mức độ nhận biết",
+        "Mục tiêu tối ưu": "Tối đa hóa độ cải thiện khả năng nhớ đến quảng cáo",
+        "Kiểm soát tần suất": "Giới hạn 2 lần / 7 ngày",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "AWR_VIDEO_THRUPLAY",
+      "campaignBundleCode": "AWARENESS_BASE",
+      "name": "Lượt xem video - ThruPlay",
+      "summary": "Mục tiêu hiệu quả là tối đa hóa số lượt xem ThruPlay.",
+      "conversionLocation": "Mức độ nhận biết",
+      "performanceGoal": "Tối đa hóa số lượt xem ThruPlay",
+      "simpleFlow": true,
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Nhận biết | Video ThruPlay",
+        "Vị trí chuyển đổi": "Mức độ nhận biết",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt xem ThruPlay",
+        "Kiểm soát tần suất": "Giới hạn 2 lần / 7 ngày",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "AWR_VIDEO_2S_CONTINUOUS",
+      "campaignBundleCode": "AWARENESS_BASE",
+      "name": "Lượt xem video - 2 giây liên tục",
+      "summary": "Mục tiêu hiệu quả là tối đa hóa số lượt phát video liên tục trong tối thiểu 2 giây.",
+      "conversionLocation": "Mức độ nhận biết",
+      "performanceGoal": "Tối đa hóa số lượt phát video liên tục trong tối thiểu 2 giây",
+      "simpleFlow": true,
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Nhận biết | Video 2 giây liên tục",
+        "Vị trí chuyển đổi": "Mức độ nhận biết",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt phát video liên tục trong tối thiểu 2 giây",
+        "Kiểm soát tần suất": "Giới hạn 2 lần / 7 ngày",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_VIDEO_COLD",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Lượt xem video (Video Views)",
+      "summary": "Loại tương tác là Lượt xem video.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt xem video",
+      "performanceGoal": "Tối đa hóa số lượt xem ThruPlay",
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Lượt xem video",
+        "Vị trí chuyển đổi": "Video",
+        "Loại tương tác": "Lượt xem video",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt xem ThruPlay",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_VIDEO_2S_CONTINUOUS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Lượt xem video - 2 giây liên tục (Video Views - 2s Continuous)",
+      "summary": "Loại tương tác là Lượt xem video, mục tiêu là phát video liên tục tối thiểu 2 giây.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt xem video",
+      "performanceGoal": "Tối đa hóa số lượt phát video liên tục trong tối thiểu 2 giây",
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Video 2 giây liên tục",
+        "Vị trí chuyển đổi": "Video",
+        "Loại tương tác": "Lượt xem video",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt phát video liên tục trong tối thiểu 2 giây",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_POST_COLD",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Lượt tương tác với bài viết (Post Engagement)",
+      "summary": "Loại tương tác là Lượt tương tác với bài viết.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt tương tác với bài viết",
+      "performanceGoal": "Tối đa hóa lượt tương tác với bài viết",
+      "disabledPerformanceGoals": [
+        "Tối đa hóa số người tiếp cận hằng ngày",
+        "Tối đa hóa số lượt hiển thị"
+      ],
+      "defaultCreativeType": "Status Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Bài viết",
+        "Vị trí chuyển đổi": "Trên quảng cáo của bạn",
+        "Loại tương tác": "Lượt tương tác với bài viết",
+        "Mục tiêu tối ưu": "Tối đa hóa lượt tương tác với bài viết",
+        "Loại bài quảng cáo": "Status Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_EVENT_RESPONSES",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Lượt phản hồi sự kiện (Event Responses)",
+      "summary": "Loại tương tác là Lượt phản hồi sự kiện.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt phản hồi sự kiện",
+      "performanceGoal": "Tối đa hóa số lượt phản hồi sự kiện",
+      "defaultCreativeType": "Event Response Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Phản hồi sự kiện",
+        "Vị trí chuyển đổi": "Trên quảng cáo của bạn",
+        "Loại tương tác": "Lượt phản hồi sự kiện",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt phản hồi sự kiện",
+        "Loại bài quảng cáo": "Event Response Ad"
+      }
+    },
+    {
+      "code": "ENG_EVENT_POST_ENGAGEMENT",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Phản hồi sự kiện - Tương tác bài viết (Event - Post Engagement)",
+      "summary": "Loại tương tác là Lượt phản hồi sự kiện, mục tiêu là tương tác với bài viết.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt phản hồi sự kiện",
+      "performanceGoal": "Tối đa hóa lượt tương tác với bài viết",
+      "defaultCreativeType": "Event Response Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Sự kiện - Tương tác bài viết",
+        "Vị trí chuyển đổi": "Trên quảng cáo của bạn",
+        "Loại tương tác": "Lượt phản hồi sự kiện",
+        "Mục tiêu tối ưu": "Tối đa hóa lượt tương tác với bài viết",
+        "Loại bài quảng cáo": "Event Response Ad"
+      }
+    },
+    {
+      "code": "ENG_EVENT_DAILY_REACH",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Phản hồi sự kiện - Tiếp cận hằng ngày (Event - Daily Reach)",
+      "summary": "Loại tương tác là Lượt phản hồi sự kiện, mục tiêu là tiếp cận mỗi người tối đa một lần mỗi ngày.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt phản hồi sự kiện",
+      "performanceGoal": "Tối đa hóa số người tiếp cận hằng ngày",
+      "defaultCreativeType": "Event Response Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Sự kiện - Tiếp cận hằng ngày",
+        "Vị trí chuyển đổi": "Trên quảng cáo của bạn",
+        "Loại tương tác": "Lượt phản hồi sự kiện",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận hằng ngày",
+        "Loại bài quảng cáo": "Event Response Ad"
+      }
+    },
+    {
+      "code": "ENG_EVENT_IMPRESSIONS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Phản hồi sự kiện - Lượt hiển thị (Event - Impressions)",
+      "summary": "Loại tương tác là Lượt phản hồi sự kiện, mục tiêu là tối đa hóa số lượt hiển thị.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt phản hồi sự kiện",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "defaultCreativeType": "Event Response Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Sự kiện - Lượt hiển thị",
+        "Vị trí chuyển đổi": "Trên quảng cáo của bạn",
+        "Loại tương tác": "Lượt phản hồi sự kiện",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Loại bài quảng cáo": "Event Response Ad"
+      }
+    },
+    {
+      "code": "ENG_REMINDERS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Lượt đặt lời nhắc (Reminders)",
+      "summary": "Loại tương tác là Lượt đặt lời nhắc.",
+      "conversionLocation": "Trên quảng cáo của bạn",
+      "interactionType": "Lượt đặt lời nhắc",
+      "performanceGoal": "Tăng tối đa lượt đặt lời nhắc",
+      "defaultCreativeType": "Status Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trên quảng cáo | Đặt lời nhắc",
+        "Vị trí chuyển đổi": "Trên quảng cáo của bạn",
+        "Loại tương tác": "Lượt đặt lời nhắc",
+        "Mục tiêu tối ưu": "Tăng tối đa lượt đặt lời nhắc",
+        "Loại bài quảng cáo": "Status Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_MESSAGE_CONVERSATIONS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Tin nhắn - Cuộc trò chuyện (Messaging - Conversations)",
+      "summary": "Tối ưu để có nhiều cuộc trò chuyện qua tin nhắn nhất.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "interactionType": "Tin nhắn",
+      "performanceGoal": "Tối đa hóa số cuộc trò chuyện",
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Tin nhắn | Messenger",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Loại tương tác": "Tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc trò chuyện",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_MESSAGE_LEADS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Tin nhắn - Khách hàng tiềm năng (Messaging - Leads)",
+      "summary": "Tối ưu để có nhiều khách hàng tiềm năng qua tin nhắn nhất.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "interactionType": "Tin nhắn",
+      "performanceGoal": "Tối đa hóa số khách hàng tiềm năng qua tin nhắn",
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Tin nhắn | Lead qua tin nhắn",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Loại tương tác": "Tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số khách hàng tiềm năng qua tin nhắn",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_MESSAGE_PURCHASES",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Tin nhắn - Lượt mua (Messaging - Purchases)",
+      "summary": "Tối ưu để có nhiều lượt mua qua tin nhắn nhất.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "interactionType": "Tin nhắn",
+      "performanceGoal": "Tối đa hóa số lượt mua qua tin nhắn",
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Tin nhắn | Mua qua tin nhắn",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Loại tương tác": "Tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt mua qua tin nhắn",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_MESSAGE_LINK_CLICKS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Tin nhắn - Click vào liên kết (Messaging - Link Clicks)",
+      "summary": "Tối ưu để có nhiều lượt click vào liên kết nhất.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "interactionType": "Tin nhắn",
+      "performanceGoal": "Tối đa hóa số lượt click vào liên kết",
+      "defaultCreativeType": "Video Page Post Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Tin nhắn | Click liên kết",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Loại tương tác": "Tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt click vào liên kết",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Video Page Post Ad"
+      }
+    },
+    {
+      "code": "ENG_CALLS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Cuộc gọi (Calls)",
+      "summary": "Vị trí chuyển đổi là Cuộc gọi.",
+      "conversionLocation": "Cuộc gọi",
+      "interactionType": "Cuộc gọi",
+      "performanceGoal": "Tối đa hóa số cuộc gọi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Call Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Cuộc gọi",
+        "Vị trí chuyển đổi": "Cuộc gọi",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc gọi",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Call Ad"
+      }
+    },
+    {
+      "code": "ENG_WEBSITE_CONVERSIONS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Trang web (Website)",
+      "summary": "Vị trí chuyển đổi là Trang web.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Tương tác với trang web",
+      "performanceGoal": "Tối đa hóa số lượt chuyển đổi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trang web",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt chuyển đổi",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "ENG_WEBSITE_LANDING_PAGE_VIEWS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Trang web - Xem trang đích (Website - Landing Page Views)",
+      "summary": "Vị trí chuyển đổi là Trang web, mục tiêu là tối đa hóa số lượt xem trang đích.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Tương tác với trang web",
+      "performanceGoal": "Tối đa hóa số lượt xem trang đích",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trang web | Xem trang đích",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt xem trang đích",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "ENG_WEBSITE_LINK_CLICKS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Trang web - Click liên kết (Website - Link Clicks)",
+      "summary": "Vị trí chuyển đổi là Trang web, mục tiêu là tối đa hóa số lượt click vào liên kết.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Tương tác với trang web",
+      "performanceGoal": "Tối đa hóa số lượt click vào liên kết",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trang web | Click liên kết",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt click vào liên kết",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "ENG_WEBSITE_DAILY_REACH",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Trang web - Tiếp cận hằng ngày (Website - Daily Reach)",
+      "summary": "Vị trí chuyển đổi là Trang web, mục tiêu là tiếp cận mỗi người tối đa một lần mỗi ngày.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Tương tác với trang web",
+      "performanceGoal": "Tối đa hóa số người tiếp cận hằng ngày",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trang web | Tiếp cận hằng ngày",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận hằng ngày",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "ENG_WEBSITE_IMPRESSIONS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Trang web - Lượt hiển thị (Website - Impressions)",
+      "summary": "Vị trí chuyển đổi là Trang web, mục tiêu là tối đa hóa số lượt hiển thị.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Tương tác với trang web",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Trang web | Lượt hiển thị",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "ENG_APP_ENGAGEMENT",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Ứng dụng (App)",
+      "summary": "Vị trí chuyển đổi là Ứng dụng.",
+      "conversionLocation": "Ứng dụng",
+      "interactionType": "Tương tác với ứng dụng",
+      "performanceGoal": "Tối đa hóa lượt tương tác với ứng dụng",
+      "defaultCreativeType": "Mobile App Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Ứng dụng",
+        "Vị trí chuyển đổi": "Ứng dụng",
+        "Loại tương tác": "Tương tác với ứng dụng",
+        "Mục tiêu tối ưu": "Tối đa hóa lượt tương tác với ứng dụng",
+        "Loại bài quảng cáo": "Mobile App Ad"
+      }
+    },
+    {
+      "code": "ENG_IG_FB_VISITS",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Instagram hoặc Facebook (Instagram or Facebook)",
+      "summary": "Vị trí chuyển đổi là Instagram hoặc Facebook.",
+      "conversionLocation": "Instagram hoặc Facebook",
+      "interactionType": "Tương tác với trang",
+      "performanceGoal": "Tối đa hóa số lượt truy cập Trang Facebook",
+      "simpleFlow": true,
+      "defaultCreativeType": "Page Like Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Instagram hoặc Facebook",
+        "Vị trí chuyển đổi": "Instagram hoặc Facebook",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt truy cập Trang Facebook",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Page Like Ad"
+      }
+    },
+    {
+      "code": "ENG_IG_FB_PAGE_LIKES",
+      "campaignBundleCode": "ENG_BASE",
+      "name": "Instagram hoặc Facebook - Thích Trang (Instagram/Facebook - Page Likes)",
+      "summary": "Vị trí chuyển đổi là Instagram hoặc Facebook, mục tiêu là tối đa hóa số lượt thích Trang.",
+      "conversionLocation": "Instagram hoặc Facebook",
+      "interactionType": "Tương tác với trang",
+      "performanceGoal": "Tối đa hóa số lượt thích Trang",
+      "simpleFlow": true,
+      "defaultCreativeType": "Page Like Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Tương tác | Instagram hoặc Facebook | Thích Trang",
+        "Vị trí chuyển đổi": "Instagram hoặc Facebook",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt thích Trang",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Page Like Ad"
+      }
+    },
+    {
+      "code": "TRF_WEB_LPV",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Trang web - Xem trang đích (Website - Landing Page Views)",
+      "summary": "Dùng khi kéo người dùng về website và ưu tiên người có khả năng xem được trang đích.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Lưu lượng truy cập",
+      "performanceGoal": "Tối đa hóa số lượt xem trang đích",
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Web | Xem trang đích",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt xem trang đích",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "TRF_WEB_CLICK",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Trang web - Click liên kết (Website - Link Clicks)",
+      "summary": "Dùng khi muốn tối đa số lượt click vào link đích.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Lưu lượng truy cập",
+      "performanceGoal": "Tối đa hóa số lượt click vào liên kết",
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Web | Click liên kết",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt click vào liên kết",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "TRF_WEB_DAILY_REACH",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Trang web - Tiếp cận hằng ngày (Website - Daily Reach)",
+      "summary": "Dùng khi kéo lưu lượng về website nhưng giới hạn mỗi người nhìn thấy quảng cáo tối đa 1 lần mỗi ngày.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Lưu lượng truy cập",
+      "performanceGoal": "Tối đa hóa số người tiếp cận hằng ngày",
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Web | Tiếp cận hằng ngày",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận hằng ngày",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "TRF_WEB_CONVERSATIONS",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Trang web - Cuộc trò chuyện (Website - Conversations)",
+      "summary": "Dùng khi vị trí chuyển đổi là trang web nhưng mục tiêu hiệu quả là tối đa hóa số cuộc trò chuyện.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Lưu lượng truy cập",
+      "performanceGoal": "Tối đa hóa số cuộc trò chuyện",
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Web | Cuộc trò chuyện",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc trò chuyện",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "TRF_WEB_IMPRESSIONS",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Trang web - Lượt hiển thị (Website - Impressions)",
+      "summary": "Dùng khi kéo lưu lượng về website nhưng ưu tiên tối đa hóa số lượt hiển thị.",
+      "conversionLocation": "Trang web",
+      "interactionType": "Lưu lượng truy cập",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Web | Lượt hiển thị",
+        "Vị trí chuyển đổi": "Trang web",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "TRF_APP_EVENTS",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Ứng dụng - Tương tác với ứng dụng (App Engagement)",
+      "summary": "Dùng khi chuyển lưu lượng truy cập đến ứng dụng và ưu tiên người có khả năng tương tác với ứng dụng.",
+      "conversionLocation": "Ứng dụng",
+      "interactionType": "Lưu lượng truy cập",
+      "performanceGoal": "Tối đa hóa lượt tương tác với ứng dụng",
+      "simpleFlow": true,
+      "defaultCreativeType": "Website Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Ứng dụng | Tương tác ứng dụng",
+        "Vị trí chuyển đổi": "Ứng dụng",
+        "Mục tiêu tối ưu": "Tối đa hóa lượt tương tác với ứng dụng",
+        "Loại bài quảng cáo": "Website Click Ad"
+      }
+    },
+    {
+      "code": "TRF_MESSAGE_DAILY_REACH",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Tin nhắn - Tiếp cận hằng ngày (Messaging - Daily Reach)",
+      "summary": "Dùng khi chuyển lưu lượng truy cập đến tin nhắn và giới hạn mỗi người nhìn thấy quảng cáo tối đa 1 lần mỗi ngày.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "interactionType": "Tin nhắn",
+      "performanceGoal": "Tối đa hóa số người tiếp cận hằng ngày",
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Tin nhắn | Tiếp cận hằng ngày",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số người tiếp cận hằng ngày",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "TRF_MESSAGE_CONVO",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Tin nhắn - Cuộc trò chuyện (Messaging - Conversations)",
+      "summary": "Dùng khi kéo lưu lượng truy cập về Messenger, Instagram hoặc WhatsApp.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "interactionType": "Tin nhắn",
+      "performanceGoal": "Tối đa hóa số cuộc trò chuyện",
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Tin nhắn | Cuộc trò chuyện",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc trò chuyện",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "TRF_MESSAGE_IMPRESSIONS",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Tin nhắn - Lượt hiển thị (Messaging - Impressions)",
+      "summary": "Dùng khi chuyển lưu lượng truy cập đến tin nhắn nhưng ưu tiên tối đa hóa số lượt hiển thị.",
+      "conversionLocation": "Đích đến của tin nhắn",
+      "interactionType": "Tin nhắn",
+      "performanceGoal": "Tối đa hóa số lượt hiển thị",
+      "defaultCreativeType": "Message Click Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Tin nhắn | Lượt hiển thị",
+        "Vị trí chuyển đổi": "Đích đến của tin nhắn",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt hiển thị",
+        "Đích đến tin nhắn": "Đích đến thủ công",
+        "Ứng dụng nhắn tin": "Messenger",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Message Click Ad"
+      }
+    },
+    {
+      "code": "TRF_PAGE_VISIT",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Instagram/Facebook - Truy cập trang (Instagram/Facebook - Page Visits)",
+      "summary": "Dùng khi đẩy người dùng sang trang Facebook hoặc Instagram.",
+      "conversionLocation": "Instagram hoặc Facebook",
+      "interactionType": "Lưu lượng truy cập",
+      "performanceGoal": "Tối đa hóa số lượt truy cập Trang Facebook",
+      "defaultCreativeType": "Page Like Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Page Visit | Facebook/Instagram",
+        "Vị trí chuyển đổi": "Instagram hoặc Facebook",
+        "Mục tiêu tối ưu": "Tối đa hóa số lượt truy cập Trang Facebook",
+        "Trang Facebook": "Dược mỹ phẩm-Khải Hoàn Derma",
+        "Loại bài quảng cáo": "Page Like Ad"
+      }
+    },
+    {
+      "code": "TRF_CALL",
+      "campaignBundleCode": "TRAFFIC_BASE",
+      "name": "Cuộc gọi - Tối đa cuộc gọi (Calls - Maximize Calls)",
+      "summary": "Dùng khi muốn kéo cuộc gọi trực tiếp về doanh nghiệp.",
+      "conversionLocation": "Cuộc gọi",
+      "interactionType": "Cuộc gọi",
+      "performanceGoal": "Tối đa hóa số cuộc gọi",
+      "simpleFlow": true,
+      "defaultCreativeType": "Call Ad",
+      "notionValues": {
+        "Tên nhóm QC": "Traffic | Cuộc gọi | Tối đa cuộc gọi",
+        "Vị trí chuyển đổi": "Cuộc gọi",
+        "Mục tiêu tối ưu": "Tối đa hóa số cuộc gọi",
+        "Loại bài quảng cáo": "Call Ad"
+      }
+    }
+  ],
+  "datasetPresets": [
+    {
+      "code": "DATASET_NONE",
+      "name": "Không chọn tập dữ liệu",
+      "summary": "Không ghi tập dữ liệu/pixel vào dòng Notion. Dùng cho vị trí chuyển đổi không yêu cầu tập dữ liệu.",
+      "notionValues": {}
+    },
+    {
+      "code": "DATASET_KHAI_HOAN_PIXEL",
+      "name": "Tập dữ liệu Khải Hoàn",
+      "summary": "Preset tập dữ liệu dùng cho các vị trí chuyển đổi web-related. Điền ID pixel/dataset thật trước khi import Meta.",
+      "notionValues": {
+        "Tập dữ liệu": ""
+      }
+    }
+  ],
+  "budgetPresets": [
+    {
+      "code": "BUD_DAILY_800_PHP",
+      "name": "Ngân sách hằng ngày 800 PHP",
+      "summary": "Thiết đặt ngân sách dùng chung cho nhóm quảng cáo.",
+      "notionValues": {
+        "Loại ngân sách": "Daily",
+        "Ngân sách/ngày": 800,
+        "Ngân sách trọn đời": 0,
+        "Tính phí theo": "IMPRESSIONS"
+      }
+    },
+    {
+      "code": "BUD_LIFETIME_50",
+      "name": "Ngân sách trọn đời 50",
+      "summary": "Thiết đặt ngân sách trọn đời theo template cũ.",
+      "notionValues": {
+        "Loại ngân sách": "Lifetime",
+        "Ngân sách trọn đời": 50,
+        "Ngân sách/ngày": 0,
+        "Tính phí theo": "IMPRESSIONS"
+      }
+    }
+  ],
+  "placementPresets": [
+    {
+      "code": "PLC_FB_MSG_MOBILE",
+      "name": "Facebook + Messenger mobile",
+      "summary": "Placement dùng chung cho các nhóm quảng cáo Khải Hoàn.",
+      "notionValues": {
+        "Nền tảng quảng cáo": "Facebook + Messenger",
+        "Vị trí Facebook": "feed, story, search, facebook_reels",
+        "Vị trí Messenger": "story",
+        "Thiết bị": "Di động",
+        "Mở rộng nhắm chọn": "custom_audience: Off, lookalike: Off"
+      }
+    },
+    {
+      "code": "PLC_FB_ALL_MOBILE",
+      "name": "Facebook mobile đầy đủ",
+      "summary": "Placement Facebook mobile mở rộng, không gồm Messenger.",
+      "notionValues": {
+        "Nền tảng quảng cáo": "Facebook",
+        "Vị trí Facebook": "feed, instream_video, story, search, facebook_reels, facebook_reels_overlay, notification",
+        "Vị trí Messenger": "",
+        "Thiết bị": "Di động",
+        "Mở rộng nhắm chọn": "custom_audience: Off, lookalike: Off"
+      }
+    }
+  ],
+  "audiencePresets": [
+    {
+      "code": "AUD_BROAD_PHAN_THIET",
+      "name": "Khách lạnh Phan Thiết (Broad Phan Thiet)",
+      "summary": "Tệp rộng cơ bản cho khách lạnh tại Phan Thiết.",
+      "notionValues": {
+        "Mẫu đối tượng": "Khách lạnh Phan Thiết",
+        "Đối tượng tuỳ chỉnh": "",
+        "Vị trí địa lý": "Phan Thiet, Bình Thuận Province, Vietnam +25km",
+        "Tuổi min": 18,
+        "Tuổi max": 45,
+        "Giới tính": "Nữ",
+        "Ngôn ngữ": "Tiếng Việt",
+        "Thiết bị": "Di động",
+        "Nền tảng quảng cáo": "Facebook + Messenger",
+        "Vị trí Facebook": "feed, story, search, facebook_reels",
+        "Vị trí Messenger": "story",
+        "Mở rộng tệp": "Tắt",
+        "Mở rộng nhắm chọn": "custom_audience: Off, lookalike: Off"
+      },
+      "notes": [
+        "Dùng chung cho các nhóm prospecting cơ bản.",
+        "Sau này có thể tách thêm các biến thể tuổi, giới tính hoặc khu vực."
+      ]
+    },
+    {
+      "code": "AUD_ENGAGED_PAGE_365D",
+      "name": "Đã tương tác page 365 ngày (Engaged Page 365D)",
+      "summary": "Tệp remarketing cho người đã tương tác với page trong 1 năm.",
+      "notionValues": {
+        "Mẫu đối tượng": "Đã tương tác Page 1 năm",
+        "Đối tượng tuỳ chỉnh": "120246010546010657:Đã tt với trang 1 năm",
+        "Vị trí địa lý": "Phan Thiet, Bình Thuận Province, Vietnam +25km",
+        "Tuổi min": 18,
+        "Tuổi max": 45,
+        "Giới tính": "Nữ",
+        "Ngôn ngữ": "Tiếng Việt",
+        "Thiết bị": "Di động",
+        "Nền tảng quảng cáo": "Facebook + Messenger",
+        "Vị trí Facebook": "feed, story, search, facebook_reels",
+        "Vị trí Messenger": "story",
+        "Mở rộng tệp": "Tắt",
+        "Mở rộng nhắm chọn": "custom_audience: Off, lookalike: Off"
+      },
+      "notes": [
+        "Dùng cho các nhóm social proof hoặc nhắc lại người đã từng tương tác page."
+      ]
+    },
+    {
+      "code": "AUD_MESSAGE_365D",
+      "name": "Đã gửi tin nhắn 365 ngày (Message 365D)",
+      "summary": "Tệp remarketing cho người đã gửi tin nhắn trong 1 năm.",
+      "notionValues": {
+        "Mẫu đối tượng": "Đã gửi tin nhắn 1 năm",
+        "Đối tượng tuỳ chỉnh": "120246011914780657:Đã gửi tin nhắn 1 năm",
+        "Vị trí địa lý": "Phan Thiet, Bình Thuận Province, Vietnam +25km",
+        "Tuổi min": 18,
+        "Tuổi max": 45,
+        "Giới tính": "Nữ",
+        "Ngôn ngữ": "Tiếng Việt",
+        "Thiết bị": "Di động",
+        "Nền tảng quảng cáo": "Facebook + Messenger",
+        "Vị trí Facebook": "feed, story, search, facebook_reels",
+        "Vị trí Messenger": "story",
+        "Mở rộng tệp": "Tắt",
+        "Mở rộng nhắm chọn": "custom_audience: Off, lookalike: Off"
+      },
+      "notes": [
+        "Ưu tiên dùng cho nhóm kéo lại người đã nhắn tin hoặc upsell."
+      ]
+    }
+  ]
+}

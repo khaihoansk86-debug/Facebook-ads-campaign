@@ -1,0 +1,44 @@
+Tên cột,Loại dữ liệu,Ví dụ,Ghi chú
+Tên chiến dịch / bài ads,Title,BÓC SEAL ĐIỆN THOẠI,Tên quảng cáo hiển thị trong file Facebook
+Trạng thái,Status,To-do,Tool xuất bài ở trạng thái Ready / To-do / Not started và chuyển sang Done sau export
+Nội dung,Text,"Nội dung caption quảng cáo...",Nội dung chính của quảng cáo
+Link bài viết,URL,https://www.facebook.com/reel/...,Link bài Facebook/Reel đã đăng
+ID Story,Text,s:122182158812616632,Dùng khi chạy bài viết có sẵn
+ID Video,Text,v:1668252937777735,Dùng khi chạy video/reel
+Link đích,URL,https://m.me/61568498960159,Link khi khách bấm quảng cáo
+Nút CTA,Select,MESSAGE_PAGE,Nút kêu gọi hành động
+Tiêu đề link,Text,Nhắn tin ngay,Tiêu đề link nếu có
+Mô tả link,Text,"Mô tả link hoặc nội dung bổ sung",Mô tả link nếu có
+Loại bài quảng cáo,Select,Video Page Post Ad,Video / ảnh / bài trạng thái
+Tên chiến dịch,Text,Chiến dịch Tin nhắn Khải Hoàn,Tên campaign
+Tên nhóm QC,Select,T2 Tin nhắn | Đã tương tác Page,Chọn tên nhóm quảng cáo có sẵn
+Mẫu đối tượng,Select,Đã tương tác Page 1 năm,Chọn nhanh bộ audience/ad set có sẵn
+Ghi chú đối tượng,Text,,Ghi chú nội bộ về tệp đối tượng
+Vị trí chuyển đổi,Select,Đích đến của tin nhắn,Đích đến chuyển đổi chính
+Đích đến tin nhắn,Select,Đích đến thủ công,Ghi chú cách chọn Messenger
+Trang Facebook,Text,Nhà thuốc Khải Hoàn Skincare - Chăm sóc da chuẩn y khoa Phan Thiết,Trang đại diện quảng cáo
+Chiến lược giá thầu,Select,Giới hạn giá thầu,Cách đặt giá thầu
+Giới hạn giá thầu,Number,5,Giá thầu tối đa
+Giá thầu nhập tay,Text,"0,05",Chỉ dùng khi muốn nhập dạng text theo mẫu cũ
+Ngân sách trọn đời,Number,50,Ngân sách trọn đời nhóm quảng cáo
+Ngân sách/ngày,Number,0,Ngân sách ngày nếu dùng
+Ngân sách mẫu,Number,50,Cột phụ giữ tương thích mẫu cũ
+Mục tiêu tối ưu,Select,Tin nhắn,Tối ưu kết quả
+Tính phí theo,Select,IMPRESSIONS,Cách tính phí
+Đối tượng tuỳ chỉnh,Text,120246010546010657:Đã tt với trang 1 năm,Tệp khách hàng tuỳ chỉnh
+Vị trí địa lý,Text,"Phan Thiet, Bình Thuận Province, Vietnam +25km",Khu vực chạy quảng cáo
+Tuổi min,Number,18,Tuổi nhỏ nhất
+Tuổi max,Number,45,Tuổi lớn nhất
+Giới tính,Select,Nữ,Nữ / Nam / Tất cả
+Ngôn ngữ,Select,Tiếng Việt,Ngôn ngữ khách hàng
+Thiết bị,Select,Di động,Thiết bị hiển thị quảng cáo
+Nền tảng quảng cáo,Select,Facebook + Messenger,Nền tảng chạy quảng cáo
+Vị trí Facebook,Text,"feed, story, search, facebook_reels",Vị trí hiển thị trên Facebook
+Vị trí Messenger,Text,story,Vị trí hiển thị trên Messenger
+Mở rộng tệp,Select,Tắt,Bật/tắt Advantage Audience
+Mở rộng nhắm chọn,Text,"custom_audience: Off, lookalike: Off",Cấu hình mở rộng nhắm chọn
+Ngày bắt đầu,Date,2026-07-01 09:00,Thời gian bắt đầu
+Ngày kết thúc,Date,2026-07-14 23:00,Thời gian kết thúc
+Đã xuất,Checkbox,false,Tool tự tick sau khi xuất
+Thời gian xuất,Date,,Tool tự ghi thời điểm xuất
+Ghi chú,Text,,Ghi chú nội bộ
