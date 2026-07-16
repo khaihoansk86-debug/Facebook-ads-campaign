@@ -2,16 +2,16 @@ export function AppSidebar() {
   return (
     <aside className="sidebar">
       <div>
-        <p className="eyebrow">Khai Hoan</p>
+        <p className="eyebrow">Khải Hoàn</p>
         <h1>Ads Ops</h1>
       </div>
-      <nav aria-label="Main navigation">
+      <nav aria-label="Điều hướng chính">
         <a className="active" href="/">
-          Campaigns
+          Chiến dịch
         </a>
-        <a href="/">Exports</a>
-        <a href="/">Notion sync</a>
-        <a href="/">Presets</a>
+        <a href="/">File export</a>
+        <a href="/">Đồng bộ Notion</a>
+        <a href="/">Bundle mẫu</a>
       </nav>
     </aside>
   );

@@ -14,20 +14,20 @@ export default async function Home() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Campaign dashboard</p>
-            <h2>Theo doi plan va file export</h2>
+            <p className="eyebrow">Bảng điều phối chiến dịch</p>
+            <h2>Theo dõi plan, bundle và file export</h2>
           </div>
           <div className="actions">
-            <button type="button">Refresh</button>
-            <button type="button" className="primary">New plan</button>
+            <button type="button">Làm mới</button>
+            <button type="button" className="primary">Plan mới</button>
           </div>
         </header>
 
         {!configured ? (
           <section className="notice">
-            <strong>Can them Supabase URL</strong>
+            <strong>Cần thêm Supabase URL</strong>
             <span>
-              Dien `NEXT_PUBLIC_SUPABASE_URL` trong `.env.local` hoac tren Vercel de dashboard doc du lieu that.
+              Điền `NEXT_PUBLIC_SUPABASE_URL` trong `.env.local` hoặc trên Vercel để dashboard đọc dữ liệu thật.
             </span>
           </section>
         ) : null}

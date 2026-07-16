@@ -2,11 +2,11 @@ import { formatCurrency, formatDate, formatNumber } from "../lib/format";
 import type { AdsPlan } from "../types/ads";
 
 const statusLabels: Record<string, string> = {
-  draft: "Draft",
-  review: "Need review",
-  ready: "Ready",
-  exported: "Exported",
-  error: "Error"
+  draft: "Nháp",
+  review: "Cần duyệt",
+  ready: "Sẵn sàng",
+  exported: "Đã export",
+  error: "Có lỗi"
 };
 
 export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
@@ -14,10 +14,10 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
     <section className="panel">
       <div className="panelHead">
         <div>
-          <h3>Ads plans</h3>
-          <span>{plans.length ? `${plans.length} plan dang theo doi` : "Chua co du lieu dong bo"}</span>
+          <h3>Plan quảng cáo</h3>
+          <span>{plans.length ? `${plans.length} plan đang theo dõi` : "Chưa có dữ liệu đồng bộ"}</span>
         </div>
-        <input aria-label="Search plans" placeholder="Search campaign, owner, objective" />
+        <input aria-label="Tìm kiếm plan" placeholder="Tìm chiến dịch, người phụ trách, mục tiêu" />
       </div>
 
       <div className="planStack">
@@ -28,21 +28,21 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
             <article className="planCard" key={plan.id}>
               <div className="planCardTop">
                 <div>
-                  <p className="eyebrow">Campaign plan</p>
+                  <p className="eyebrow">Plan chiến dịch</p>
                   <h4>{plan.name}</h4>
-                  <span>Updated {formatDate(plan.updated_at)}</span>
+                  <span>Cập nhật {formatDate(plan.updated_at)}</span>
                 </div>
                 <div className="planMeta">
                   <span className={`status ${plan.status}`}>{statusLabels[plan.status] || plan.status}</span>
                   <strong>{formatNumber(plan.ads_count)} ads</strong>
-                  <span>{formatNumber(plan.adsets_count)} ad sets</span>
+                  <span>{formatNumber(plan.adsets_count)} nhóm quảng cáo</span>
                 </div>
               </div>
 
               <div className="planFacts">
-                <span>Objective: <strong>{plan.objective || "-"}</strong></span>
-                <span>Budget: <strong>{formatCurrency(plan.budget_total)}</strong></span>
-                <span>Last export: <strong>{formatDate(plan.last_exported_at)}</strong></span>
+                <span>Mục tiêu: <strong>{plan.objective || "-"}</strong></span>
+                <span>Ngân sách: <strong>{formatCurrency(plan.budget_total)}</strong></span>
+                <span>Export gần nhất: <strong>{formatDate(plan.last_exported_at)}</strong></span>
                 <span className="linkCell">
                   {plan.latest_csv_url ? <a href={plan.latest_csv_url}>CSV</a> : null}
                   {plan.notion_url ? <a href={plan.notion_url}>Notion</a> : null}
@@ -51,8 +51,8 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
 
               <div className="bundlePreview">
                 <div className="bundleHeader">
-                  <strong>Bundle preview</strong>
-                  <span>{items.length ? `${items.length} synced rows` : "Waiting for next desktop sync"}</span>
+                  <strong>Preview bundle</strong>
+                  <span>{items.length ? `${items.length} dòng đã đồng bộ` : "Đang chờ lần sync desktop tiếp theo"}</span>
                 </div>
                 {items.length ? (
                   <div className="bundleGrid">
@@ -60,43 +60,43 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
                       <div className="bundleItem" key={item.id}>
                         <div className="bundleItemHead">
                           <span>#{item.row_index}</span>
-                          <strong>{item.ad_name || item.campaign_name || "Untitled ad"}</strong>
+                          <strong>{item.ad_name || item.campaign_name || "Ads chưa đặt tên"}</strong>
                         </div>
                         <dl>
                           <div>
-                            <dt>Ad set</dt>
+                            <dt>Nhóm QC</dt>
                             <dd>{item.adset_name || "-"}</dd>
                           </div>
                           <div>
-                            <dt>Goal</dt>
+                            <dt>Tối ưu</dt>
                             <dd>{item.optimization_goal || item.objective || "-"}</dd>
                           </div>
                           <div>
-                            <dt>Destination</dt>
+                            <dt>Chuyển đổi</dt>
                             <dd>{item.destination_type || "-"}</dd>
                           </div>
                           <div>
-                            <dt>Audience</dt>
+                            <dt>Đối tượng</dt>
                             <dd>{item.audience_name || "-"}</dd>
                           </div>
                           <div>
-                            <dt>Placement</dt>
+                            <dt>Vị trí</dt>
                             <dd>{item.placement_summary || "-"}</dd>
                           </div>
                           <div>
-                            <dt>Budget</dt>
+                            <dt>Ngân sách</dt>
                             <dd>{formatCurrency(item.budget_amount)}</dd>
                           </div>
                         </dl>
                         <div className="linkCell">
-                          {item.post_url ? <a href={item.post_url}>Post</a> : null}
-                          {item.notion_url ? <a href={item.notion_url}>Notion row</a> : null}
+                          {item.post_url ? <a href={item.post_url}>Bài viết</a> : null}
+                          {item.notion_url ? <a href={item.notion_url}>Dòng Notion</a> : null}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="empty">Chay export/sync lai tu desktop de dashboard hien tung adset, audience va placement.</p>
+                  <p className="empty">Chạy export/sync lại từ desktop để dashboard hiện từng nhóm quảng cáo, đối tượng và vị trí.</p>
                 )}
               </div>
             </article>
@@ -104,7 +104,7 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
         })}
         {!plans.length ? (
           <p className="empty">
-            Tool desktop sync len Supabase xong thi campaign se hien o day.
+            Tool desktop sync lên Supabase xong thì chiến dịch sẽ hiện ở đây.
           </p>
         ) : null}
       </div>
