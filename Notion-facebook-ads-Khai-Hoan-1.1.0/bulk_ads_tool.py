@@ -34,6 +34,7 @@ from ads_core.supabase_sync import (
     insert_sync_log,
     is_supabase_sync_configured,
     upsert_ads_plan,
+    upsert_ads_plan_items,
 )
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -1199,6 +1200,71 @@ def _parse_budget_value(value):
         return 0
 
 
+def _placement_summary(row, values):
+    parts = [
+        row.get("Publisher Platforms") or values.get("Nền tảng quảng cáo"),
+        row.get("Facebook Positions") or values.get("Vị trí Facebook"),
+        row.get("Messenger Positions") or values.get("Vị trí Messenger"),
+        row.get("Device Platforms") or values.get("Thiết bị"),
+    ]
+    return " | ".join(part for part in parts if part)
+
+
+def build_supabase_plan_items(external_id, pages, rows, notion_values):
+    items = []
+    for index, (page, row, values) in enumerate(zip(pages, rows, notion_values), start=1):
+        budget_value = row.get("Ad Set Lifetime Budget") or row.get("Ad Set Daily Budget")
+        items.append(
+            {
+                "external_id": f"{external_id}:item:{index}",
+                "row_index": index,
+                "ad_name": row.get("Ad Name") or values.get("Tên quảng cáo") or values.get("Tên chiến dịch / bài ads"),
+                "campaign_name": row.get("Campaign Name") or values.get("Tên chiến dịch"),
+                "adset_name": row.get("Ad Set Name") or values.get("Tên nhóm QC"),
+                "objective": row.get("Campaign Objective") or values.get("Mục tiêu chiến dịch"),
+                "optimization_goal": row.get("Optimization Goal") or values.get("Mục tiêu tối ưu"),
+                "destination_type": row.get("Destination Type") or values.get("Vị trí chuyển đổi"),
+                "audience_name": (
+                    values.get("Mẫu đối tượng")
+                    or values.get("Đối tượng tuỳ chỉnh")
+                    or row.get("Custom Audiences")
+                    or row.get("Saved Audience")
+                ),
+                "placement_summary": _placement_summary(row, values),
+                "budget_amount": _parse_budget_value(budget_value) or None,
+                "post_url": row.get("Permalink") or values.get("Link bài viết") or values.get("Facebook Post URL"),
+                "notion_page_id": page.get("id", ""),
+                "notion_url": page.get("url", ""),
+                "csv_payload": {
+                    key: value
+                    for key, value in row.items()
+                    if key
+                    in (
+                        "Ad Name",
+                        "Campaign Name",
+                        "Campaign Objective",
+                        "Ad Set Name",
+                        "Optimization Goal",
+                        "Destination Type",
+                        "Ad Set Lifetime Budget",
+                        "Ad Set Daily Budget",
+                        "Publisher Platforms",
+                        "Facebook Positions",
+                        "Messenger Positions",
+                        "Device Platforms",
+                        "Permalink",
+                    )
+                },
+                "notion_payload": {
+                    key: value
+                    for key, value in values.items()
+                    if value not in (None, "")
+                },
+            }
+        )
+    return items
+
+
 def build_supabase_export_payload(database_id, pages, rows, output, sample_csv):
     notion_values = [notion_page_to_values(page) for page in pages]
     campaigns = _compact_unique(
@@ -1261,18 +1327,22 @@ def build_supabase_export_payload(database_id, pages, rows, output, sample_csv):
             "notion_page_ids": source_payload["notion_page_ids"],
         },
     }
-    return plan, export_record
+    items = build_supabase_plan_items(external_id, pages, rows, notion_values)
+    return plan, export_record, items
 
 
 def sync_export_to_supabase(database_id, pages, rows, output, sample_csv):
     if not is_supabase_sync_configured():
         return False
 
-    plan, export_record = build_supabase_export_payload(database_id, pages, rows, output, sample_csv)
+    plan, export_record, items = build_supabase_export_payload(database_id, pages, rows, output, sample_csv)
     synced_plan = upsert_ads_plan(plan)
     if isinstance(synced_plan, list) and synced_plan:
         export_record["plan_id"] = synced_plan[0].get("id")
+        for item in items:
+            item["plan_id"] = synced_plan[0].get("id")
     insert_ads_export(export_record)
+    upsert_ads_plan_items(items)
     insert_sync_log(
         {
             "source": "desktop",

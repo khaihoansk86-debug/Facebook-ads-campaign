@@ -17,7 +17,7 @@ export async function fetchAdsPlans(): Promise<AdsPlan[]> {
   }
 
   const params = new URLSearchParams({
-    select: "*",
+    select: "*,ads_plan_items(*)",
     order: "updated_at.desc"
   });
   const response = await fetch(`${supabaseUrl}/rest/v1/ads_plans?${params}`, {

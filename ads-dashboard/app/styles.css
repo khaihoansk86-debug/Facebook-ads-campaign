@@ -259,6 +259,130 @@ td strong {
   text-align: center;
 }
 
+.planStack {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+.planCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfaf7 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(35, 39, 47, 0.06);
+  overflow: hidden;
+}
+
+.planCardTop {
+  align-items: flex-start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 18px 20px;
+}
+
+.planCardTop h4 {
+  font-size: 21px;
+  margin: 4px 0 6px;
+}
+
+.planCardTop span,
+.planFacts span,
+.bundleHeader span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.planMeta {
+  align-items: flex-end;
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  min-width: 140px;
+}
+
+.planMeta strong {
+  font-size: 22px;
+}
+
+.planFacts {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 14px 20px;
+}
+
+.bundlePreview {
+  background: #f4f0e8;
+  border-top: 1px solid var(--line);
+  padding: 18px 20px 20px;
+}
+
+.bundleHeader {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.bundleGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.bundleItem {
+  background: #fffdf8;
+  border: 1px solid #ded5c7;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.bundleItemHead {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.bundleItemHead span {
+  background: var(--ink);
+  border-radius: 999px;
+  color: #ffffff;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 8px;
+}
+
+.bundleItemHead strong {
+  line-height: 1.35;
+}
+
+.bundleItem dl {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.bundleItem dl div {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: 92px 1fr;
+}
+
+.bundleItem dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bundleItem dd {
+  margin: 0;
+}
+
 @media (max-width: 860px) {
   .shell {
     grid-template-columns: 1fr;
@@ -286,5 +410,19 @@ td strong {
   .panelHead input {
     min-width: 0;
     width: 100%;
+  }
+
+  .planCardTop,
+  .bundleHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .planMeta {
+    justify-items: start;
+  }
+
+  .planFacts {
+    grid-template-columns: 1fr;
   }
 }

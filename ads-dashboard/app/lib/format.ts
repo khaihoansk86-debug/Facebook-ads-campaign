@@ -12,3 +12,10 @@ export function formatDate(value: string | null) {
 export function formatNumber(value: number | null) {
   return new Intl.NumberFormat("vi-VN").format(value || 0);
 }
+
+export function formatCurrency(value: number | null) {
+  if (!value) return "-";
+  return new Intl.NumberFormat("vi-VN", {
+    maximumFractionDigits: 0
+  }).format(value);
+}

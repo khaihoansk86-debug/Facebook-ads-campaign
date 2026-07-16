@@ -31,6 +31,40 @@ for select
 to anon, authenticated
 using (true);
 
+create table if not exists public.ads_plan_items (
+  id uuid primary key default gen_random_uuid(),
+  plan_id uuid references public.ads_plans(id) on delete cascade,
+  external_id text unique,
+  row_index integer not null default 0,
+  ad_name text,
+  campaign_name text,
+  adset_name text,
+  objective text,
+  optimization_goal text,
+  destination_type text,
+  audience_name text,
+  placement_summary text,
+  budget_amount numeric,
+  post_url text,
+  notion_page_id text,
+  notion_url text,
+  csv_payload jsonb not null default '{}'::jsonb,
+  notion_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists ads_plan_items_plan_idx on public.ads_plan_items(plan_id, row_index);
+create index if not exists ads_plan_items_external_id_idx on public.ads_plan_items(external_id);
+
+alter table public.ads_plan_items enable row level security;
+
+drop policy if exists "Allow public read ads plan items" on public.ads_plan_items;
+create policy "Allow public read ads plan items"
+on public.ads_plan_items
+for select
+to anon, authenticated
+using (true);
+
 create table if not exists public.ads_exports (
   id uuid primary key default gen_random_uuid(),
   plan_id uuid references public.ads_plans(id) on delete cascade,
@@ -142,6 +176,21 @@ with check (public.is_valid_desktop_sync());
 drop policy if exists "Allow desktop sync update ads exports" on public.ads_exports;
 create policy "Allow desktop sync update ads exports"
 on public.ads_exports
+for update
+to anon, authenticated
+using (public.is_valid_desktop_sync())
+with check (public.is_valid_desktop_sync());
+
+drop policy if exists "Allow desktop sync insert ads plan items" on public.ads_plan_items;
+create policy "Allow desktop sync insert ads plan items"
+on public.ads_plan_items
+for insert
+to anon, authenticated
+with check (public.is_valid_desktop_sync());
+
+drop policy if exists "Allow desktop sync update ads plan items" on public.ads_plan_items;
+create policy "Allow desktop sync update ads plan items"
+on public.ads_plan_items
 for update
 to anon, authenticated
 using (public.is_valid_desktop_sync())

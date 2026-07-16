@@ -1,3 +1,25 @@
+export type AdsPlanItem = {
+  id: string;
+  plan_id: string | null;
+  external_id: string | null;
+  row_index: number;
+  ad_name: string | null;
+  campaign_name: string | null;
+  adset_name: string | null;
+  objective: string | null;
+  optimization_goal: string | null;
+  destination_type: string | null;
+  audience_name: string | null;
+  placement_summary: string | null;
+  budget_amount: number | null;
+  post_url: string | null;
+  notion_page_id: string | null;
+  notion_url: string | null;
+  csv_payload: Record<string, unknown>;
+  notion_payload: Record<string, unknown>;
+  created_at: string;
+};
+
 export type AdsPlan = {
   id: string;
   external_id: string | null;
@@ -16,4 +38,5 @@ export type AdsPlan = {
   last_exported_at: string | null;
   created_at: string;
   updated_at: string;
+  ads_plan_items?: AdsPlanItem[];
 };

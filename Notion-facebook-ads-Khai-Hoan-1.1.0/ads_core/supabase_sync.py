@@ -79,6 +79,18 @@ def insert_ads_export(export_record):
     )
 
 
+def upsert_ads_plan_items(items):
+    if not items:
+        return None
+    return supabase_request(
+        "POST",
+        "ads_plan_items",
+        payload=items,
+        prefer="resolution=merge-duplicates,return=representation",
+        query={"on_conflict": "external_id"},
+    )
+
+
 def insert_sync_log(log_record):
     return supabase_request(
         "POST",
