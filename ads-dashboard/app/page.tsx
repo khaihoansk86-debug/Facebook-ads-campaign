@@ -1,6 +1,7 @@
 import { AdsPlansTable } from "./components/AdsPlansTable";
 import { AppSidebar } from "./components/AppSidebar";
 import { DashboardMetrics } from "./components/DashboardMetrics";
+import { OpsBreakdown } from "./components/OpsBreakdown";
 import { fetchAdsPlans, isSupabaseConfigured } from "./lib/supabase-rest";
 
 export default async function Home() {
@@ -34,6 +35,7 @@ export default async function Home() {
 
         <DashboardMetrics plans={plans} />
         <AdsPlansTable plans={plans} />
+        <OpsBreakdown plans={plans} />
       </section>
     </main>
   );

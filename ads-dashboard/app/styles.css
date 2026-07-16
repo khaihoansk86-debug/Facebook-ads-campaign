@@ -169,6 +169,7 @@ td span {
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
+  scroll-margin-top: 18px;
 }
 
 .panelHead {
@@ -326,61 +327,188 @@ td strong {
   margin-bottom: 14px;
 }
 
-.bundleGrid {
+.bundleHeader div {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 4px;
 }
 
-.bundleItem {
+.hintText {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.adRows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adRow {
+  align-items: center;
   background: #fffdf8;
   border: 1px solid #ded5c7;
   border-radius: 14px;
-  padding: 14px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 54px minmax(210px, 0.9fr) minmax(360px, 2fr) auto;
+  padding: 12px;
 }
 
-.bundleItemHead {
-  align-items: flex-start;
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.bundleItemHead span {
+.adRowIndex {
+  align-items: center;
   background: var(--ink);
-  border-radius: 999px;
+  border-radius: 12px;
   color: #ffffff;
-  flex: 0 0 auto;
+  display: inline-flex;
   font-size: 12px;
   font-weight: 800;
-  padding: 4px 8px;
+  height: 34px;
+  justify-content: center;
+  width: 42px;
 }
 
-.bundleItemHead strong {
-  line-height: 1.35;
-}
-
-.bundleItem dl {
-  display: grid;
-  gap: 8px;
-  margin: 0 0 12px;
-}
-
-.bundleItem dl div {
+.adRowMain {
   display: grid;
   gap: 4px;
-  grid-template-columns: 92px 1fr;
+  min-width: 0;
 }
 
-.bundleItem dt {
+.adRowMain strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adRowMain span,
+.setupItem em,
+.opsPanelHead span {
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 13px;
+}
+
+.adRowTags,
+.setupTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.tagChip {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d8d0c2;
+  border-radius: 10px;
+  color: #2f3639;
+  display: inline-flex;
+  gap: 7px;
+  line-height: 1.2;
+  min-height: 32px;
+  padding: 7px 9px;
+}
+
+.tagChip b {
+  color: #7b6d5d;
+  font-size: 11px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.bundleItem dd {
-  margin: 0;
+.tagChip.compact {
+  font-size: 12px;
+  min-height: 28px;
+  padding: 5px 7px;
+}
+
+.adRowLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 70px;
+}
+
+.adRowLinks a {
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.opsGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.opsPanel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  scroll-margin-top: 18px;
+}
+
+.opsPanelHead {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.opsPanelHead h3 {
+  margin: 0 0 6px;
+}
+
+.countBadge {
+  background: #f4f0e8;
+  border: 1px solid #ded5c7;
+  border-radius: 999px;
+  color: var(--ink);
+  font-weight: 800;
+  min-width: 34px;
+  padding: 7px 10px;
+  text-align: center;
+}
+
+.setupList {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.setupItem {
+  background: #fffdf8;
+  border: 1px solid #ded5c7;
+  border-radius: 12px;
+  color: inherit;
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  text-align: left;
+  text-decoration: none;
+  width: 100%;
+}
+
+.setupItem:hover {
+  border-color: #c9a979;
+}
+
+.setupItemTop {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.setupItemTop strong {
+  line-height: 1.35;
+}
+
+.empty.small {
+  padding: 24px 16px;
 }
 
 @media (max-width: 860px) {
@@ -423,6 +551,24 @@ td strong {
   }
 
   .planFacts {
+    grid-template-columns: 1fr;
+  }
+
+  .adRow {
+    align-items: stretch;
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .adRowTags,
+  .adRowLinks {
+    grid-column: 1 / -1;
+  }
+
+  .adRowLinks {
+    flex-direction: row;
+  }
+
+  .opsGrid {
     grid-template-columns: 1fr;
   }
 }

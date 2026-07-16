@@ -1,5 +1,5 @@
 import { formatCurrency, formatDate, formatNumber } from "../lib/format";
-import type { AdsPlan } from "../types/ads";
+import type { AdsPlan, AdsPlanItem } from "../types/ads";
 
 const statusLabels: Record<string, string> = {
   draft: "Nháp",
@@ -9,9 +9,24 @@ const statusLabels: Record<string, string> = {
   error: "Có lỗi"
 };
 
+function tag(label: string, value?: string | number | null) {
+  if (!value) return null;
+
+  return (
+    <span className="tagChip">
+      <b>{label}</b>
+      {value}
+    </span>
+  );
+}
+
+function adTitle(item: AdsPlanItem) {
+  return item.ad_name || item.campaign_name || "Ads chưa đặt tên";
+}
+
 export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
   return (
-    <section className="panel">
+    <section className="panel" id="campaigns">
       <div className="panelHead">
         <div>
           <h3>Plan quảng cáo</h3>
@@ -51,52 +66,40 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
 
               <div className="bundlePreview">
                 <div className="bundleHeader">
-                  <strong>Preview bundle</strong>
-                  <span>{items.length ? `${items.length} dòng đã đồng bộ` : "Đang chờ lần sync desktop tiếp theo"}</span>
+                  <div>
+                    <strong>Dòng ads trong bundle</strong>
+                    <span>{items.length ? `${items.length} dòng đã đồng bộ` : "Đang chờ lần sync desktop tiếp theo"}</span>
+                  </div>
+                  <span className="hintText">Mỗi dòng là 1 ads, tag là thông tin setup nhanh.</span>
                 </div>
+
                 {items.length ? (
-                  <div className="bundleGrid">
+                  <div className="adRows">
                     {items.map((item) => (
-                      <div className="bundleItem" key={item.id}>
-                        <div className="bundleItemHead">
-                          <span>#{item.row_index}</span>
-                          <strong>{item.ad_name || item.campaign_name || "Ads chưa đặt tên"}</strong>
+                      <div className="adRow" key={item.id}>
+                        <div className="adRowIndex">#{item.row_index || 1}</div>
+                        <div className="adRowMain">
+                          <strong>{adTitle(item)}</strong>
+                          <span>{item.adset_name || "Chưa có nhóm quảng cáo"}</span>
                         </div>
-                        <dl>
-                          <div>
-                            <dt>Nhóm QC</dt>
-                            <dd>{item.adset_name || "-"}</dd>
-                          </div>
-                          <div>
-                            <dt>Tối ưu</dt>
-                            <dd>{item.optimization_goal || item.objective || "-"}</dd>
-                          </div>
-                          <div>
-                            <dt>Chuyển đổi</dt>
-                            <dd>{item.destination_type || "-"}</dd>
-                          </div>
-                          <div>
-                            <dt>Đối tượng</dt>
-                            <dd>{item.audience_name || "-"}</dd>
-                          </div>
-                          <div>
-                            <dt>Vị trí</dt>
-                            <dd>{item.placement_summary || "-"}</dd>
-                          </div>
-                          <div>
-                            <dt>Ngân sách</dt>
-                            <dd>{formatCurrency(item.budget_amount)}</dd>
-                          </div>
-                        </dl>
-                        <div className="linkCell">
+                        <div className="adRowTags">
+                          {tag("Tối ưu", item.optimization_goal || item.objective)}
+                          {tag("Đích", item.destination_type)}
+                          {tag("Đối tượng", item.audience_name)}
+                          {tag("Vị trí", item.placement_summary)}
+                          {tag("Ngân sách", formatCurrency(item.budget_amount))}
+                        </div>
+                        <div className="adRowLinks">
                           {item.post_url ? <a href={item.post_url}>Bài viết</a> : null}
-                          {item.notion_url ? <a href={item.notion_url}>Dòng Notion</a> : null}
+                          {item.notion_url ? <a href={item.notion_url}>Notion</a> : null}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="empty">Chạy export/sync lại từ desktop để dashboard hiện từng nhóm quảng cáo, đối tượng và vị trí.</p>
+                  <p className="empty">
+                    Chạy export/sync lại từ desktop để dashboard hiện từng ads, nhóm quảng cáo, đối tượng và vị trí.
+                  </p>
                 )}
               </div>
             </article>

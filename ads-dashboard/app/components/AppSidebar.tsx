@@ -1,3 +1,10 @@
+const links = [
+  { href: "#campaigns", label: "Chiến dịch" },
+  { href: "#audiences", label: "Đối tượng" },
+  { href: "#placements", label: "Vị trí quảng cáo" },
+  { href: "#exports", label: "File export" }
+];
+
 export function AppSidebar() {
   return (
     <aside className="sidebar">
@@ -6,12 +13,11 @@ export function AppSidebar() {
         <h1>Ads Ops</h1>
       </div>
       <nav aria-label="Điều hướng chính">
-        <a className="active" href="/">
-          Chiến dịch
-        </a>
-        <a href="/">File export</a>
-        <a href="/">Đồng bộ Notion</a>
-        <a href="/">Bundle mẫu</a>
+        {links.map((link, index) => (
+          <a className={index === 0 ? "active" : undefined} href={link.href} key={link.href}>
+            {link.label}
+          </a>
+        ))}
       </nav>
     </aside>
   );
