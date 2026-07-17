@@ -481,11 +481,18 @@ td strong {
 }
 
 .tagChip b {
-  color: #7b6d5d;
+  color: inherit;
   font-size: 11px;
   letter-spacing: 0.04em;
+  opacity: 0.75;
   text-transform: uppercase;
 }
+
+.tagChip.tag-opt { background: #e6fffa; border-color: #b2f5ea; color: #234e52; }
+.tagChip.tag-dest { background: #ebf8ff; border-color: #bee3f8; color: #2a4365; }
+.tagChip.tag-budget { background: #fff5f5; border-color: #fed7d7; color: #742a2a; }
+.tagChip.tag-aud { background: #faf5ff; border-color: #e9d8fd; color: #44337a; }
+.tagChip.tag-place { background: #fffff0; border-color: #fef08a; color: #744210; }
 
 .tagChip.compact {
   font-size: 12px;

@@ -12,12 +12,14 @@ const statusLabels: Record<string, string> = {
   error: "Có lỗi"
 };
 
-function tag(label: string, value?: string | number | null, href?: string) {
+function tag(label: string, value?: string | number | null, href?: string, colorClass?: string) {
   if (!value) return null;
+
+  const className = `tagChip ${colorClass || ''}`.trim();
 
   if (href) {
     return (
-      <Link href={href} className="tagChip" style={{ textDecoration: 'none' }}>
+      <Link href={href} className={className} style={{ textDecoration: 'none' }}>
         <b>{label}</b>
         {value}
       </Link>
@@ -25,7 +27,7 @@ function tag(label: string, value?: string | number | null, href?: string) {
   }
 
   return (
-    <span className="tagChip">
+    <span className={className}>
       <b>{label}</b>
       {value}
     </span>
@@ -91,11 +93,11 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
                           <span>{item.adset_name || "Chưa có nhóm quảng cáo"}</span>
                         </div>
                         <div className="adRowTags">
-                          {tag("Tối ưu", item.optimization_goal || item.objective)}
-                          {tag("Đích", item.destination_type)}
-                          {tag("Đối tượng", item.audience_name, `/?tab=audiences#${item.audience_name ? encodeURIComponent(item.audience_name) : ''}`)}
-                          {tag("Vị trí", item.placement_summary, `/?tab=placements#${item.placement_summary ? encodeURIComponent(item.placement_summary) : ''}`)}
-                          {tag("Ngân sách", formatCurrency(item.budget_amount))}
+                          {tag("Tối ưu", item.optimization_goal || item.objective, undefined, "tag-opt")}
+                          {tag("Đích", item.destination_type, undefined, "tag-dest")}
+                          {tag("Ngân sách", formatCurrency(item.budget_amount), undefined, "tag-budget")}
+                          {tag("Đối tượng", item.audience_name, `/?tab=audiences#${item.audience_name ? encodeURIComponent(item.audience_name) : ''}`, "tag-aud")}
+                          {tag("Vị trí", item.placement_summary, `/?tab=placements#${item.placement_summary ? encodeURIComponent(item.placement_summary) : ''}`, "tag-place")}
                         </div>
                         <div className="adRowLinks">
                           {item.post_url ? <a href={item.post_url} onClick={(e) => e.stopPropagation()}>Bài viết</a> : null}
