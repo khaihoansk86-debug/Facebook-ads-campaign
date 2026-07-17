@@ -1,11 +1,13 @@
+import Link from 'next/link';
+
 const links = [
-  { href: "#campaigns", label: "Chiến dịch" },
-  { href: "#audiences", label: "Đối tượng" },
-  { href: "#placements", label: "Vị trí quảng cáo" },
-  { href: "#exports", label: "File export" }
+  { id: "campaigns", label: "Chiến dịch" },
+  { id: "audiences", label: "Đối tượng" },
+  { id: "placements", label: "Vị trí quảng cáo" },
+  { id: "exports", label: "File export" }
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ activeTab = "campaigns" }: { activeTab?: string }) {
   return (
     <aside className="sidebar">
       <div>
@@ -13,10 +15,10 @@ export function AppSidebar() {
         <h1>Ads Ops</h1>
       </div>
       <nav aria-label="Điều hướng chính">
-        {links.map((link, index) => (
-          <a className={index === 0 ? "active" : undefined} href={link.href} key={link.href}>
+        {links.map((link) => (
+          <Link className={activeTab === link.id ? "active" : undefined} href={`/?tab=${link.id}`} key={link.id}>
             {link.label}
-          </a>
+          </Link>
         ))}
       </nav>
     </aside>

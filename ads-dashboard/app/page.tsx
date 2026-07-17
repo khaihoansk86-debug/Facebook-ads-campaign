@@ -4,13 +4,18 @@ import { DashboardMetrics } from "./components/DashboardMetrics";
 import { OpsBreakdown } from "./components/OpsBreakdown";
 import { fetchAdsPlans, isSupabaseConfigured } from "./lib/supabase-rest";
 
-export default async function Home() {
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function Home(props: { searchParams: SearchParams }) {
+  const searchParams = await props.searchParams;
+  const tab = typeof searchParams.tab === 'string' ? searchParams.tab : 'campaigns';
+
   const configured = isSupabaseConfigured();
   const plans = configured ? await fetchAdsPlans() : [];
 
   return (
     <main className="shell">
-      <AppSidebar />
+      <AppSidebar activeTab={tab} />
 
       <section className="workspace">
         <header className="topbar">
@@ -33,9 +38,16 @@ export default async function Home() {
           </section>
         ) : null}
 
-        <DashboardMetrics plans={plans} />
-        <AdsPlansTable plans={plans} />
-        <OpsBreakdown plans={plans} />
+        {tab === 'campaigns' ? (
+          <>
+            <DashboardMetrics plans={plans} />
+            <AdsPlansTable plans={plans} />
+          </>
+        ) : null}
+
+        {tab !== 'campaigns' ? (
+          <OpsBreakdown plans={plans} activeTab={tab} />
+        ) : null}
       </section>
     </main>
   );

@@ -69,7 +69,7 @@ function SetupPanel({
       {groups.length ? (
         <div className="setupList">
           {groups.map((group) => (
-            <button className="setupItem" type="button" key={group.name}>
+            <button className="setupItem" type="button" key={group.name} id={encodeURIComponent(group.name)}>
               <span className="setupItemTop">
                 <strong>{group.name}</strong>
                 <em>{group.count} ads</em>
@@ -140,7 +140,7 @@ function ExportsPanel({ plans }: { plans: AdsPlan[] }) {
   );
 }
 
-export function OpsBreakdown({ plans }: { plans: AdsPlan[] }) {
+export function OpsBreakdown({ plans, activeTab }: { plans: AdsPlan[], activeTab: string }) {
   const audiences = groupBySetup(
     plans,
     (item) => item.audience_name,
@@ -153,22 +153,26 @@ export function OpsBreakdown({ plans }: { plans: AdsPlan[] }) {
   );
 
   return (
-    <section className="opsGrid" aria-label="Khu setup chi tiết">
-      <SetupPanel
-        id="audiences"
-        title="Đối tượng"
-        description="Tách riêng audience để team marketing và ads kiểm tra trước khi xuất CSV."
-        empty="Chưa có đối tượng. Sync lại desktop sau khi bundle có audience."
-        groups={audiences}
-      />
-      <SetupPanel
-        id="placements"
-        title="Vị trí quảng cáo"
-        description="Tách placement ra khỏi dòng ads để dễ rà soát nơi chạy quảng cáo."
-        empty="Chưa có vị trí quảng cáo. Sync lại desktop sau khi bundle có placement."
-        groups={placements}
-      />
-      <ExportsPanel plans={plans} />
-    </section>
+    <div className="opsContainer" aria-label="Khu setup chi tiết">
+      {activeTab === 'audiences' && (
+        <SetupPanel
+          id="audiences"
+          title="Đối tượng"
+          description="Tách riêng audience để team marketing và ads kiểm tra trước khi xuất CSV."
+          empty="Chưa có đối tượng. Sync lại desktop sau khi bundle có audience."
+          groups={audiences}
+        />
+      )}
+      {activeTab === 'placements' && (
+        <SetupPanel
+          id="placements"
+          title="Vị trí quảng cáo"
+          description="Tách placement ra khỏi dòng ads để dễ rà soát nơi chạy quảng cáo."
+          empty="Chưa có vị trí quảng cáo. Sync lại desktop sau khi bundle có placement."
+          groups={placements}
+        />
+      )}
+      {activeTab === 'exports' && <ExportsPanel plans={plans} />}
+    </div>
   );
 }

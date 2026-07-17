@@ -440,6 +440,11 @@ td strong {
   margin-top: 18px;
 }
 
+.opsContainer {
+  margin-top: 18px;
+}
+
+
 .opsPanel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -494,6 +499,12 @@ td strong {
 
 .setupItem:hover {
   border-color: #c9a979;
+}
+
+.setupItem:target {
+  border-color: var(--accent);
+  background: #fff8f5;
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .setupItemTop {

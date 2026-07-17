@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { formatCurrency, formatDate, formatNumber } from "../lib/format";
 import type { AdsPlan, AdsPlanItem } from "../types/ads";
 
@@ -9,8 +10,17 @@ const statusLabels: Record<string, string> = {
   error: "Có lỗi"
 };
 
-function tag(label: string, value?: string | number | null) {
+function tag(label: string, value?: string | number | null, href?: string) {
   if (!value) return null;
+
+  if (href) {
+    return (
+      <Link href={href} className="tagChip" style={{ textDecoration: 'none' }}>
+        <b>{label}</b>
+        {value}
+      </Link>
+    );
+  }
 
   return (
     <span className="tagChip">
@@ -85,8 +95,8 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
                         <div className="adRowTags">
                           {tag("Tối ưu", item.optimization_goal || item.objective)}
                           {tag("Đích", item.destination_type)}
-                          {tag("Đối tượng", item.audience_name)}
-                          {tag("Vị trí", item.placement_summary)}
+                          {tag("Đối tượng", item.audience_name, `/?tab=audiences#${item.audience_name ? encodeURIComponent(item.audience_name) : ''}`)}
+                          {tag("Vị trí", item.placement_summary, `/?tab=placements#${item.placement_summary ? encodeURIComponent(item.placement_summary) : ''}`)}
                           {tag("Ngân sách", formatCurrency(item.budget_amount))}
                         </div>
                         <div className="adRowLinks">
