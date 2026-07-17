@@ -311,44 +311,76 @@ td strong {
   overflow: hidden;
 }
 
-.planCardTop {
-  align-items: flex-start;
+.planCardSummary {
+  align-items: center;
+  cursor: pointer;
   display: flex;
-  gap: 18px;
+  gap: 16px;
   justify-content: space-between;
-  padding: 18px 20px;
+  list-style: none;
+  padding: 16px 20px;
+  transition: background 0.15s;
 }
 
-.planCardTop h4 {
-  font-size: 21px;
-  margin: 4px 0 6px;
+.planCardSummary::-webkit-details-marker {
+  display: none;
 }
 
-.planCardTop span,
-.planFacts span,
-.bundleHeader span {
+.planCardSummary:hover {
+  background: #faf8f5;
+}
+
+.planCardMain {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.planCardMain h4 {
+  font-size: 18px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.planCardMain .planDate {
   color: var(--muted);
   font-size: 13px;
 }
 
-.planMeta {
-  align-items: flex-end;
-  display: grid;
-  gap: 6px;
-  justify-items: end;
-  min-width: 140px;
+.planCardQuickFacts {
+  align-items: center;
+  display: flex;
+  gap: 24px;
 }
 
-.planMeta strong {
-  font-size: 22px;
+.planCardQuickFacts span {
+  color: var(--muted);
+  font-size: 13px;
 }
 
-.planFacts {
-  border-top: 1px solid var(--line);
-  display: grid;
+.planCardQuickFacts strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.planCardLinks {
+  display: flex;
   gap: 10px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding: 14px 20px;
+}
+
+.planCardLinks a {
+  background: #f0f7ff;
+  border-radius: 6px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  text-decoration: none;
+}
+
+.planCardLinks a:hover {
+  background: #d6eaff;
 }
 
 .bundlePreview {
@@ -362,6 +394,11 @@ td strong {
   display: flex;
   justify-content: space-between;
   margin-bottom: 14px;
+}
+
+.bundleHeader span {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .bundleHeader div {
@@ -588,18 +625,22 @@ td strong {
     width: 100%;
   }
 
-  .planCardTop,
-  .bundleHeader {
+  .planCardSummary {
     align-items: stretch;
     flex-direction: column;
+    gap: 12px;
   }
 
-  .planMeta {
-    justify-items: start;
+  .planCardMain {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
-  .planFacts {
-    grid-template-columns: 1fr;
+  .planCardQuickFacts {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .adRow {

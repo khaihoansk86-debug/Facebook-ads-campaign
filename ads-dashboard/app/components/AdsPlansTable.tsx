@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { formatCurrency, formatDate, formatNumber } from "../lib/format";
 import type { AdsPlan, AdsPlanItem } from "../types/ads";
@@ -50,29 +52,25 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
           const items = [...(plan.ads_plan_items || [])].sort((a, b) => a.row_index - b.row_index);
 
           return (
-            <article className="planCard" key={plan.id}>
-              <div className="planCardTop">
-                <div>
-                  <p className="eyebrow">Plan chiến dịch</p>
-                  <h4>{plan.name}</h4>
-                  <span>Cập nhật {formatDate(plan.updated_at)}</span>
-                </div>
-                <div className="planMeta">
+            <details className="planCard" key={plan.id} open>
+              <summary className="planCardSummary">
+                <div className="planCardMain">
                   <span className={`status ${plan.status}`}>{statusLabels[plan.status] || plan.status}</span>
-                  <strong>{formatNumber(plan.ads_count)} ads</strong>
-                  <span>{formatNumber(plan.adsets_count)} nhóm quảng cáo</span>
+                  <h4>{plan.name}</h4>
+                  <span className="planDate">Cập nhật: {formatDate(plan.updated_at)}</span>
                 </div>
-              </div>
+                
+                <div className="planCardQuickFacts">
+                  <span>Mục tiêu: <strong>{plan.objective || "-"}</strong></span>
+                  <span>Ngân sách: <strong>{formatCurrency(plan.budget_total)}</strong></span>
+                  <span><strong>{formatNumber(plan.ads_count)}</strong> ads</span>
+                </div>
 
-              <div className="planFacts">
-                <span>Mục tiêu: <strong>{plan.objective || "-"}</strong></span>
-                <span>Ngân sách: <strong>{formatCurrency(plan.budget_total)}</strong></span>
-                <span>Export gần nhất: <strong>{formatDate(plan.last_exported_at)}</strong></span>
-                <span className="linkCell">
-                  {plan.latest_csv_url ? <a href={plan.latest_csv_url}>CSV</a> : null}
-                  {plan.notion_url ? <a href={plan.notion_url}>Notion</a> : null}
-                </span>
-              </div>
+                <div className="planCardLinks">
+                  {plan.latest_csv_url ? <a href={plan.latest_csv_url} onClick={(e) => e.stopPropagation()}>CSV</a> : null}
+                  {plan.notion_url ? <a href={plan.notion_url} onClick={(e) => e.stopPropagation()}>Notion</a> : null}
+                </div>
+              </summary>
 
               <div className="bundlePreview">
                 <div className="bundleHeader">
@@ -100,8 +98,8 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
                           {tag("Ngân sách", formatCurrency(item.budget_amount))}
                         </div>
                         <div className="adRowLinks">
-                          {item.post_url ? <a href={item.post_url}>Bài viết</a> : null}
-                          {item.notion_url ? <a href={item.notion_url}>Notion</a> : null}
+                          {item.post_url ? <a href={item.post_url} onClick={(e) => e.stopPropagation()}>Bài viết</a> : null}
+                          {item.notion_url ? <a href={item.notion_url} onClick={(e) => e.stopPropagation()}>Notion</a> : null}
                         </div>
                       </div>
                     ))}
@@ -112,7 +110,7 @@ export function AdsPlansTable({ plans }: { plans: AdsPlan[] }) {
                   </p>
                 )}
               </div>
-            </article>
+            </details>
           );
         })}
         {!plans.length ? (
