@@ -55,6 +55,30 @@ test('chặn ngân sách tùy chỉnh không hợp lệ ngay tại biểu mẫu'
   await expect(page.locator('.flow-card')).toHaveCount(0);
 });
 
+test('cấu hình ngân sách và lịch chạy ngay trong Planner', async ({ page }) => {
+  await page.locator('#linksInput').fill('https://facebook.com/post-a');
+  await openVideoFlow(page);
+
+  await expect(page.locator('#budgetAmount')).toHaveValue('800');
+  await expect(page.locator('#startTime')).not.toHaveValue('');
+  await expect(page.locator('#endTimeField')).toBeHidden();
+
+  await page.locator('#hasEndTime').check();
+  await expect(page.locator('#endTimeField')).toBeVisible();
+  await page.locator('#hasEndTime').uncheck();
+  await page.locator('#budgetType').selectOption('Ngân sách trọn đời');
+  await expect(page.locator('#endTimeField')).toBeVisible();
+  await expect(page.locator('#hasEndTime')).toBeDisabled();
+
+  await page.locator('#addFlowButton').click();
+  await expect(page.locator('#toast')).toContainText('trọn đời bắt buộc');
+  await expect(page.locator('#endTime')).toBeFocused();
+
+  await page.locator('#endTime').fill('2030-12-31T23:55');
+  await page.locator('#addFlowButton').click();
+  await expect(page.locator('.flow-card')).toContainText('800 PHP · Trọn đời');
+});
+
 test('tạo bundle đối tượng ở khu vực riêng', async ({ page }) => {
   let created;
   await page.route('**/api/presets/audiences', async route => {
@@ -114,6 +138,9 @@ test('thực thi đầy đủ thao tác tạo bản nháp và hiện liên kết
   expect(submittedPayload.links).toEqual(['https://facebook.com/post-a']);
   expect(submittedPayload.flows).toHaveLength(1);
   expect(submittedPayload.flows[0].audience_codes).toEqual(['AUD_BROAD_PHAN_THIET']);
+  expect(submittedPayload.flows[0].custom_budget_values).toEqual({ 'Ngân sách/ngày': '800' });
+  expect(submittedPayload.flows[0].start_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+  expect(submittedPayload.flows[0].end_time).toBeNull();
 });
 
 test('duyệt xuất chỉ hiển thị dữ liệu đã hoàn thành', async ({ page }, testInfo) => {

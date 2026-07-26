@@ -708,6 +708,7 @@ def create_notion_ad_drafts_from_bundles(
     dataset_preset_code=None,
     budget_preset_code=None,
     custom_budget_values=None,
+    schedule_values=None,
     placement_preset_code=None,
     creative_mode="existing_post",
     ad_name=None,
@@ -734,6 +735,7 @@ def create_notion_ad_drafts_from_bundles(
     if placement_preset_code and not placement_preset:
         raise RuntimeError(f"Không tìm thấy placement preset: {placement_preset_code}")
     custom_budget_values = custom_budget_values or {}
+    schedule_values = schedule_values or {}
     results = []
     selected_audience_codes = audience_preset_codes or [None]
     for adset_code in adset_bundle_codes:
@@ -755,6 +757,14 @@ def create_notion_ad_drafts_from_bundles(
                 overrides.update(budget_preset.get("notionValues", {}))
             if custom_budget_values:
                 overrides.update(custom_budget_values)
+                if custom_budget_values.get("Ngân sách/ngày") not in ("", None):
+                    overrides["Loại ngân sách"] = "Daily"
+                    overrides["Ngân sách trọn đời"] = 0
+                elif custom_budget_values.get("Ngân sách trọn đời") not in ("", None):
+                    overrides["Loại ngân sách"] = "Lifetime"
+                    overrides["Ngân sách/ngày"] = 0
+            if schedule_values:
+                overrides.update(schedule_values)
             if placement_preset:
                 overrides.update(placement_preset.get("notionValues", {}))
             note_lines = [

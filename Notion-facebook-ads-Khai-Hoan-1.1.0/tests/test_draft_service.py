@@ -83,6 +83,36 @@ class DraftServiceTests(unittest.TestCase):
         self.assertEqual(attempts["https://facebook.com/a"], 1)
         self.assertEqual(attempts["https://facebook.com/b"], 2)
 
+    def test_forwards_normalized_budget_and_schedule(self):
+        received = {}
+
+        def create_func(*_args, **kwargs):
+            received.update(kwargs)
+            return [{"id": "page-1"}]
+
+        flow = sample_flow()
+        flow.update(
+            {
+                "custom_budget_values": {"Ngân sách/ngày": "1200"},
+                "start_time": "2026-07-26T09:05",
+                "end_time": "2026-07-27T10:15",
+            }
+        )
+        create_drafts_safely(
+            {"links": ["https://facebook.com/a"], "flows": [flow]},
+            "database",
+            create_func,
+            self.ledger,
+        )
+        self.assertEqual(received["custom_budget_values"], {"Ngân sách/ngày": "1200"})
+        self.assertEqual(
+            received["schedule_values"],
+            {
+                "Start Time": "2026-07-26T09:05+07:00",
+                "Stop Time": "2026-07-27T10:15+07:00",
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

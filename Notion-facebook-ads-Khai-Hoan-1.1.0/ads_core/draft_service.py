@@ -55,7 +55,8 @@ def create_drafts_safely(
     ad_name = str(payload.get("ad_name") or "").strip()
     tasks: list[dict[str, Any]] = []
     for link in plan["links"]:
-        for flow in flows:
+        for flow_index, flow in enumerate(flows):
+            normalized_flow = plan["flows"][flow_index]
             audience_codes = flow.get("audience_codes") or [None]
             for audience_code in audience_codes:
                 task_name = ad_name if len(plan["links"]) == 1 else ""
@@ -64,6 +65,7 @@ def create_drafts_safely(
                         "key": _task_key(link, flow, audience_code, task_name),
                         "link": link,
                         "flow": flow,
+                        "normalized_flow": normalized_flow,
                         "audience_code": audience_code,
                         "ad_name": task_name,
                     }
@@ -88,6 +90,7 @@ def create_drafts_safely(
                 )
                 continue
             flow = task["flow"]
+            normalized_flow = task["normalized_flow"]
             try:
                 created_pages = create_func(
                     data_source_id,
@@ -97,7 +100,8 @@ def create_drafts_safely(
                     audience_preset_codes=[task["audience_code"]] if task["audience_code"] else [],
                     dataset_preset_code=flow.get("dataset_code"),
                     budget_preset_code=flow.get("budget_code"),
-                    custom_budget_values=flow.get("custom_budget_values", {}),
+                    custom_budget_values=normalized_flow.get("custom_budget_values", {}),
+                    schedule_values=normalized_flow.get("schedule_values", {}),
                     placement_preset_code=flow.get("placement_code"),
                     creative_mode=flow.get("creative_mode", "existing_post"),
                     ad_name=task["ad_name"] or None,

@@ -65,9 +65,17 @@
               <label>Nhóm người xem <small class="required-hint">Bắt buộc</small><select id="audienceSelect"></select></label>
               <label>Nguồn dữ liệu <small id="datasetHint"></small><select id="datasetSelect"></select></label>
               <label>Vị trí quảng cáo<select id="placementSelect"></select></label>
-              <label>Ngân sách mẫu<select id="budgetSelect"></select></label>
-              <label>Loại ngân sách<select id="budgetType"><option value="Ngân sách/ngày">Ngân sách/ngày</option><option value="Ngân sách trọn đời">Ngân sách trọn đời</option></select></label>
-              <label>Số tiền tùy chỉnh<input id="budgetAmount" inputmode="decimal" placeholder="Không bắt buộc"><small class="field-help">Nếu nhập, số tiền này sẽ thay ngân sách mẫu</small></label>
+              <fieldset class="budget-schedule-card">
+                <legend>Ngân sách và lịch chạy</legend>
+                <div class="budget-schedule-grid">
+                  <label>Mức thường dùng<select id="budgetSelect"></select></label>
+                  <label>Loại ngân sách<select id="budgetType"><option value="Ngân sách/ngày">Ngân sách/ngày</option><option value="Ngân sách trọn đời">Ngân sách trọn đời</option></select></label>
+                  <label>Số tiền <small class="required-hint">Bắt buộc</small><span class="input-suffix"><input id="budgetAmount" inputmode="decimal" placeholder="Ví dụ: 800" aria-describedby="budgetHelp"><b>PHP</b></span><small class="field-help" id="budgetHelp">Mức thường dùng sẽ tự điền; số tiền này sẽ thay ngân sách mẫu</small></label>
+                  <label>Thời gian bắt đầu <small class="required-hint">Bắt buộc</small><input id="startTime" type="datetime-local"></label>
+                  <label class="end-time-toggle"><input id="hasEndTime" type="checkbox"> Đặt thời gian kết thúc</label>
+                  <label id="endTimeField" class="hidden">Thời gian kết thúc<input id="endTime" type="datetime-local"><small class="field-help">Bắt buộc khi dùng ngân sách trọn đời</small></label>
+                </div>
+              </fieldset>
             </div>
             <button class="button primary full" id="addFlowButton">+ Thêm cách chạy vào kế hoạch</button>
           </div>

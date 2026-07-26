@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.parse import urlparse
@@ -10,6 +11,9 @@ from ads_core.planner_catalog import load_planner_bundles
 
 class PlannerValidationError(ValueError):
     pass
+
+
+PLANNER_TIMEZONE = timezone(timedelta(hours=7))
 
 
 @dataclass(frozen=True)
@@ -77,6 +81,33 @@ def _clean_links(raw_links: Any) -> list[str]:
     return links
 
 
+def _normalize_schedule(flow: dict[str, Any]) -> dict[str, str]:
+    def parse(raw_value: Any, label: str) -> datetime | None:
+        value = str(raw_value or "").strip()
+        if not value:
+            return None
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise PlannerValidationError(f"{label} không hợp lệ.") from exc
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=PLANNER_TIMEZONE)
+        return parsed.astimezone(PLANNER_TIMEZONE)
+
+    start = parse(flow.get("start_time"), "Thời gian bắt đầu")
+    end = parse(flow.get("end_time"), "Thời gian kết thúc")
+    if end and not start:
+        raise PlannerValidationError("Cần chọn thời gian bắt đầu trước thời gian kết thúc.")
+    if start and end and end <= start:
+        raise PlannerValidationError("Thời gian kết thúc phải sau thời gian bắt đầu.")
+    schedule: dict[str, str] = {}
+    if start:
+        schedule["Start Time"] = start.isoformat(timespec="minutes")
+    if end:
+        schedule["Stop Time"] = end.isoformat(timespec="minutes")
+    return schedule
+
+
 def _flow_details(flow: dict[str, Any], catalog_index: CatalogIndex) -> dict[str, Any]:
     campaign = _required(catalog_index.campaigns, flow.get("campaign_code"), "chiến dịch")
     adset = _required(catalog_index.adsets, flow.get("adset_code"), "nhóm quảng cáo")
@@ -117,11 +148,24 @@ def _flow_details(flow: dict[str, Any], catalog_index: CatalogIndex) -> dict[str
         if not amount.is_finite() or amount <= 0:
             raise PlannerValidationError("Số tiền tùy chỉnh phải là một số lớn hơn 0.")
         custom_budget[key] = value if isinstance(value, (int, float)) and not isinstance(value, bool) else normalized
+    schedule_values = _normalize_schedule(flow)
     values: dict[str, Any] = {}
     for item in (campaign, adset, audiences[0] if audiences else None, dataset, budget):
         if item:
             values.update(item.get("notionValues", {}))
     values.update(custom_budget)
+    if custom_budget:
+        budget_key = next(iter(custom_budget))
+        if budget_key == "Ngân sách/ngày":
+            values["Loại ngân sách"] = "Daily"
+            values["Ngân sách trọn đời"] = 0
+        else:
+            values["Loại ngân sách"] = "Lifetime"
+            values["Ngân sách/ngày"] = 0
+    effective_budget_type = values.get("Loại ngân sách")
+    if effective_budget_type == "Lifetime" and not schedule_values.get("Stop Time"):
+        raise PlannerValidationError("Ngân sách trọn đời bắt buộc phải có thời gian kết thúc.")
+    values.update(schedule_values)
     if placement:
         values.update(placement.get("notionValues", {}))
 
@@ -133,6 +177,8 @@ def _flow_details(flow: dict[str, Any], catalog_index: CatalogIndex) -> dict[str
         "budget": budget,
         "placement": placement,
         "custom_budget_values": custom_budget,
+        "schedule_values": schedule_values,
+        "budget_type": effective_budget_type,
         "creative_mode": flow.get("creative_mode") or "existing_post",
         "notion_values": values,
     }
@@ -178,6 +224,11 @@ def preview_plan(payload: dict[str, Any], catalog: dict[str, Any] | None = None)
                 "audiences": [item.get("name") for item in details["audiences"]],
                 "dataset": details["dataset"].get("name") if details["dataset"] else "Không chọn",
                 "budget": details["budget"].get("name") if details["budget"] else "Chưa chọn",
+                "budget_type": details["budget_type"],
+                "custom_budget_values": details["custom_budget_values"],
+                "schedule_values": details["schedule_values"],
+                "start_time": details["schedule_values"].get("Start Time"),
+                "end_time": details["schedule_values"].get("Stop Time"),
                 "placement": details["placement"].get("name") if details["placement"] else "Chưa chọn",
                 "creative_mode": details["creative_mode"],
                 "units": len(units),

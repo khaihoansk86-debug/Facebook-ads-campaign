@@ -35,6 +35,59 @@ class PlannerServiceTests(unittest.TestCase):
         payload["flows"][0]["custom_budget_values"] = {"Ngân sách/ngày": 1200}
         result = preview_plan(payload)
         self.assertEqual(result["flows"][0]["notion_values"]["Ngân sách/ngày"], 1200)
+        self.assertEqual(result["flows"][0]["notion_values"]["Ngân sách trọn đời"], 0)
+        self.assertEqual(result["flows"][0]["notion_values"]["Loại ngân sách"], "Daily")
+
+    def test_lifetime_budget_clears_daily_budget(self):
+        payload = self.base_payload()
+        payload["flows"][0].update(
+            {
+                "custom_budget_values": {"Ngân sách trọn đời": "2400"},
+                "start_time": "2026-07-26T09:00",
+                "end_time": "2026-07-29T09:00",
+            }
+        )
+        result = preview_plan(payload)
+        values = result["flows"][0]["notion_values"]
+        self.assertEqual(values["Ngân sách/ngày"], 0)
+        self.assertEqual(values["Ngân sách trọn đời"], "2400")
+        self.assertEqual(values["Loại ngân sách"], "Lifetime")
+
+    def test_normalizes_browser_schedule_to_gmt_plus_seven(self):
+        payload = self.base_payload()
+        payload["flows"][0].update(
+            {
+                "start_time": "2026-07-26T09:05",
+                "end_time": "2026-07-27T10:15",
+            }
+        )
+        flow = preview_plan(payload)["flows"][0]
+        self.assertEqual(flow["start_time"], "2026-07-26T09:05+07:00")
+        self.assertEqual(flow["end_time"], "2026-07-27T10:15+07:00")
+        self.assertEqual(flow["notion_values"]["Start Time"], flow["start_time"])
+        self.assertEqual(flow["notion_values"]["Stop Time"], flow["end_time"])
+
+    def test_rejects_end_not_after_start(self):
+        payload = self.base_payload()
+        payload["flows"][0].update(
+            {
+                "start_time": "2026-07-26T09:05",
+                "end_time": "2026-07-26T09:05",
+            }
+        )
+        with self.assertRaisesRegex(PlannerValidationError, "phải sau"):
+            preview_plan(payload)
+
+    def test_rejects_lifetime_budget_without_end(self):
+        payload = self.base_payload()
+        payload["flows"][0].update(
+            {
+                "custom_budget_values": {"Ngân sách trọn đời": "2400"},
+                "start_time": "2026-07-26T09:05",
+            }
+        )
+        with self.assertRaisesRegex(PlannerValidationError, "trọn đời"):
+            preview_plan(payload)
 
     def test_rejects_invalid_custom_budget(self):
         for invalid in (0, -100, "abc"):
