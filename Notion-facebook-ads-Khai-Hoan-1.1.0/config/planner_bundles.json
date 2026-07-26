@@ -965,6 +965,11 @@
       "interactionType": "Lượt xem video",
       "performanceGoal": "Tối đa hóa số lượt xem ThruPlay",
       "defaultCreativeType": "Video Page Post Ad",
+      "templateAdSetNamesByAudience": {
+        "AUD_BROAD_PHAN_THIET": "T1 Video/ThruPlay | Khách lạnh Phan Thiết",
+        "AUD_ENGAGED_PAGE_365D": "T1 Video/ThruPlay | Đã tương tác page",
+        "AUD_MESSAGE_365D": "T1 Video/ThruPlay | Đã nhắn tin page"
+      },
       "notionValues": {
         "Tên nhóm QC": "Tương tác | Trên quảng cáo | Lượt xem video",
         "Vị trí chuyển đổi": "Video",

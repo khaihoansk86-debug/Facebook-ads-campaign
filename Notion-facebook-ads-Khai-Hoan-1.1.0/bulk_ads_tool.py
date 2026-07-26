@@ -11,7 +11,12 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from ads_core.facebook_csv import read_sample_csv, read_sample_rows, write_facebook_csv
-from ads_core.mapping import DEFAULT_MAPPING, SAFE_TEMPLATE_OVERRIDE_FIELDS, VALUE_ALIASES
+from ads_core.mapping import (
+    DEFAULT_MAPPING,
+    PLANNER_TEMPLATE_OVERRIDE_FIELDS,
+    SAFE_TEMPLATE_OVERRIDE_FIELDS,
+    VALUE_ALIASES,
+)
 from ads_core.notion_api import load_env, notion_request, property_payload, property_value
 from ads_core.planner_catalog import (
     PLANNER_BUNDLES_PATH,
@@ -215,7 +220,7 @@ DEFAULTS = {
 }
 
 DRAFT_DEFAULT_VALUES = {
-    "Trạng thái": "Not started",
+    "Trạng thái": "In progress",
     "Mẫu đối tượng": "Đã tương tác Page 1 năm",
     "Vị trí chuyển đổi": "Đích đến của tin nhắn",
     "Đích đến tin nhắn": "Đích đến thủ công",
@@ -246,7 +251,7 @@ DRAFT_DEFAULT_VALUES = {
     "Đã xuất": False,
 }
 
-DEFAULT_READY_STATUS_NAMES = ["Ready", "To-do", "Not started"]
+DEFAULT_READY_STATUS_NAMES = ["Ready", "To-do"]
 DEFAULT_EXPORTED_STATUS_NAMES = ["Done", "Complete", "Exported"]
 
 NOTION_PROPERTIES = {
@@ -885,10 +890,15 @@ def query_ready_pages(data_source_or_database_id, include_exported=False, ready_
     status_prop = properties.get("Trạng thái")
     if status_prop:
         status_type = status_prop.get("type")
-        ready_names = ready_names or configured_names("READY_STATUS_NAMES", DEFAULT_READY_STATUS_NAMES)
+        requested_ready_names = ready_names or configured_names("READY_STATUS_NAMES", DEFAULT_READY_STATUS_NAMES)
+        ready_names = list(requested_ready_names)
         available = available_option_names(status_prop)
         if available:
             ready_names = [name for name in ready_names if name in available]
+            # Fail closed: an explicit workflow must never fall back to every
+            # unexported page just because its configured statuses do not exist.
+            if requested_ready_names and not ready_names:
+                return []
         status_filters = []
         for name in ready_names:
             if status_type == "status":
@@ -927,8 +937,31 @@ def query_ready_pages(data_source_or_database_id, include_exported=False, ready_
 
 def choose_template_row(values, sample_rows, fallback_row):
     wanted_adset = values.get("Tên nhóm QC") or values.get("Ad Set Name")
+    catalog = load_planner_bundles()
+    matched_bundle = next(
+        (
+            item
+            for item in catalog.get("adSetBundles", [])
+            if item.get("notionValues", {}).get("Tên nhóm QC") == wanted_adset
+        ),
+        None,
+    )
+    audience_name = values.get("Mẫu đối tượng")
+    matched_audience = next(
+        (
+            item
+            for item in catalog.get("audiencePresets", [])
+            if item.get("notionValues", {}).get("Mẫu đối tượng") == audience_name
+        ),
+        None,
+    )
+    planner_template_name = ""
+    if matched_bundle and matched_audience:
+        template_names = matched_bundle.get("templateAdSetNamesByAudience", {})
+        planner_template_name = template_names.get(matched_audience.get("code"), "")
+        wanted_adset = planner_template_name or wanted_adset
     preset = AUDIENCE_PRESETS.get(values.get("Mẫu đối tượng", ""))
-    if preset:
+    if preset and not planner_template_name:
         wanted_adset = values.get("Tên nhóm QC") or preset.get("Tên nhóm QC") or wanted_adset
     if wanted_adset:
         for row in sample_rows:
@@ -945,6 +978,12 @@ def build_facebook_rows(pages, headers, template_row, mapping, sample_rows=None)
 
     for page in pages:
         notion_values = notion_page_to_values(page)
+        catalog = load_planner_bundles()
+        planner_adset_names = {
+            item.get("notionValues", {}).get("Tên nhóm QC")
+            for item in catalog.get("adSetBundles", [])
+        }
+        is_planner_row = notion_values.get("Tên nhóm QC") in planner_adset_names
         preset = AUDIENCE_PRESETS.get(notion_values.get("Mẫu đối tượng", ""))
         base_row, matched_template = choose_template_row(notion_values, sample_rows or [], template_row)
         if preset and not matched_template:
@@ -957,7 +996,11 @@ def build_facebook_rows(pages, headers, template_row, mapping, sample_rows=None)
             if key in headers and (not matched_template or not row.get(key)):
                 row[key] = value
         for notion_name, facebook_column in mapping.items():
-            if matched_template and notion_name not in SAFE_TEMPLATE_OVERRIDE_FIELDS:
+            if (
+                matched_template
+                and notion_name not in SAFE_TEMPLATE_OVERRIDE_FIELDS
+                and not (is_planner_row and notion_name in PLANNER_TEMPLATE_OVERRIDE_FIELDS)
+            ):
                 continue
             value = values.get(notion_name)
             if value not in (None, ""):
@@ -965,7 +1008,7 @@ def build_facebook_rows(pages, headers, template_row, mapping, sample_rows=None)
             elif preset and notion_name in preset:
                 row[facebook_column] = ""
         apply_campaign_objective_fallback(row, values)
-        clean_stale_creative_fields(row, values)
+        clean_stale_creative_fields(row, values, template_permalink=base_row.get("Permalink", ""))
         if values.get("Start Time"):
             row["Ad Set Time Start"] = facebook_datetime(values["Start Time"])
             row["Campaign Start Time"] = facebook_datetime(values["Start Time"])
@@ -999,14 +1042,20 @@ def apply_campaign_objective_fallback(row, values):
         row["Campaign Objective"] = "Outcome Engagement"
 
 
-def clean_stale_creative_fields(row, values):
+def clean_stale_creative_fields(row, values, template_permalink=""):
     post_link = values.get("Link bài viết") or values.get("Facebook Post URL") or ""
     has_new_link = bool(str(post_link).strip())
     if not has_new_link:
         return
 
+    normalized_post_link = str(post_link).strip().rstrip("/")
+    normalized_template_link = str(template_permalink).strip().rstrip("/")
+    same_template_post = bool(normalized_template_link and normalized_template_link == normalized_post_link)
     explicit_story = values.get("ID Story") or values.get("Story ID")
     explicit_video = values.get("ID Video") or values.get("Video ID")
+    if same_template_post:
+        explicit_story = explicit_story or row.get("Story ID")
+        explicit_video = explicit_video or row.get("Video ID")
     link_info = parse_facebook_post_link(str(post_link), resolve=True)
 
     if not explicit_story and link_info.get("story_id"):
@@ -1092,67 +1141,6 @@ def update_exported(page_id, page_properties=None):
     notion_request("PATCH", f"/pages/{page_id}", payload)
 
 
-def update_page_status_by_id(page_id, status_name, fallback_status_names=None, note_content=None):
-    try:
-        page = notion_request("GET", f"/pages/{page_id}", notion_version=NOTION_DATA_SOURCE_VERSION)
-    except RuntimeError:
-        page = notion_request("GET", f"/pages/{page_id}")
-        
-    parent = page.get("parent", {})
-    db_id = parent.get("database_id") or parent.get("data_source_id")
-    
-    available_options = []
-    if db_id:
-        try:
-            schema = get_source_schema(db_id)
-            status_prop = schema.get("properties", {}).get("Trạng thái", {})
-            prop_type = status_prop.get("type")
-            if prop_type == "status":
-                options = status_prop.get("status", {}).get("options", [])
-                available_options = [opt.get("name") for opt in options if opt.get("name")]
-            elif prop_type == "select":
-                options = status_prop.get("select", {}).get("options", [])
-                available_options = [opt.get("name") for opt in options if opt.get("name")]
-        except Exception:
-            pass
-
-    target_status = None
-    if status_name in available_options:
-        target_status = status_name
-    else:
-        for name in (fallback_status_names or []):
-            if name in available_options:
-                target_status = name
-                break
-        if not target_status and available_options:
-            target_status = available_options[0]
-
-    if not target_status:
-        target_status = status_name
-
-    page_properties = page.get("properties", {})
-    status_prop = page_properties.get("Trạng thái", {})
-    status_type = status_prop.get("type")
-    
-    properties = {}
-    if status_type == "status":
-        properties["Trạng thái"] = {"status": {"name": target_status}}
-    elif status_type == "select":
-        properties["Trạng thái"] = {"select": {"name": target_status}}
-        
-    if note_content:
-        if "Ghi chú" in page_properties:
-            properties["Ghi chú"] = {"rich_text": [{"type": "text", "text": {"content": note_content}}]}
-        elif "Ghi chú thiết lập" in page_properties:
-            properties["Ghi chú thiết lập"] = {"rich_text": [{"type": "text", "text": {"content": note_content}}]}
-            
-    if not properties:
-        return
-    payload = {"properties": properties}
-    try:
-        notion_request("PATCH", f"/pages/{page_id}", payload, notion_version=NOTION_DATA_SOURCE_VERSION)
-    except RuntimeError:
-        notion_request("PATCH", f"/pages/{page_id}", payload)
 
 
 

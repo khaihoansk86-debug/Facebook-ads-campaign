@@ -73,6 +73,40 @@ SAFE_TEMPLATE_OVERRIDE_FIELDS = {
     "Mục tiêu chiến dịch",
 }
 
+PLANNER_TEMPLATE_OVERRIDE_FIELDS = {
+    "Ad Set Name",
+    "Tên nhóm QC",
+    "Lifetime Budget",
+    "Ngân sách mẫu",
+    "Ngân sách trọn đời",
+    "Ngân sách/ngày",
+    "Bid Amount",
+    "Giá thầu nhập tay",
+    "Giới hạn giá thầu",
+    "Chiến lược giá thầu",
+    "Vị trí chuyển đổi",
+    "Mục tiêu tối ưu",
+    "Tập dữ liệu",
+    "Billing Event",
+    "Tính phí theo",
+    "Custom Audiences",
+    "Đối tượng tuỳ chỉnh",
+    "Vị trí địa lý",
+    "Tuổi min",
+    "Tuổi max",
+    "Giới tính",
+    "Ngôn ngữ",
+    "Thiết bị",
+    "Nền tảng quảng cáo",
+    "Vị trí Facebook",
+    "Vị trí Messenger",
+    "Advantage Audience",
+    "Mở rộng tệp",
+    "Targeting Relaxation",
+    "Mở rộng nhắm chọn",
+    "Kiểm soát tần suất",
+}
+
 VALUE_ALIASES = {
     "Vị trí chuyển đổi": {
         "Mức độ nhận biết": "ON_AD",

@@ -1,4 +1,12 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
+TAG_COLORS = {
+    "objective": "#3b82f6", # Blue
+    "destination": "#10b981", # Emerald
+    "budget": "#f59e0b", # Amber
+    "audience": "#8b5cf6", # Violet
+    "placement": "#ec4899", # Pink
+    "default": "#64748b" # Slate
+}
 import json
 import os
 import queue
@@ -6,6 +14,7 @@ import hashlib
 import sys
 import threading
 import time
+import customtkinter as ctk
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -51,14 +60,25 @@ COLORS = {
     "field_border": "#cbd8ea",
 }
 
+FONTS = {
+    "h1": ("Roboto", 18, "bold"),
+    "h2": ("Roboto", 14, "bold"),
+    "body": ("Roboto", 13),
+    "body_bold": ("Roboto", 13, "bold"),
+    "small": ("Roboto", 12),
+    "small_bold": ("Roboto", 12, "bold"),
+}
 
-class BulkAdsApp(tk.Tk):
+
+class BulkAdsApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+        ctk.set_appearance_mode("Light")
+        ctk.set_default_color_theme('blue')
         self.title(APP_TITLE)
         self.geometry("1240x820")
         self.minsize(1080, 720)
-        self.configure(bg=COLORS["bg"])
+        self.configure(fg_color=COLORS["bg"])
         if APP_ICON.exists():
             self.iconbitmap(str(APP_ICON))
 
@@ -82,6 +102,8 @@ class BulkAdsApp(tk.Tk):
         self.planner_location_vars = {}
         self.planner_selected_adset_codes = set()
         self.planner_focus_campaign_code = None
+        self.planner_flows = []
+        self.planner_flow_sequence = 0
 
         sample_default = str(PACKAGE_SAMPLE_CSV if PACKAGE_SAMPLE_CSV.exists() else tool.DEFAULT_SAMPLE_CSV)
         self.vars = {
@@ -106,8 +128,8 @@ class BulkAdsApp(tk.Tk):
             "TELEGRAM_CONFIRM_EXPORT": tk.BooleanVar(value=True),
         }
         self.planner_creative_mode_var = tk.StringVar(value="Dùng bài có sẵn")
-        self.planner_summary_var = tk.StringVar(value="Chưa chọn planner bundle nào.")
-        self.planner_campaign_detail_var = tk.StringVar(value="Chọn một mẫu chiến dịch để xem cấu hình campaign.")
+        self.planner_summary_var = tk.StringVar(value="Chưa chọn cách chạy quảng cáo nào.")
+        self.planner_campaign_detail_var = tk.StringVar(value="Chọn một mẫu chiến dịch để xem thiết lập.")
         self.planner_audience_summary_var = tk.StringVar(value="Chưa chọn tệp đối tượng.")
         self.planner_dataset_summary_var = tk.StringVar(value="Chưa chọn tập dữ liệu.")
         self.planner_budget_summary_var = tk.StringVar(value="Chưa chọn ngân sách.")
@@ -115,9 +137,12 @@ class BulkAdsApp(tk.Tk):
         self.planner_matrix_summary_var = tk.StringVar(value="Chưa có dữ liệu để tạo planner.")
         self.planner_budget_type_var = tk.StringVar(value="Ngân sách/ngày")
         self.planner_budget_amount_var = tk.StringVar()
+        self.planner_audience_choice_var = tk.StringVar()
+        self.planner_dataset_choice_var = tk.StringVar()
+        self.planner_budget_choice_var = tk.StringVar()
+        self.planner_placement_choice_var = tk.StringVar()
 
         self._load_env_to_vars()
-        self._build_styles()
         self._build_ui()
         self.after(150, self._drain_logs)
 
@@ -126,17 +151,17 @@ class BulkAdsApp(tk.Tk):
         style.theme_use("clam")
         style.configure("TFrame", background=COLORS["bg"])
         style.configure("Card.TFrame", background=COLORS["surface"], relief="flat")
-        style.configure("TLabel", background=COLORS["bg"], foreground=COLORS["text"], font=("Segoe UI", 10))
-        style.configure("Muted.TLabel", background=COLORS["bg"], foreground=COLORS["muted"], font=("Segoe UI", 9))
-        style.configure("Card.TLabel", background=COLORS["surface"], foreground=COLORS["text"], font=("Segoe UI", 10))
-        style.configure("CardMuted.TLabel", background=COLORS["surface"], foreground=COLORS["muted"], font=("Segoe UI", 9))
-        style.configure("Title.TLabel", background=COLORS["bg"], foreground=COLORS["text"], font=("Segoe UI Semibold", 18))
-        style.configure("Section.TLabel", background=COLORS["surface"], foreground=COLORS["text"], font=("Segoe UI Semibold", 12))
-        style.configure("StepTitle.TLabel", background=COLORS["surface"], foreground=COLORS["text"], font=("Segoe UI Semibold", 11))
-        style.configure("StepMeta.TLabel", background=COLORS["surface"], foreground=COLORS["muted"], font=("Segoe UI", 9))
+        style.configure("TLabel", background=COLORS["bg"], foreground=COLORS["text"], font=FONTS["body"])
+        style.configure("Muted.TLabel", background=COLORS["bg"], foreground=COLORS["muted"], font=FONTS["body"])
+        style.configure("Card.TLabel", background=COLORS["surface"], foreground=COLORS["text"], font=FONTS["body"])
+        style.configure("CardMuted.TLabel", background=COLORS["surface"], foreground=COLORS["muted"], font=FONTS["body"])
+        style.configure("Title.TLabel", background=COLORS["bg"], foreground=COLORS["text"], font=FONTS["h1"])
+        style.configure("Section.TLabel", background=COLORS["surface"], foreground=COLORS["text"], font=FONTS["h2"])
+        style.configure("StepTitle.TLabel", background=COLORS["surface"], foreground=COLORS["text"], font=FONTS["body_bold"])
+        style.configure("StepMeta.TLabel", background=COLORS["surface"], foreground=COLORS["muted"], font=FONTS["body"])
         style.configure("TEntry", fieldbackground="#ffffff", bordercolor=COLORS["field_border"], lightcolor=COLORS["field_border"], padding=10)
         style.map("TEntry", bordercolor=[("focus", COLORS["primary"])], lightcolor=[("focus", COLORS["primary"])])
-        style.configure("TCheckbutton", background=COLORS["surface"], foreground=COLORS["text"], font=("Segoe UI", 10))
+        style.configure("TCheckbutton", background=COLORS["surface"], foreground=COLORS["text"], font=FONTS["body"])
         style.configure(
             "Planner.TCombobox",
             fieldbackground="#ffffff",
@@ -157,7 +182,7 @@ class BulkAdsApp(tk.Tk):
             "Primary.TButton",
             background=COLORS["primary"],
             foreground="#ffffff",
-            font=("Segoe UI Semibold", 10),
+            font=FONTS["body_bold"],
             padding=(16, 10),
             borderwidth=1,
             relief="flat",
@@ -170,7 +195,7 @@ class BulkAdsApp(tk.Tk):
             "Secondary.TButton",
             background="#ffffff",
             foreground=COLORS["text"],
-            font=("Segoe UI Semibold", 10),
+            font=FONTS["body_bold"],
             padding=(14, 10),
             borderwidth=1,
             relief="flat",
@@ -179,17 +204,17 @@ class BulkAdsApp(tk.Tk):
             darkcolor=COLORS["field_border"],
         )
         style.map("Secondary.TButton", background=[("active", "#f4f8ff")], bordercolor=[("active", COLORS["primary"])])
-        style.configure("Danger.TButton", background=COLORS["danger"], foreground="#ffffff", font=("Segoe UI Semibold", 10), padding=(12, 8), borderwidth=0)
+        style.configure("Danger.TButton", background=COLORS["danger"], foreground="#ffffff", font=FONTS["body_bold"], padding=(12, 8), borderwidth=0)
 
     def _build_ui(self):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        sidebar = tk.Frame(self, bg=COLORS["sidebar"], width=240)
+        sidebar = ctk.CTkFrame(self, width=240)
         sidebar.grid(row=0, column=0, sticky="ns")
         sidebar.grid_propagate(False)
 
-        main = tk.Frame(self, bg=COLORS["bg"])
+        main = ctk.CTkFrame(self)
         main.grid(row=0, column=1, sticky="nsew")
         main.grid_columnconfigure(0, weight=1)
         main.grid_rowconfigure(1, weight=1)
@@ -197,7 +222,7 @@ class BulkAdsApp(tk.Tk):
         self._build_sidebar(sidebar)
         self._build_header(main)
 
-        container = tk.Frame(main, bg=COLORS["bg"])
+        container = ctk.CTkFrame(main)
         container.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 24))
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -216,117 +241,87 @@ class BulkAdsApp(tk.Tk):
         self.show_page("dashboard")
 
     def _build_sidebar(self, sidebar):
-        brand = tk.Frame(sidebar, bg=COLORS["sidebar"])
+        brand = ctk.CTkFrame(sidebar)
         brand.pack(fill="x", padx=18, pady=(18, 20))
 
         self.logo_image = None
         if APP_LOGO.exists():
             try:
-                self.logo_image = tk.PhotoImage(file=str(APP_LOGO)).subsample(18, 18)
-                tk.Label(brand, image=self.logo_image, bg=COLORS["sidebar"]).pack(anchor="w")
+                from PIL import Image
+                self.logo_image = ctk.CTkImage(Image.open(APP_LOGO), size=(60, 60))
+                ctk.CTkLabel(brand, image=self.logo_image, text="").pack(anchor="w")
             except tk.TclError:
                 pass
 
-        tk.Label(
+        ctk.CTkLabel(
             brand,
             text="Khải Hoàn Ads",
-            bg=COLORS["sidebar"],
-            fg="#ffffff",
-            font=("Segoe UI Semibold", 15),
+                                    font=FONTS["h1"],
         ).pack(anchor="w", pady=(10, 0))
-        tk.Label(
+        ctk.CTkLabel(
             brand,
             text="Notion -> Facebook Ads",
-            bg=COLORS["sidebar"],
-            fg="#b9c7dc",
-            font=("Segoe UI", 9),
+                                    font=FONTS["body"],
         ).pack(anchor="w")
 
         nav_items = [
             ("dashboard", "Tổng quan"),
-            ("import", "Nhập link bài"),
+            ("import", "Lập kế hoạch"),
             ("audiences", "Tệp đối tượng"),
-            ("export", "Xuất CSV"),
+            ("export", "Xuất tệp quảng cáo"),
             ("config", "Cấu hình"),
             ("notion", "Notion mẫu"),
             ("logs", "Nhật ký"),
         ]
         for key, label in nav_items:
-            btn = tk.Button(
+            btn = ctk.CTkButton(
                 sidebar,
                 text=label,
                 anchor="w",
-                relief="flat",
-                bd=0,
-                padx=18,
-                pady=12,
-                bg=COLORS["sidebar"],
-                fg="#dce7f8",
-                activebackground="#17365f",
-                activeforeground="#ffffff",
-                font=("Segoe UI Semibold", 10),
+                                                                                                                                                font=FONTS["body_bold"],
                 command=lambda k=key: self.show_page(k),
             )
             btn.pack(fill="x", padx=12, pady=2)
             self.nav_buttons[key] = btn
 
-        footer = tk.Frame(sidebar, bg=COLORS["sidebar"])
+        footer = ctk.CTkFrame(sidebar)
         footer.pack(side="bottom", fill="x", padx=18, pady=18)
-        tk.Label(
+        ctk.CTkLabel(
             footer,
-            text="Template-match mode\nGiữ cấu hình CSV mẫu",
+            text="Dùng cấu hình\ntừ tệp mẫu",
             justify="left",
-            bg=COLORS["sidebar"],
-            fg="#91a6c5",
-            font=("Segoe UI", 8),
+                                    font=FONTS["small"],
         ).pack(anchor="w")
 
     def _build_header(self, main):
-        header = tk.Frame(main, bg=COLORS["bg"])
+        header = ctk.CTkFrame(main)
         header.grid(row=0, column=0, sticky="ew", padx=24, pady=(22, 18))
         header.grid_columnconfigure(0, weight=1)
 
-        ttk.Label(header, text=APP_TITLE, style="Title.TLabel").grid(row=0, column=0, sticky="w")
-        ttk.Label(
+        ctk.CTkLabel(header, text=APP_TITLE).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(
             header,
-            text="Tạo nháp từ link Facebook, duyệt trên Notion, xuất CSV theo đúng file mẫu Ads Manager.",
-            style="Muted.TLabel",
-        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
+            text="Tạo bản nháp từ bài Facebook, duyệt trên Notion và xuất tệp cho Trình quản lý quảng cáo.",
+                    ).grid(row=1, column=0, sticky="w", pady=(4, 0))
 
-        actions = tk.Frame(header, bg=COLORS["bg"])
+        actions = ctk.CTkFrame(header)
         actions.grid(row=0, column=1, rowspan=2, sticky="e")
-        ttk.Button(actions, text="Mở exports", style="Secondary.TButton", command=self.open_exports).pack(side="left", padx=(0, 8))
-        ttk.Button(actions, text="Xuất CSV", style="Primary.TButton", command=self.export_now).pack(side="left")
+        ctk.CTkButton(actions, text="Mở thư mục kết quả", command=self.open_exports).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(actions, text="Xuất tệp", command=self.export_now).pack(side="left")
 
     def _card(self, parent, title=None, subtitle=None):
-        outer = tk.Frame(parent, bg=COLORS["shadow"])
-        border = tk.Frame(outer, bg=COLORS["border"])
+        outer = ctk.CTkFrame(parent)
+        border = ctk.CTkFrame(outer)
         border.pack(fill="both", expand=True, padx=(0, 0), pady=(0, 3))
-        inner = tk.Frame(border, bg=COLORS["surface"], padx=22, pady=20)
+        inner = ctk.CTkFrame(border)
         inner.pack(fill="both", expand=True, padx=1, pady=1)
         if title:
-            ttk.Label(inner, text=title, style="Section.TLabel").pack(anchor="w")
+            ctk.CTkLabel(inner, text=title).pack(anchor="w")
         if subtitle:
-            ttk.Label(inner, text=subtitle, style="CardMuted.TLabel", wraplength=820).pack(anchor="w", pady=(4, 12))
-        content = tk.Frame(inner, bg=COLORS["surface"])
+            ctk.CTkLabel(inner, text=subtitle, wraplength=820).pack(anchor="w", pady=(4, 12))
+        content = ctk.CTkFrame(inner)
         content.pack(fill="both", expand=True)
         return outer, content
-
-    def _mini_step(self, parent, number, title, desc):
-        box = tk.Frame(parent, bg=COLORS["surface"])
-        badge = tk.Label(
-            box,
-            text=number,
-            bg=COLORS["surface_alt"],
-            fg=COLORS["primary"],
-            font=("Segoe UI Semibold", 16),
-            width=3,
-            pady=6,
-        )
-        badge.pack(anchor="w")
-        ttk.Label(box, text=title, style="StepTitle.TLabel").pack(anchor="w", pady=(12, 2))
-        ttk.Label(box, text=desc, style="StepMeta.TLabel", wraplength=220, justify="left").pack(anchor="w")
-        return box
 
     def _planner_creative_mode_options(self):
         return {
@@ -351,7 +346,8 @@ class BulkAdsApp(tk.Tk):
         return palettes.get(code, {"bg": "#1d2636", "line": "#61728c", "text": "#f4f7fb", "muted": "#9fb0c5"})
 
     def _campaign_card_title(self, bundle):
-        return bundle.get("objectiveName") or bundle.get("campaignType") or bundle.get("name") or bundle.get("code")
+        title = bundle.get("objectiveName") or bundle.get("campaignType") or bundle.get("name") or bundle.get("code")
+        return title.split(" (", 1)[0] if title else ""
 
     def _campaign_card_subtitle(self, bundle):
         return bundle.get("name") or bundle.get("code") or ""
@@ -363,53 +359,38 @@ class BulkAdsApp(tk.Tk):
 
     def _adset_flow_tag(self, adset_bundle):
         code = adset_bundle.get("code", "")
-        if code.startswith("AWR_VIDEO"):
-            return "Nhận biết / Video"
-        if code.startswith("AWR_"):
-            return "Nhận biết"
-        if code in ("LEAD_WEB_FORM", "LEAD_WEB_CALL", "LEAD_FORM_MESSENGER"):
-            return "Lead / Nhiều vị trí"
-        if code.startswith("LEAD_"):
-            return "Lead / Một vị trí"
-        if code in ("SALE_WEB_APP", "SALE_WEB_SHOP", "SALE_WEB_APP_STORE", "SALE_WEB_CALL"):
-            return "Sales / Nhiều vị trí"
-        if code.startswith("SALE_WEBSITE"):
-            return "Sales / Web"
-        if code.startswith("SALE_APP"):
-            return "Sales / Ứng dụng"
-        if code.startswith("SALE_MESSAGE"):
-            return "Sales / Tin nhắn"
-        if code == "SALE_CALL":
-            return "Sales / Cuộc gọi"
-        if code.startswith("ENG_VIDEO"):
-            return "Tương tác / ThruPlay"
-        if code.startswith("ENG_MESSAGE"):
-            return "Tương tác / Tin nhắn"
-        if code.startswith("ENG_POST"):
-            return "Tương tác / Bài viết"
-        if code == "TRF_WEB_LPV":
-            return "Traffic / Xem trang đích"
-        if code == "TRF_WEB_CLICK":
-            return "Traffic / Click link"
-        if code == "TRF_WEB_DAILY_REACH":
-            return "Traffic / Web Reach"
-        if code == "TRF_WEB_CONVERSATIONS":
-            return "Traffic / Web Chat"
-        if code == "TRF_WEB_IMPRESSIONS":
-            return "Traffic / Web Hiển thị"
-        if code == "TRF_APP_EVENTS":
-            return "Traffic / Ứng dụng"
-        if code == "TRF_MESSAGE_DAILY_REACH":
-            return "Traffic / Tin nhắn Reach"
-        if code == "TRF_MESSAGE_CONVO":
-            return "Traffic / Tin nhắn"
-        if code == "TRF_MESSAGE_IMPRESSIONS":
-            return "Traffic / Tin nhắn Hiển thị"
-        if code == "TRF_PAGE_VISIT":
-            return "Traffic / Truy cập trang"
-        if code == "TRF_CALL":
-            return "Traffic / Cuộc gọi"
-        return adset_bundle.get("name") or code
+        tags = []
+
+        # 1. Mục tiêu (Objective)
+        if "LEAD" in code:
+            tags.append({"text": "Lead", "color": TAG_COLORS["objective"]})
+        elif "SALE" in code:
+            tags.append({"text": "Sales", "color": TAG_COLORS["objective"]})
+        elif "ENG" in code:
+            tags.append({"text": "Tương tác", "color": TAG_COLORS["objective"]})
+        elif "AWR" in code:
+            tags.append({"text": "Nhận biết", "color": TAG_COLORS["objective"]})
+        elif "APP" in code:
+            tags.append({"text": "App", "color": TAG_COLORS["objective"]})
+        elif "TRF" in code or "TRAFFIC" in code:
+            tags.append({"text": "Traffic", "color": TAG_COLORS["objective"]})
+
+        # 2. Đích đến / Vị trí (Destination)
+        if "WEB" in code or "WEBSITE" in code:
+            tags.append({"text": "Website", "color": TAG_COLORS["destination"]})
+        elif "MESSENGER" in code or "MESSAGE" in code or "CONVERSATION" in code:
+            tags.append({"text": "Tin nhắn", "color": TAG_COLORS["destination"]})
+        elif "CALL" in code:
+            tags.append({"text": "Cuộc gọi", "color": TAG_COLORS["destination"]})
+        elif "APP" in code and "SALE" in code:
+            tags.append({"text": "Ứng dụng", "color": TAG_COLORS["destination"]})
+        elif "VIDEO" in code:
+            tags.append({"text": "Xem video", "color": TAG_COLORS["destination"]})
+
+        if not tags:
+            tags.append({"text": "Tùy chỉnh", "color": TAG_COLORS["default"]})
+
+        return tags
 
     def _render_campaign_card_state(self, code):
         refs = self.planner_campaign_cards.get(code)
@@ -423,12 +404,19 @@ class BulkAdsApp(tk.Tk):
         title = refs["title"]
         subtitle = refs["subtitle"]
         dot = refs["dot"]
-        frame.configure(bg=palette["line"] if selected else COLORS["canvas_line"])
-        refs["body"].configure(bg=palette["bg"] if selected else "#121b29")
-        bar.configure(bg=palette["line"])
-        title.configure(bg=palette["bg"] if selected else "#121b29", fg=palette["text"])
-        subtitle.configure(bg=palette["bg"] if selected else "#121b29", fg=palette["muted"])
-        dot.configure(text="◆" if focused else "●", bg=palette["line"] if selected else "#2c3b50")
+        try:
+            frame.configure(fg_color=palette["line"] if selected else COLORS["canvas_line"])
+            refs["body"].configure(fg_color=palette["bg"] if selected else "#121b29")
+            bar.configure(fg_color=palette["line"])
+            title.configure(fg_color=palette["bg"] if selected else "#121b29", text_color=palette["text"])
+            subtitle.configure(fg_color=palette["bg"] if selected else "#121b29", text_color=palette["muted"])
+            dot.configure(
+                text="✓" if selected else "○",
+                fg_color=palette["line"] if selected else COLORS["surface_alt"],
+                text_color="#ffffff" if selected else COLORS["muted"],
+            )
+        except ValueError:
+            pass
 
     def _render_all_campaign_card_states(self):
         for code in self.planner_campaign_cards:
@@ -437,22 +425,14 @@ class BulkAdsApp(tk.Tk):
     def _toggle_campaign_bundle(self, code):
         if code not in self.planner_campaign_vars:
             return
-        current = bool(self.planner_campaign_vars[code].get())
-        if current and self.planner_focus_campaign_code != code:
+        if self.planner_focus_campaign_code != code:
+            for campaign_var in self.planner_campaign_vars.values():
+                campaign_var.set(False)
+            self.planner_campaign_vars[code].set(True)
             self.planner_focus_campaign_code = code
-            self._render_all_campaign_card_states()
-            self._refresh_planner_adset_list()
-            return
-        self.planner_campaign_vars[code].set(not current)
-        if not current:
-            self.planner_focus_campaign_code = code
-        elif self.planner_focus_campaign_code == code:
-            selected_codes = [
-                item.get("code")
-                for item in self.planner_campaign_bundles
-                if self.planner_campaign_vars.get(item.get("code")) and self.planner_campaign_vars[item.get("code")].get()
-            ]
-            self.planner_focus_campaign_code = selected_codes[0] if selected_codes else None
+            self.planner_selected_adset_codes.clear()
+            for location_var in self.planner_location_vars.values():
+                location_var.set(False)
         self._render_all_campaign_card_states()
         self._refresh_planner_adset_list()
 
@@ -460,18 +440,11 @@ class BulkAdsApp(tk.Tk):
         if key not in self.planner_location_vars:
             return
         current = bool(self.planner_location_vars[key].get())
+        for location_var in self.planner_location_vars.values():
+            location_var.set(False)
         self.planner_location_vars[key].set(not current)
+        self.planner_selected_adset_codes.clear()
         self._refresh_planner_adset_list()
-
-    def _on_adset_listbox_select(self, listbox, bundles):
-        bundle_codes = {bundle.get("code") for bundle in bundles if bundle.get("code")}
-        self.planner_selected_adset_codes.difference_update(bundle_codes)
-        self.planner_selected_adset_codes.update(
-            bundles[index].get("code")
-            for index in listbox.curselection()
-            if index < len(bundles) and bundles[index].get("code")
-        )
-        self._refresh_matrix_summary()
 
     def _remove_selected_adset_code(self, code):
         self.planner_selected_adset_codes.discard(code)
@@ -480,11 +453,59 @@ class BulkAdsApp(tk.Tk):
 
     def _toggle_adset_chip(self, code):
         if code in self.planner_selected_adset_codes:
-            self.planner_selected_adset_codes.discard(code)
+            self.planner_selected_adset_codes.clear()
         elif code:
-            self.planner_selected_adset_codes.add(code)
+            self.planner_selected_adset_codes = {code}
         self._restore_rendered_adset_selections()
         self._refresh_matrix_summary()
+        if self.planner_selected_adset_codes:
+            self._show_planner_setup_stage()
+        else:
+            self._show_planner_selection_stage()
+
+    def _current_planner_flow_is_valid(self):
+        return (
+            len(self._selected_campaign_bundle_codes()) == 1
+            and len(self._selected_adset_bundle_codes()) == 1
+        )
+
+    def _current_planner_draft_summary(self):
+        campaign_codes = self._selected_campaign_bundle_codes()
+        adset_codes = self._selected_adset_bundle_codes()
+        if len(campaign_codes) != 1 or len(adset_codes) != 1:
+            return "Chưa chọn đủ chiến dịch và nhóm quảng cáo"
+        return self._planner_flow_summary(
+            {"campaign_code": campaign_codes[0], "adset_code": adset_codes[0]}
+        )
+
+    def _show_planner_setup_stage(self):
+        if not all(
+            hasattr(self, name)
+            for name in (
+                "planner_campaign_panel",
+                "planner_adset_panel",
+                "planner_draft_summary_frame",
+                "planner_setup_panel",
+            )
+        ):
+            return
+        self.planner_campaign_panel.grid_remove()
+        self.planner_adset_panel.grid_remove()
+        self.planner_structure_frame.grid_rowconfigure(2, weight=0)
+        self.planner_structure_frame.grid_rowconfigure(3, weight=1)
+        self.planner_draft_summary_var.set(self._current_planner_draft_summary())
+        self.planner_draft_summary_frame.grid()
+        self.planner_setup_panel.grid()
+
+    def _show_planner_selection_stage(self):
+        if not hasattr(self, "planner_campaign_panel"):
+            return
+        self.planner_draft_summary_frame.grid_remove()
+        self.planner_setup_panel.grid_remove()
+        self.planner_structure_frame.grid_rowconfigure(2, weight=1)
+        self.planner_structure_frame.grid_rowconfigure(3, weight=0)
+        self.planner_campaign_panel.grid()
+        self.planner_adset_panel.grid()
 
     def _restore_rendered_adset_selections(self):
         for group in self.planner_adset_listboxes.values():
@@ -497,10 +518,15 @@ class BulkAdsApp(tk.Tk):
                         listbox.selection_set(index)
             for bundle, chip, palette in group.get("chips", []):
                 selected = bundle.get("code") in self.planner_selected_adset_codes
-                chip.configure(
-                    bg=palette["line"] if selected else "#182437",
-                    fg="#ffffff" if selected else COLORS["canvas_text"],
-                )
+                try:
+                    chip.configure(
+                        fg_color=palette["line"] if selected else COLORS["surface_alt"],
+                        text_color="#ffffff" if selected else COLORS["text"],
+                        border_width=1,
+                        border_color=palette["line"] if selected else COLORS["field_border"],
+                    )
+                except ValueError:
+                    pass
 
     def _current_allowed_adset_codes(self):
         campaign_codes = set(self._selected_campaign_bundle_codes())
@@ -510,14 +536,24 @@ class BulkAdsApp(tk.Tk):
             if bundle.get("campaignBundleCode") in campaign_codes and bundle.get("code")
         }
 
-    def _selected_adset_code_set(self):
-        return self.planner_selected_adset_codes.intersection(self._current_allowed_adset_codes())
+    def _selected_adset_bundle_codes(self):
+        adset_lookup = {
+            item.get("code"): item
+            for item in self.planner_catalog.get("adSetBundles", [])
+            if item.get("code")
+        }
+        return [
+            code
+            for code in self.planner_selected_adset_codes
+            if code in self._current_allowed_adset_codes() and code in adset_lookup
+        ]
+
 
     def _campaign_detail_text(self, bundle):
         if not bundle:
             return "Chọn ít nhất một mẫu chiến dịch để xem cấu hình."
         settings = bundle.get("campaignSettings", {})
-        objective = bundle.get("objectiveName") or bundle.get("name") or bundle.get("code")
+        objective = self._campaign_card_title(bundle)
         budget_status = "Bật" if settings.get("budgetStrategyEnabled") else "Tắt"
         sharing_status = "Bật" if settings.get("budgetSharingEnabled") else "Tắt"
         ab_test_status = "Bật" if settings.get("abTestEnabled") else "Tắt"
@@ -532,37 +568,55 @@ class BulkAdsApp(tk.Tk):
 
     def _refresh_matrix_summary(self):
         links = self._current_import_links()
-        campaigns = len(self._selected_campaign_bundle_codes()) if hasattr(self, "planner_campaign_vars") else 0
-        adsets = len(self._selected_adset_bundle_codes()) if hasattr(self, "planner_adset_listboxes") else 0
-        audiences = len(self._selected_audience_preset_codes()) if hasattr(self, "planner_audience_listbox") else 0
-        dataset = self._selected_dataset_preset_code() if hasattr(self, "planner_dataset_listbox") else None
-        budget = self._selected_budget_preset_code() if hasattr(self, "planner_budget_listbox") else None
-        custom_budget = self._custom_budget_values() if hasattr(self, "planner_budget_amount_var") else {}
-        placement = self._selected_placement_preset_code() if hasattr(self, "planner_placement_listbox") else None
-        audience_multiplier = audiences if audiences else 1
-        total = len(links) * adsets * audience_multiplier
+        flows = list(self.planner_flows) if hasattr(self, "planner_flows") else []
+        campaigns = len({flow.get("campaign_code") for flow in flows if flow.get("campaign_code")})
+        adsets = len(flows)
+        audience_units = sum(max(1, len(flow.get("audience_codes", []))) for flow in flows)
+        total = len(links) * audience_units
         self._refresh_selected_adset_tags()
-        if not links and not campaigns:
-            self.planner_matrix_summary_var.set("Chưa có dữ liệu để tạo planner.")
+        if hasattr(self, "planner_link_overview_var"):
+            self.planner_link_overview_var.set(
+                f"{len(links)} bài · {adsets} cách chạy · {total} mục sẽ tạo"
+            )
+        missing = []
+        if not links:
+            missing.append("đường dẫn bài viết")
+        if not flows:
+            missing.append("cách chạy đã thêm")
+        ready = not missing
+        if hasattr(self, "planner_readiness_var"):
+            if ready:
+                self.planner_readiness_var.set("✓ Sẵn sàng")
+                self.planner_readiness_label.configure(text_color=COLORS["success"])
+            else:
+                self.planner_readiness_var.set(f"Thiếu {len(missing)} mục")
+                self.planner_readiness_label.configure(text_color=COLORS["muted"])
+        if hasattr(self, "planner_primary_button"):
+            self.planner_primary_button.configure(state="normal" if ready else "disabled")
+        if hasattr(self, "planner_add_flow_button"):
+            self.planner_add_flow_button.configure(
+                state="normal" if self._current_planner_flow_is_valid() else "disabled"
+            )
+        if not links and not flows:
+            self.planner_matrix_summary_var.set("Chưa có dữ liệu để tạo kế hoạch.")
             self._refresh_link_plan_preview()
             return
         lines = [
-            f"{len(links)} link x {campaigns} campaign x {adsets} nhóm x {audiences or 1} tệp = {total} dòng Notion",
-            f"Dataset: {dataset or 'chưa chọn'} · Ngân sách: {self._budget_summary_text(budget, custom_budget)} · Vị trí: {placement or 'chưa chọn'}",
+            f"{len(links)} bài · {campaigns} chiến dịch",
+            f"{adsets} cách chạy",
+            f"→ {total} mục sẽ tạo",
         ]
-        if audiences == 0:
-            lines.append("Nếu chưa chọn tệp đối tượng, tool sẽ tạo theo mẫu nhóm đang chọn.")
         self.planner_matrix_summary_var.set("\n".join(lines))
         self._refresh_link_plan_preview()
 
     def _page_base(self, container):
-        page = tk.Frame(container, bg=COLORS["bg"])
+        page = ctk.CTkFrame(container)
         page.grid_columnconfigure(0, weight=1)
         return page
 
     def _page_dashboard(self, container):
         page = self._page_base(container)
-        grid = tk.Frame(page, bg=COLORS["bg"])
+        grid = ctk.CTkFrame(page)
         grid.pack(fill="x")
         for i in range(3):
             grid.grid_columnconfigure(i, weight=1)
@@ -575,9 +629,9 @@ class BulkAdsApp(tk.Tk):
         for i, (num, title, desc) in enumerate(cards):
             outer, inner = self._card(grid)
             outer.grid(row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 10, 0))
-            tk.Label(inner, text=num, bg=COLORS["surface_alt"], fg=COLORS["primary"], font=("Segoe UI Semibold", 18), width=3).pack(anchor="w")
-            ttk.Label(inner, text=title, style="Section.TLabel").pack(anchor="w", pady=(12, 2))
-            ttk.Label(inner, text=desc, style="CardMuted.TLabel", wraplength=250).pack(anchor="w")
+            ctk.CTkLabel(inner, text=num, font=FONTS["h1"], width=3).pack(anchor="w")
+            ctk.CTkLabel(inner, text=title).pack(anchor="w", pady=(12, 2))
+            ctk.CTkLabel(inner, text=desc, wraplength=250).pack(anchor="w")
 
         outer, inner = self._card(page, "Quy trình chuẩn", "Không export bản nháp nếu chưa duyệt, trừ khi bật tùy chọn xuất In progress.")
         outer.pack(fill="x", pady=(18, 0))
@@ -587,331 +641,398 @@ class BulkAdsApp(tk.Tk):
             "- Sau khi xuất thành công, tool tick Đã xuất và chuyển trạng thái sang Done.\n"
             "- Cấu hình nhóm quảng cáo được lấy nguyên từ file CSV mẫu theo Tên nhóm QC."
         )
-        tk.Label(inner, text=text, justify="left", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 10)).pack(anchor="w")
+        ctk.CTkLabel(inner, text=text, justify="left", font=FONTS["body"]).pack(anchor="w")
         return page
+
 
     def _page_import(self, container):
         page = self._page_base(container)
-        page.grid_rowconfigure(0, weight=1)
         page.grid_columnconfigure(0, weight=1)
+        page.grid_rowconfigure(1, weight=1)
 
-        canvas = tk.Canvas(page, bg=COLORS["bg"], highlightthickness=0, bd=0)
-        canvas.grid(row=0, column=0, sticky="nsew")
-        page_scrollbar = ttk.Scrollbar(page, orient="vertical", command=canvas.yview)
-        page_scrollbar.grid(row=0, column=1, sticky="ns")
-        canvas.configure(yscrollcommand=page_scrollbar.set)
+        top = ctk.CTkFrame(page, corner_radius=14)
+        top.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        top.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            top,
+            text="Lập kế hoạch quảng cáo",
+            font=FONTS["h1"],
+            anchor="w",
+        ).grid(row=0, column=0, sticky="w", padx=18, pady=(7, 0))
+        ctk.CTkLabel(
+            top,
+            text="Bài viết và thiết lập luôn hiện bên phải để bạn dễ kiểm tra.",
+            font=FONTS["small"],
+            text_color=COLORS["muted"],
+            anchor="w",
+        ).grid(row=1, column=0, sticky="w", padx=18, pady=(0, 4))
 
-        content = tk.Frame(canvas, bg=COLORS["bg"])
-        content_window = canvas.create_window((0, 0), window=content, anchor="nw")
+        step_nav = ctk.CTkFrame(top, fg_color="transparent")
+        step_nav.grid(row=2, column=0, sticky="ew", padx=14, pady=(0, 6))
+        self.planner_step_buttons = {}
+        step_specs = [
+            ("creative", "01", "Nội dung"),
+            ("structure", "02", "Tạo cách chạy"),
+        ]
+        for column, (key, number, title) in enumerate(step_specs):
+            step_nav.grid_columnconfigure(column, weight=1)
+            button = ctk.CTkButton(
+                step_nav,
+                text=f"{number}  {title}",
+                height=32,
+                corner_radius=9,
+                fg_color="transparent",
+                text_color=COLORS["text"],
+                hover_color=COLORS["surface_alt"],
+                font=FONTS["body_bold"],
+                command=lambda item_key=key: self._planner_show_step(item_key),
+            )
+            button.grid(row=0, column=column, sticky="ew", padx=4)
+            self.planner_step_buttons[key] = button
 
-        def _sync_import_scroll(_event=None):
-            canvas.configure(scrollregion=canvas.bbox("all"))
+        ctk.CTkButton(
+            top,
+            text="Nạp lại mẫu",
+            command=self.reload_planner_catalog,
+            fg_color="transparent",
+            border_width=1,
+            text_color=COLORS["text"],
+            font=FONTS["small_bold"],
+            width=130,
+        ).grid(row=0, column=1, rowspan=2, sticky="e", padx=14)
 
-        def _resize_import_width(event):
-            canvas.itemconfigure(content_window, width=event.width)
+        body = ctk.CTkFrame(page, fg_color="transparent")
+        body.grid(row=1, column=0, sticky="nsew")
+        body.grid_rowconfigure(0, weight=1)
+        body.grid_columnconfigure(0, weight=1)
+        body.grid_columnconfigure(1, weight=0, minsize=320)
 
-        def _bind_import_wheel(_event=None):
-            canvas.bind_all("<MouseWheel>", _on_import_wheel)
+        workspace = ctk.CTkFrame(body, corner_radius=14)
+        workspace.grid(row=0, column=0, sticky="nsew")
+        workspace.grid_rowconfigure(0, weight=1)
+        workspace.grid_columnconfigure(0, weight=1)
+        self.planner_step_frames = {}
 
-        def _unbind_import_wheel(_event=None):
-            canvas.unbind_all("<MouseWheel>")
-
-        def _on_import_wheel(event):
-            delta = int(-1 * (event.delta / 120)) if event.delta else 0
-            canvas.yview_scroll(delta, "units")
-
-        content.bind("<Configure>", _sync_import_scroll)
-        canvas.bind("<Configure>", _resize_import_width)
-        canvas.bind("<Enter>", _bind_import_wheel)
-        canvas.bind("<Leave>", _unbind_import_wheel)
-
-        content.grid_columnconfigure(0, weight=1)
-        content.grid_rowconfigure(1, weight=1)
-
-        link_outer, link_inner = self._card(content, "Link nguồn")
-        link_outer.grid(row=0, column=0, sticky="ew", pady=(0, 14))
-        link_inner.grid_columnconfigure(0, weight=1)
-        link_inner.grid_columnconfigure(1, weight=0)
-        link_inner.grid_rowconfigure(1, weight=1)
-
-        ttk.Label(link_inner, text="Danh sách link Facebook", style="Card.TLabel").grid(row=0, column=0, sticky="w", columnspan=2)
-        self.import_links_text = tk.Text(
-            link_inner,
-            height=5,
-            wrap="word",
-            relief="flat",
-            bd=0,
-            bg=COLORS["field"],
-            fg=COLORS["text"],
-            insertbackground=COLORS["primary"],
-            font=("Segoe UI", 10),
-            highlightthickness=2,
-            highlightbackground=COLORS["field_border"],
-            highlightcolor=COLORS["primary"],
-            padx=14,
-            pady=14,
+        creative = ctk.CTkScrollableFrame(workspace, fg_color="transparent")
+        creative.grid_columnconfigure(0, weight=1)
+        self.planner_step_frames["creative"] = creative
+        ctk.CTkLabel(creative, text="Nội dung quảng cáo", font=FONTS["h1"], anchor="w").grid(
+            row=0, column=0, sticky="w", padx=18, pady=(16, 2)
         )
-        self.import_links_text.grid(row=1, column=0, sticky="nsew", pady=(10, 14), padx=(0, 16))
+        ctk.CTkLabel(
+            creative,
+            text="Mỗi dòng là một đường dẫn bài viết Facebook. Dòng trống sẽ được bỏ qua.",
+            font=FONTS["small"],
+            text_color=COLORS["muted"],
+            anchor="w",
+        ).grid(row=1, column=0, sticky="w", padx=18, pady=(0, 12))
+        creative_form = ctk.CTkFrame(creative)
+        creative_form.grid(row=2, column=0, sticky="ew", padx=18)
+        creative_form.grid_columnconfigure(0, weight=1)
+        creative_form.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(creative_form, text="Danh sách bài viết Facebook", font=FONTS["body_bold"]).grid(
+            row=0, column=0, sticky="w", padx=12, pady=(12, 5)
+        )
+        ctk.CTkLabel(creative_form, text="Tên nháp (khi chỉ có 1 link)", font=FONTS["body_bold"]).grid(
+            row=0, column=1, sticky="w", padx=12, pady=(12, 5)
+        )
+        self.import_links_text = ctk.CTkTextbox(
+            creative_form,
+            height=180,
+            wrap="word",
+            font=FONTS["body"],
+            fg_color=COLORS["field"],
+            text_color=COLORS["text"],
+            border_width=1,
+            border_color=COLORS["field_border"],
+        )
+        self.import_links_text.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
         self.import_links_text.bind("<KeyRelease>", lambda _event: self._refresh_matrix_summary())
-
-        side_actions = tk.Frame(link_inner, bg=COLORS["surface"])
-        side_actions.grid(row=1, column=1, sticky="ns")
-        ttk.Button(side_actions, text="Đưa link vào Notion", style="Secondary.TButton", command=self.import_links_to_notion).pack(fill="x")
-        ttk.Button(side_actions, text="Mở Notion", style="Secondary.TButton", command=self.open_notion).pack(fill="x", pady=(8, 0))
-
-        ttk.Label(link_inner, text="Tên nháp khi chỉ nhập 1 link", style="Card.TLabel").grid(row=2, column=0, sticky="w")
+        creative_side = ctk.CTkFrame(creative_form, fg_color="transparent")
+        creative_side.grid(row=1, column=1, sticky="new", padx=12, pady=(0, 12))
+        creative_side.grid_columnconfigure(0, weight=1)
         self.import_name_var = tk.StringVar()
-        ttk.Entry(link_inner, textvariable=self.import_name_var).grid(row=3, column=0, sticky="ew", pady=(8, 0), padx=(0, 16))
-
-        self.link_plan_preview_host = tk.Frame(link_inner, bg=COLORS["surface"])
-        self.link_plan_preview_host.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(14, 0))
-        self.link_plan_preview_host.grid_columnconfigure(0, weight=1)
-
-        planner_shadow = tk.Frame(content, bg=COLORS["shadow"])
-        planner_shadow.grid(row=1, column=0, sticky="nsew")
-        planner_outer = tk.Frame(planner_shadow, bg=COLORS["canvas_line"])
-        planner_outer.pack(fill="both", expand=True, pady=(0, 4))
-        planner_inner = tk.Frame(planner_outer, bg=COLORS["canvas"], padx=12, pady=12)
-        planner_inner.pack(fill="both", expand=True, padx=1, pady=1)
-        planner_inner.grid_columnconfigure(0, weight=7)
-        planner_inner.grid_columnconfigure(1, weight=5)
-        planner_inner.grid_rowconfigure(4, weight=0, minsize=120)
-        planner_inner.grid_rowconfigure(5, weight=1, minsize=130)
-
-        header = tk.Frame(planner_inner, bg=COLORS["canvas"])
-        header.grid(row=0, column=0, columnspan=2, sticky="ew")
-        header.grid_columnconfigure(0, weight=1)
-        header.grid_columnconfigure(2, weight=0)
-
-        tk.Label(
-            header,
-            text="Planner bundle",
-            bg=COLORS["canvas"],
-            fg=COLORS["canvas_text"],
-            font=("Segoe UI Semibold", 15),
-        ).grid(row=0, column=0, sticky="w")
-        tk.Label(
-            header,
-            text="Campaign, bundle nhóm và tệp đối tượng",
-            bg=COLORS["canvas"],
-            fg="#8ea5c2",
-            font=("Segoe UI", 9),
-        ).grid(row=0, column=1, sticky="e", padx=(0, 14))
-        tk.Label(
-            header,
-            text="Kiểu nội dung",
-            bg=COLORS["canvas"],
-            fg="#dbe6f7",
-            font=("Segoe UI Semibold", 9),
-        ).grid(row=0, column=2, sticky="e", padx=(0, 8))
-        self.planner_creative_mode_combo = ttk.Combobox(
-            header,
-            textvariable=self.planner_creative_mode_var,
+        self.import_name_entry = ctk.CTkEntry(
+            creative_side,
+            textvariable=self.import_name_var,
+            font=FONTS["body"],
+            fg_color=COLORS["field"],
+            text_color=COLORS["text"],
+            border_color=COLORS["field_border"],
+        )
+        self.import_name_entry.grid(row=0, column=0, sticky="ew")
+        ctk.CTkLabel(creative_side, text="Kiểu nội dung", font=FONTS["body_bold"], anchor="w").grid(
+            row=1, column=0, sticky="w", pady=(16, 5)
+        )
+        self.planner_creative_mode_combo = ctk.CTkComboBox(
+            creative_side,
+            variable=self.planner_creative_mode_var,
             state="readonly",
             values=list(self._planner_creative_mode_options().keys()),
-            style="Planner.TCombobox",
-            width=22,
         )
-        self.planner_creative_mode_combo.grid(row=0, column=3, sticky="e")
+        self.planner_creative_mode_combo.grid(row=2, column=0, sticky="ew")
+        ctk.CTkButton(
+            creative_side,
+            text="Tạo bản nháp không kèm thiết lập",
+            command=self.import_links_to_notion,
+            fg_color="transparent",
+            border_width=1,
+            text_color=COLORS["text"],
+        ).grid(row=3, column=0, sticky="ew", pady=(16, 0))
+        ctk.CTkLabel(
+            creative,
+            text="Sau khi nhập, thiết lập của từng bài luôn hiện trong cột “Bài viết & thiết lập”.",
+            font=FONTS["small"],
+            text_color=COLORS["muted"],
+            anchor="w",
+        ).grid(row=3, column=0, sticky="w", padx=18, pady=12)
 
-        tk.Label(
-            planner_inner,
-            text="Mẫu chiến dịch",
-            bg=COLORS["canvas"],
-            fg="#dbe6f7",
-            font=("Segoe UI Semibold", 10),
-        ).grid(row=1, column=0, sticky="w", pady=(10, 4))
+        structure = ctk.CTkFrame(workspace, fg_color="transparent")
+        self.planner_structure_frame = structure
+        structure.grid_rowconfigure(2, weight=1)
+        structure.grid_columnconfigure(1, weight=1)
+        self.planner_step_frames["structure"] = structure
+        ctk.CTkLabel(
+            structure,
+            text="Tạo một cách chạy quảng cáo",
+            font=FONTS["h1"],
+            anchor="w",
+        ).grid(row=0, column=0, columnspan=2, sticky="w", padx=18, pady=(16, 2))
+        ctk.CTkLabel(
+            structure,
+            text="Chọn lần lượt chiến dịch, nhóm quảng cáo và thiết lập; sau đó bấm Thêm cách chạy.",
+            font=FONTS["small"],
+            text_color=COLORS["muted"],
+            anchor="w",
+        ).grid(row=1, column=0, columnspan=2, sticky="w", padx=18, pady=(0, 12))
 
-        campaign_wrap = tk.Frame(planner_inner, bg=COLORS["canvas"])
-        campaign_wrap.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 8))
-        for col in range(5):
-            campaign_wrap.grid_columnconfigure(col, weight=1)
-        self.planner_campaign_cards_host = campaign_wrap
-
-        self.planner_bundle_heading_label = tk.Label(
-            planner_inner,
-            text="Bundle nhóm quảng cáo",
-            bg=COLORS["canvas"],
-            fg="#dbe6f7",
-            font=("Segoe UI Semibold", 10),
+        campaign_panel = ctk.CTkFrame(structure, width=225, corner_radius=10)
+        self.planner_campaign_panel = campaign_panel
+        campaign_panel.grid(row=2, column=0, sticky="ns", padx=(18, 8), pady=(0, 12))
+        campaign_panel.grid_propagate(False)
+        campaign_panel.grid_rowconfigure(2, weight=1)
+        campaign_panel.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            campaign_panel,
+            text="1. CHỌN CHIẾN DỊCH",
+            font=FONTS["small_bold"],
+            text_color=COLORS["muted"],
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=10, pady=(12, 8))
+        self.planner_campaign_cards_host = ctk.CTkScrollableFrame(
+            campaign_panel,
+            fg_color="transparent",
+            width=205,
         )
-        self.planner_bundle_heading_label.grid(row=3, column=0, sticky="w", pady=(0, 4))
-        self.planner_selected_tags_host = tk.Frame(planner_inner, bg=COLORS["canvas"])
-        self.planner_selected_tags_host.grid(row=3, column=1, sticky="ew", pady=(0, 4))
+        self.planner_campaign_cards_host.grid(row=2, column=0, sticky="nsew", padx=4, pady=(0, 6))
+        self.planner_campaign_cards_host.grid_columnconfigure(0, weight=1)
+        adset_panel = ctk.CTkFrame(structure, corner_radius=10)
+        self.planner_adset_panel = adset_panel
+        adset_panel.grid(row=2, column=1, sticky="nsew", padx=(0, 12), pady=(0, 12))
+        adset_panel.grid_rowconfigure(2, weight=1)
+        adset_panel.grid_columnconfigure(0, weight=1)
+        self.planner_bundle_heading_label = ctk.CTkLabel(
+            adset_panel, text="2. CHỌN NHÓM QUẢNG CÁO", font=FONTS["small_bold"], anchor="w"
+        )
+        self.planner_bundle_heading_label.grid(row=0, column=0, sticky="w", padx=12, pady=(12, 6))
+        self.planner_selected_tags_host = ctk.CTkFrame(adset_panel, fg_color="transparent")
+        self.planner_selected_tags_host.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 6))
         self.planner_selected_tags_host.grid_columnconfigure(0, weight=1)
-
-        list_wrap = tk.Frame(planner_inner, bg=COLORS["canvas_line"])
-        list_wrap.grid(row=4, column=0, columnspan=2, sticky="ew")
-        self.planner_adset_groups_host = tk.Frame(list_wrap, bg=COLORS["canvas_soft"], padx=6, pady=6)
-        self.planner_adset_groups_host.pack(fill="both", expand=True, padx=1, pady=1)
+        self.planner_adset_groups_host = ctk.CTkScrollableFrame(adset_panel, fg_color="transparent")
+        self.planner_adset_groups_host.grid(row=2, column=0, sticky="nsew", padx=(6, 2), pady=(0, 8))
         self.planner_adset_groups_host.grid_columnconfigure(0, weight=1)
 
-        audience_wrap = tk.Frame(planner_inner, bg=COLORS["canvas_line"])
-        audience_wrap.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(8, 0))
-        audience_inner = tk.Frame(audience_wrap, bg=COLORS["canvas_soft"])
-        audience_inner.pack(fill="both", expand=True, padx=1, pady=1)
-        audience_inner.grid_columnconfigure(0, weight=1)
-        audience_inner.grid_columnconfigure(2, weight=1)
-        audience_inner.grid_columnconfigure(4, weight=1)
-        audience_inner.grid_columnconfigure(6, weight=1)
-
-        self.planner_audience_heading_label = tk.Label(
-            audience_inner,
-            text="Tệp đối tượng",
-            bg=COLORS["canvas_soft"],
-            fg="#dbe6f7",
-            font=("Segoe UI Semibold", 10),
-            padx=10,
-            pady=5,
+        self.planner_draft_summary_frame = ctk.CTkFrame(structure, corner_radius=10)
+        self.planner_draft_summary_frame.grid(
+            row=2, column=0, columnspan=2, sticky="ew", padx=18, pady=(0, 8)
         )
-        self.planner_audience_heading_label.grid(row=0, column=0, sticky="w")
+        self.planner_draft_summary_frame.grid_columnconfigure(0, weight=1)
+        self.planner_draft_summary_var = tk.StringVar()
+        ctk.CTkLabel(
+            self.planner_draft_summary_frame,
+            textvariable=self.planner_draft_summary_var,
+            font=FONTS["body_bold"],
+            anchor="w",
+            justify="left",
+            wraplength=345,
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=10)
+        ctk.CTkButton(
+            self.planner_draft_summary_frame,
+            text="Đổi lựa chọn",
+            command=self._show_planner_selection_stage,
+            width=110,
+            height=30,
+            fg_color="transparent",
+            border_width=1,
+            text_color=COLORS["text"],
+        ).grid(row=0, column=1, padx=10, pady=6)
 
-        self.planner_audience_listbox = tk.Listbox(
-            audience_inner,
-            selectmode="multiple",
-            height=2,
-            exportselection=False,
-            relief="flat",
-            bd=0,
-            bg=COLORS["canvas_soft"],
-            fg=COLORS["canvas_text"],
-            selectbackground=COLORS["primary"],
-            selectforeground="#ffffff",
-            font=("Segoe UI", 10),
-            activestyle="none",
-            highlightthickness=0,
-        )
-        self.planner_audience_listbox.grid(row=1, column=0, sticky="ew", padx=8, pady=(0, 8))
-        self.planner_audience_listbox.bind("<<ListboxSelect>>", lambda _event: self._refresh_matrix_summary())
-        audience_scrollbar = ttk.Scrollbar(audience_inner, orient="vertical", command=self.planner_audience_listbox.yview)
-        audience_scrollbar.grid(row=1, column=1, sticky="ns", pady=(0, 8), padx=(0, 8))
-        self.planner_audience_listbox.configure(yscrollcommand=audience_scrollbar.set)
+        setup = ctk.CTkFrame(structure, corner_radius=10)
+        self.planner_setup_panel = setup
+        setup.grid(row=3, column=0, columnspan=2, sticky="ew", padx=18, pady=(0, 12))
+        for column in range(2):
+            setup.grid_columnconfigure(column, weight=1)
+        ctk.CTkLabel(
+            setup,
+            text="3. HOÀN THIỆN VÀ THÊM CÁCH CHẠY",
+            font=FONTS["small_bold"],
+            text_color=COLORS["muted"],
+            anchor="w",
+        ).grid(row=0, column=0, columnspan=2, sticky="w", padx=10, pady=(10, 4))
 
-        tk.Label(
-            audience_inner,
-            text="Tập dữ liệu",
-            bg=COLORS["canvas_soft"],
-            fg="#dbe6f7",
-            font=("Segoe UI Semibold", 10),
-            padx=10,
-            pady=5,
-        ).grid(row=0, column=2, sticky="w")
-        self.planner_dataset_listbox = tk.Listbox(
-            audience_inner,
-            selectmode="browse",
-            height=2,
-            exportselection=False,
-            relief="flat",
-            bd=0,
-            bg=COLORS["canvas_soft"],
-            fg=COLORS["canvas_text"],
-            selectbackground=COLORS["primary"],
-            selectforeground="#ffffff",
-            font=("Segoe UI", 10),
-            activestyle="none",
-            highlightthickness=0,
-        )
-        self.planner_dataset_listbox.grid(row=1, column=2, sticky="ew", padx=8, pady=(0, 8))
-        self.planner_dataset_listbox.bind("<<ListboxSelect>>", lambda _event: self._refresh_matrix_summary())
+        def planner_choice(parent, title, row, column, variable):
+            card = ctk.CTkFrame(parent)
+            card.grid(row=row, column=column, sticky="nsew", padx=4, pady=2)
+            card.grid_columnconfigure(0, weight=1)
+            heading = ctk.CTkLabel(card, text=title, font=FONTS["body_bold"], anchor="w")
+            heading.grid(
+                row=0, column=0, sticky="w", padx=8, pady=(6, 3)
+            )
+            choice = ctk.CTkComboBox(
+                card,
+                variable=variable,
+                values=["Chưa có lựa chọn"],
+                state="readonly",
+                font=FONTS["body"],
+                command=lambda _value: self._refresh_matrix_summary(),
+            )
+            choice.grid(row=1, column=0, sticky="ew", padx=8, pady=(0, 7))
+            return card, heading, choice
 
-        tk.Label(
-            audience_inner,
-            text="Ngân sách",
-            bg=COLORS["canvas_soft"],
-            fg="#dbe6f7",
-            font=("Segoe UI Semibold", 10),
-            padx=10,
-            pady=5,
-        ).grid(row=0, column=4, sticky="w")
-        self.planner_budget_listbox = tk.Listbox(
-            audience_inner,
-            selectmode="browse",
-            height=2,
-            exportselection=False,
-            relief="flat",
-            bd=0,
-            bg=COLORS["canvas_soft"],
-            fg=COLORS["canvas_text"],
-            selectbackground=COLORS["primary"],
-            selectforeground="#ffffff",
-            font=("Segoe UI", 10),
-            activestyle="none",
-            highlightthickness=0,
+        audience_card, self.planner_audience_heading_label, self.planner_audience_combo = planner_choice(
+            setup, "Nhóm người xem", 1, 0, self.planner_audience_choice_var
         )
-        self.planner_budget_listbox.grid(row=1, column=4, sticky="ew", padx=8, pady=(0, 8))
-        self.planner_budget_listbox.bind("<<ListboxSelect>>", lambda _event: self._refresh_matrix_summary())
-        budget_custom = tk.Frame(audience_inner, bg=COLORS["canvas_soft"])
-        budget_custom.grid(row=2, column=4, sticky="ew", padx=8, pady=(0, 8))
+        _, _, self.planner_dataset_combo = planner_choice(
+            setup, "Nguồn dữ liệu", 1, 1, self.planner_dataset_choice_var
+        )
+        budget_card, _, self.planner_budget_combo = planner_choice(
+            setup, "Ngân sách", 2, 0, self.planner_budget_choice_var
+        )
+        budget_custom = ctk.CTkFrame(budget_card, fg_color="transparent")
+        budget_custom.grid(row=2, column=0, sticky="ew", padx=8, pady=(0, 6))
         budget_custom.grid_columnconfigure(1, weight=1)
-        self.planner_budget_type_combo = ttk.Combobox(
+        self.planner_budget_type_combo = ctk.CTkComboBox(
             budget_custom,
-            textvariable=self.planner_budget_type_var,
+            variable=self.planner_budget_type_var,
             state="readonly",
             values=["Ngân sách/ngày", "Ngân sách trọn đời"],
-            width=16,
-            style="Planner.TCombobox",
+            width=86,
         )
-        self.planner_budget_type_combo.grid(row=0, column=0, sticky="w", padx=(0, 6))
+        self.planner_budget_type_combo.grid(row=0, column=0, padx=(0, 4))
         self.planner_budget_type_combo.bind("<<ComboboxSelected>>", lambda _event: self._refresh_matrix_summary())
-        self.planner_budget_amount_entry = ttk.Entry(
-            budget_custom,
-            textvariable=self.planner_budget_amount_var,
-            width=14,
+        self.planner_budget_amount_entry = ctk.CTkEntry(
+            budget_custom, textvariable=self.planner_budget_amount_var, placeholder_text="Số tiền", width=60
         )
         self.planner_budget_amount_entry.grid(row=0, column=1, sticky="ew")
         self.planner_budget_amount_entry.bind("<KeyRelease>", lambda _event: self._refresh_matrix_summary())
-
-        tk.Label(
-            audience_inner,
-            text="Vị trí quảng cáo",
-            bg=COLORS["canvas_soft"],
-            fg="#dbe6f7",
-            font=("Segoe UI Semibold", 10),
-            padx=10,
-            pady=5,
-        ).grid(row=0, column=6, sticky="w")
-        self.planner_placement_listbox = tk.Listbox(
-            audience_inner,
-            selectmode="browse",
-            height=2,
-            exportselection=False,
-            relief="flat",
-            bd=0,
-            bg=COLORS["canvas_soft"],
-            fg=COLORS["canvas_text"],
-            selectbackground=COLORS["primary"],
-            selectforeground="#ffffff",
-            font=("Segoe UI", 10),
-            activestyle="none",
-            highlightthickness=0,
+        _, _, self.planner_placement_combo = planner_choice(
+            setup, "Vị trí hiển thị", 2, 1, self.planner_placement_choice_var
         )
-        self.planner_placement_listbox.grid(row=1, column=6, sticky="ew", padx=8, pady=(0, 8))
-        self.planner_placement_listbox.bind("<<ListboxSelect>>", lambda _event: self._refresh_matrix_summary())
+        self.planner_add_flow_button = ctk.CTkButton(
+            setup,
+            text="+ Thêm cách chạy vào kế hoạch",
+            command=self.add_current_planner_flow,
+            font=FONTS["body_bold"],
+            height=36,
+        )
+        self.planner_add_flow_button.grid(row=3, column=0, columnspan=2, sticky="ew", padx=4, pady=(6, 8))
+        self.planner_add_flow_button.configure(state="disabled")
+        self.planner_draft_summary_frame.grid_remove()
+        self.planner_setup_panel.grid_remove()
 
-        matrix_outer = tk.Frame(planner_inner, bg=COLORS["canvas_line"])
-        matrix_outer.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(8, 0))
-        matrix_inner = tk.Frame(matrix_outer, bg="#101a2a")
-        matrix_inner.pack(fill="both", expand=True, padx=1, pady=1)
-        tk.Label(
-            matrix_inner,
-            textvariable=self.planner_matrix_summary_var,
-            bg="#101a2a",
-            fg=COLORS["canvas_text"],
-            justify="left",
-            wraplength=1280,
-            font=("Segoe UI Semibold", 10),
-            padx=10,
-            pady=7,
-        ).pack(anchor="w")
+        summary = ctk.CTkFrame(body, width=320, corner_radius=14)
+        summary.grid(row=0, column=1, sticky="ns", padx=(10, 0))
+        summary.grid_propagate(False)
+        summary_header = ctk.CTkFrame(summary, fg_color="transparent")
+        summary_header.pack(fill="x", padx=12, pady=(12, 6))
+        summary_header.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(summary_header, text="Bài viết & thiết lập", font=FONTS["h1"], anchor="w").grid(
+            row=0, column=0, sticky="w"
+        )
+        self.planner_link_overview_var = tk.StringVar(value="0 bài · 0 cách chạy · 0 mục")
+        ctk.CTkLabel(
+            summary_header,
+            textvariable=self.planner_link_overview_var,
+            font=FONTS["small_bold"],
+            text_color=COLORS["muted"],
+            anchor="w",
+        ).grid(row=1, column=0, sticky="w", pady=(2, 0))
+        self.planner_readiness_var = tk.StringVar(value="Chưa đủ thông tin")
+        self.planner_readiness_label = ctk.CTkLabel(
+            summary_header,
+            textvariable=self.planner_readiness_var,
+            anchor="e",
+            font=FONTS["small_bold"],
+            text_color=COLORS["muted"],
+        )
+        self.planner_readiness_label.grid(row=0, column=1, rowspan=2, sticky="e", padx=(4, 0))
+        flow_box = ctk.CTkFrame(
+            summary,
+            fg_color=COLORS["surface_alt"],
+            height=126,
+            corner_radius=8,
+        )
+        flow_box.pack(fill="x", padx=6, pady=(0, 6))
+        flow_box.pack_propagate(False)
+        ctk.CTkLabel(
+            flow_box,
+            text="Cách chạy đã thêm",
+            font=FONTS["small_bold"],
+            anchor="w",
+        ).pack(fill="x", padx=8, pady=(6, 3))
+        self.planner_flows_host = ctk.CTkFrame(flow_box, fg_color="transparent")
+        self.planner_flows_host.pack(fill="both", expand=True, padx=4, pady=(0, 4))
+        self.planner_flows_host.grid_columnconfigure(0, weight=1)
+        self.link_plan_preview_host = ctk.CTkScrollableFrame(
+            summary,
+            fg_color="transparent",
+        )
+        self.link_plan_preview_host.pack(fill="both", expand=True, padx=6, pady=(0, 6))
+        self.link_plan_preview_host.grid_columnconfigure(0, weight=1)
 
-        planner_actions = tk.Frame(planner_inner, bg=COLORS["canvas"])
-        planner_actions.grid(row=7, column=0, columnspan=2, sticky="ew", pady=(8, 0))
-        ttk.Button(planner_actions, text="Nạp lại mẫu", style="Secondary.TButton", command=self.reload_planner_catalog).pack(side="left")
-        ttk.Button(planner_actions, text="Xem số dòng sẽ tạo", style="Secondary.TButton", command=self.preview_planner_selection).pack(side="left", padx=8)
-        ttk.Button(planner_actions, text="Tạo planner vào Notion", style="Primary.TButton", command=self.import_links_with_planner).pack(side="left")
+        actions = ctk.CTkFrame(page, corner_radius=14)
+        actions.grid(row=2, column=0, sticky="ew", pady=(10, 0))
+        actions.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            actions,
+            text="Dữ liệu chỉ được gửi khi bạn bấm Tạo bản nháp.",
+            font=FONTS["small"],
+            text_color=COLORS["muted"],
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=12)
+        ctk.CTkButton(actions, text="Xem trước", command=self.preview_planner_selection, width=120).grid(
+            row=0, column=1, padx=6, pady=8
+        )
+        self.planner_primary_button = ctk.CTkButton(
+            actions,
+            text="Tạo bản nháp trên Notion",
+            command=self.import_links_with_planner,
+            width=190,
+            font=FONTS["body_bold"],
+        )
+        self.planner_primary_button.grid(row=0, column=2, padx=(6, 12), pady=8)
+
         self.reload_planner_catalog()
+        self._planner_show_step("creative")
+        self._refresh_planner_flows_panel()
         self._refresh_matrix_summary()
         return page
+
+    def _planner_show_step(self, key):
+        if not hasattr(self, "planner_step_frames") or key not in self.planner_step_frames:
+            return
+        self.planner_active_step = key
+        for step_key, frame in self.planner_step_frames.items():
+            if step_key == key:
+                frame.grid(row=0, column=0, sticky="nsew")
+                frame.tkraise()
+            else:
+                frame.grid_remove()
+        for step_key, button in self.planner_step_buttons.items():
+            selected = step_key == key
+            button.configure(
+                fg_color=COLORS["primary"] if selected else "transparent",
+                text_color="#ffffff" if selected else COLORS["text"],
+            )
 
     def _page_audiences(self, container):
         page = self._page_base(container)
@@ -934,14 +1055,14 @@ class BulkAdsApp(tk.Tk):
             fg=COLORS["text"],
             selectbackground=COLORS["primary"],
             selectforeground="#ffffff",
-            font=("Segoe UI", 10),
+            font=FONTS["body"],
             activestyle="none",
             highlightthickness=1,
             highlightbackground=COLORS["field_border"],
         )
         self.audience_library_listbox.grid(row=0, column=0, sticky="nsew")
         self.audience_library_listbox.bind("<<ListboxSelect>>", lambda _event: self._load_selected_audience_preset())
-        list_scrollbar = ttk.Scrollbar(list_inner, orient="vertical", command=self.audience_library_listbox.yview)
+        list_scrollbar = ctk.CTkScrollbar(list_inner, orientation="vertical", command=self.audience_library_listbox.yview)
         list_scrollbar.grid(row=0, column=1, sticky="ns")
         self.audience_library_listbox.configure(yscrollcommand=list_scrollbar.set)
 
@@ -985,14 +1106,14 @@ class BulkAdsApp(tk.Tk):
             ("Ghi chú", "summary"),
         ]
         for row, (label, key) in enumerate(fields):
-            ttk.Label(form_inner, text=label, style="Card.TLabel").grid(row=row, column=0, sticky="w", pady=6)
-            ttk.Entry(form_inner, textvariable=self.audience_form_vars[key]).grid(row=row, column=1, sticky="ew", pady=6, padx=(12, 0))
+            ctk.CTkLabel(form_inner, text=label).grid(row=row, column=0, sticky="w", pady=6)
+            ctk.CTkEntry(form_inner, textvariable=self.audience_form_vars[key]).grid(row=row, column=1, sticky="ew", pady=6, padx=(12, 0))
 
-        actions = tk.Frame(form_inner, bg=COLORS["surface"])
+        actions = ctk.CTkFrame(form_inner)
         actions.grid(row=len(fields), column=0, columnspan=2, sticky="ew", pady=(16, 0))
-        ttk.Button(actions, text="Tạo mới", style="Secondary.TButton", command=self.clear_audience_form).pack(side="left")
-        ttk.Button(actions, text="Lưu tệp đối tượng", style="Primary.TButton", command=self.save_audience_preset).pack(side="left", padx=(8, 0))
-        ttk.Button(actions, text="Nạp lại", style="Secondary.TButton", command=self.reload_audience_library).pack(side="left", padx=(8, 0))
+        ctk.CTkButton(actions, text="Tạo mới", command=self.clear_audience_form).pack(side="left")
+        ctk.CTkButton(actions, text="Lưu tệp đối tượng", command=self.save_audience_preset).pack(side="left", padx=(8, 0))
+        ctk.CTkButton(actions, text="Nạp lại", command=self.reload_audience_library).pack(side="left", padx=(8, 0))
 
         self.reload_audience_library()
         return page
@@ -1002,26 +1123,26 @@ class BulkAdsApp(tk.Tk):
         outer, inner = self._card(page, "Xuất CSV Facebook", "CSV xuất ra giữ format UTF-16 + tab và clone cấu hình từ file mẫu cũ.")
         outer.pack(fill="x")
 
-        checks = tk.Frame(inner, bg=COLORS["surface"])
+        checks = ctk.CTkFrame(inner)
         checks.pack(fill="x")
-        ttk.Checkbutton(checks, text="Đánh dấu Đã xuất sau khi xuất", variable=self.vars["MARK_EXPORTED"]).pack(side="left", padx=(0, 16))
-        ttk.Checkbutton(checks, text="Xuất cả bài đã xuất", variable=self.vars["INCLUDE_EXPORTED"]).pack(side="left", padx=(0, 16))
-        ttk.Checkbutton(checks, text="Xuất cả bản nháp In progress", variable=self.vars["EXPORT_IN_PROGRESS"]).pack(side="left")
+        ctk.CTkCheckBox(checks, text="Đánh dấu Đã xuất sau khi xuất", variable=self.vars["MARK_EXPORTED"]).pack(side="left", padx=(0, 16))
+        ctk.CTkCheckBox(checks, text="Xuất cả bài đã xuất", variable=self.vars["INCLUDE_EXPORTED"]).pack(side="left", padx=(0, 16))
+        ctk.CTkCheckBox(checks, text="Xuất cả bản nháp In progress", variable=self.vars["EXPORT_IN_PROGRESS"]).pack(side="left")
 
-        buttons = tk.Frame(inner, bg=COLORS["surface"])
+        buttons = ctk.CTkFrame(inner)
         buttons.pack(fill="x", pady=(18, 0))
-        ttk.Button(buttons, text="Xuất CSV ngay", style="Primary.TButton", command=self.export_now).pack(side="left")
-        ttk.Button(buttons, text="Mở thư mục exports", style="Secondary.TButton", command=self.open_exports).pack(side="left", padx=8)
+        ctk.CTkButton(buttons, text="Xuất CSV ngay", command=self.export_now).pack(side="left")
+        ctk.CTkButton(buttons, text="Mở thư mục exports", command=self.open_exports).pack(side="left", padx=8)
 
         scan_outer, scan_inner = self._card(page, "Tự quét Notion", "Bật khi muốn tool tự kiểm tra bài Ready theo chu kỳ.")
         scan_outer.pack(fill="x", pady=(18, 0))
-        row = tk.Frame(scan_inner, bg=COLORS["surface"])
+        row = ctk.CTkFrame(scan_inner)
         row.pack(fill="x")
-        ttk.Label(row, text="Chu kỳ quét (giây)", style="Card.TLabel").pack(side="left")
-        ttk.Entry(row, textvariable=self.vars["SCAN_INTERVAL_SECONDS"], width=12).pack(side="left", padx=10)
-        self.scan_button = ttk.Button(row, text="Bật tự quét", style="Secondary.TButton", command=self.toggle_auto_scan)
+        ctk.CTkLabel(row, text="Chu kỳ quét (giây)").pack(side="left")
+        ctk.CTkEntry(row, textvariable=self.vars["SCAN_INTERVAL_SECONDS"], width=12).pack(side="left", padx=10)
+        self.scan_button = ctk.CTkButton(row, text="Bật tự quét", command=self.toggle_auto_scan)
         self.scan_button.pack(side="left")
-        ttk.Checkbutton(
+        ctk.CTkCheckBox(
             scan_inner,
             text="Telegram xác nhận trước khi tự xuất",
             variable=self.vars["TELEGRAM_CONFIRM_EXPORT"],
@@ -1051,11 +1172,11 @@ class BulkAdsApp(tk.Tk):
         for row, (label, key, show, browse) in enumerate(fields):
             self._field(inner, row, label, self.vars[key], show=show, browse=browse)
 
-        actions = tk.Frame(inner, bg=COLORS["surface"])
+        actions = ctk.CTkFrame(inner)
         actions.grid(row=len(fields), column=0, columnspan=3, sticky="ew", pady=(18, 0))
-        ttk.Button(actions, text="Lưu cấu hình", style="Primary.TButton", command=self.save_config).pack(side="left")
-        ttk.Button(actions, text="Test Telegram", style="Secondary.TButton", command=self.test_telegram).pack(side="left", padx=8)
-        ttk.Button(actions, text="Mở thư mục tool", style="Secondary.TButton", command=lambda: os.startfile(APP_DIR)).pack(side="left")
+        ctk.CTkButton(actions, text="Lưu cấu hình", command=self.save_config).pack(side="left")
+        ctk.CTkButton(actions, text="Test Telegram", command=self.test_telegram).pack(side="left", padx=8)
+        ctk.CTkButton(actions, text="Mở thư mục tool", command=lambda: os.startfile(APP_DIR)).pack(side="left")
         return page
 
     def _page_notion(self, container):
@@ -1064,15 +1185,15 @@ class BulkAdsApp(tk.Tk):
         outer.pack(fill="both", expand=True)
         inner.grid_columnconfigure(1, weight=1)
         self._field(inner, 0, "Parent page ID", self.vars["PARENT_PAGE_ID"])
-        ttk.Button(inner, text="Tạo database Notion mẫu", style="Primary.TButton", command=self.create_template).grid(row=1, column=0, sticky="w", pady=(14, 0))
-        ttk.Button(inner, text="Lưu cấu hình", style="Secondary.TButton", command=self.save_config).grid(row=1, column=1, sticky="w", padx=(10, 0), pady=(14, 0))
+        ctk.CTkButton(inner, text="Tạo database Notion mẫu", command=self.create_template).grid(row=1, column=0, sticky="w", pady=(14, 0))
+        ctk.CTkButton(inner, text="Lưu cấu hình", command=self.save_config).grid(row=1, column=1, sticky="w", padx=(10, 0), pady=(14, 0))
         guide = (
             "1. Tạo một page trống trong Notion.\n"
             "2. Share page đó cho integration đang giữ token.\n"
             "3. Copy Page ID và dán vào ô trên.\n"
             "4. Bấm tạo database mẫu, sau đó copy Data Source ID vào cấu hình."
         )
-        tk.Label(inner, text=guide, justify="left", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 10)).grid(row=2, column=0, columnspan=3, sticky="w", pady=(18, 0))
+        ctk.CTkLabel(inner, text=guide, justify="left", font=FONTS["body"]).grid(row=2, column=0, columnspan=3, sticky="w", pady=(18, 0))
         return page
 
     def _page_logs(self, container):
@@ -1081,31 +1202,29 @@ class BulkAdsApp(tk.Tk):
         outer.pack(fill="both", expand=True)
         inner.grid_columnconfigure(0, weight=1)
         inner.grid_rowconfigure(0, weight=1)
-        self.log_text = tk.Text(inner, wrap="word", state="disabled", relief="flat", bd=0, bg="#0f172a", fg="#dbeafe", insertbackground="#ffffff", font=("Consolas", 10))
+        self.log_text = ctk.CTkTextbox(inner, wrap="word", state="disabled", font=FONTS["body"])
         self.log_text.grid(row=0, column=0, sticky="nsew")
-        scrollbar = ttk.Scrollbar(inner, orient="vertical", command=self.log_text.yview)
+        scrollbar = ctk.CTkScrollbar(inner, orientation="vertical", command=self.log_text.yview)
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.log_text.configure(yscrollcommand=scrollbar.set)
         return page
 
     def _field(self, parent, row, label, var, show=None, browse=False):
-        ttk.Label(parent, text=label, style="Card.TLabel").grid(row=row, column=0, sticky="w", pady=7)
-        entry = ttk.Entry(parent, textvariable=var, show=show)
+        ctk.CTkLabel(parent, text=label).grid(row=row, column=0, sticky="w", pady=7)
+        entry = ctk.CTkEntry(parent, textvariable=var, show=show)
         entry.grid(row=row, column=1, sticky="ew", pady=7, padx=(12, 8))
         if browse:
-            ttk.Button(parent, text="Chọn file", style="Secondary.TButton", command=self._choose_sample_csv).grid(row=row, column=2, pady=7)
+            ctk.CTkButton(parent, text="Chọn file", command=self._choose_sample_csv).grid(row=row, column=2, pady=7)
         return entry
 
     def show_page(self, key):
         for nav_key, btn in self.nav_buttons.items():
             if nav_key == key:
-                btn.configure(bg=COLORS["sidebar_active"], fg="#ffffff")
+                btn.configure(fg_color=COLORS["sidebar_active"], text_color="#ffffff")
             else:
-                btn.configure(bg=COLORS["sidebar"], fg="#dce7f8")
+                btn.configure(fg_color=COLORS["sidebar"], text_color="#dce7f8")
         self.pages[key].tkraise()
 
-    def open_notion(self):
-        os.startfile("https://app.notion.com/p/0d89661f16ee43fcaa7abad46058b9bc?v=a62193e84656430f970a676d812b3a31")
 
     def _choose_sample_csv(self):
         path = filedialog.askopenfilename(
@@ -1307,38 +1426,40 @@ class BulkAdsApp(tk.Tk):
             self.planner_campaign_vars[code] = var
             palette = self._campaign_palette(code)
 
-            frame = tk.Frame(self.planner_campaign_cards_host, bg=COLORS["canvas_line"], cursor="hand2")
-            frame.grid(row=0, column=index, sticky="nsew", padx=(0, 8), pady=(0, 0))
-            self.planner_campaign_cards_host.grid_rowconfigure(0, weight=1)
-
-            body = tk.Frame(frame, bg="#121b29", padx=7, pady=6, cursor="hand2")
+            frame = ctk.CTkFrame(self.planner_campaign_cards_host, cursor="hand2", height=90)
+            frame.grid_propagate(False)
+            frame.pack_propagate(False)
+            frame.grid(
+                row=index,
+                column=0,
+                sticky="ew",
+                padx=(0, 4),
+                pady=(0, 8),
+            )
+            body = ctk.CTkFrame(frame, cursor="hand2")
             body.pack(fill="both", expand=True, padx=1, pady=1)
             body.grid_columnconfigure(1, weight=1)
 
-            bar = tk.Frame(body, bg=palette["line"], width=3)
+            bar = ctk.CTkFrame(body, width=3)
             bar.grid(row=0, column=0, rowspan=2, sticky="ns", padx=(0, 10))
-            dot = tk.Label(body, text="●", bg="#121b29", fg=palette["line"], font=("Segoe UI", 8), cursor="hand2")
+            dot = ctk.CTkLabel(body, text="●", font=FONTS["small"], cursor="hand2")
             dot.grid(row=0, column=2, sticky="ne")
-            title = tk.Label(
+            title = ctk.CTkLabel(
                 body,
                 text=self._campaign_card_title(item),
-                bg="#121b29",
-                fg=COLORS["canvas_text"],
-                font=("Segoe UI Semibold", 9),
+                                                font=FONTS["body_bold"],
                 anchor="w",
                 justify="left",
                 cursor="hand2",
             )
             title.grid(row=0, column=1, sticky="w")
-            subtitle = tk.Label(
+            subtitle = ctk.CTkLabel(
                 body,
                 text=self._campaign_card_subtitle(item),
-                bg="#121b29",
-                fg="#9fb0c5",
-                font=("Segoe UI", 7),
+                                                font=FONTS["small"],
                 anchor="w",
                 justify="left",
-                wraplength=220,
+                wraplength=195,
                 cursor="hand2",
             )
             subtitle.grid(row=1, column=1, columnspan=2, sticky="w", pady=(2, 0))
@@ -1374,10 +1495,10 @@ class BulkAdsApp(tk.Tk):
         for child in self.planner_adset_groups_host.winfo_children():
             child.destroy()
         self.planner_adset_listboxes = {}
-        self.planner_audience_listbox.delete(0, "end")
-        self.planner_dataset_listbox.delete(0, "end")
-        self.planner_budget_listbox.delete(0, "end")
-        self.planner_placement_listbox.delete(0, "end")
+        self.planner_audience_choice_var.set("Theo thiết lập nhóm quảng cáo")
+        self.planner_dataset_choice_var.set("Chưa có lựa chọn")
+        self.planner_budget_choice_var.set("Chưa có lựa chọn")
+        self.planner_placement_choice_var.set("Chưa có lựa chọn")
         self.planner_adset_bundles = []
         self.planner_audience_presets = []
         self.planner_dataset_presets = []
@@ -1426,28 +1547,24 @@ class BulkAdsApp(tk.Tk):
             campaign_adsets = adsets_by_campaign.get(campaign_code, [])
             palette = self._campaign_palette(campaign_code)
 
-            group = tk.Frame(self.planner_adset_groups_host, bg=palette["line"])
+            group = ctk.CTkFrame(self.planner_adset_groups_host)
             group.grid(row=row, column=0, sticky="ew", pady=(0, 6))
             group.grid_columnconfigure(0, weight=1)
 
-            body = tk.Frame(group, bg="#121b29", padx=8, pady=8)
+            body = ctk.CTkFrame(group)
             body.grid(row=0, column=0, sticky="ew", padx=1, pady=1)
             body.grid_columnconfigure(0, weight=1)
 
-            tk.Label(
+            ctk.CTkLabel(
                 body,
                 text=self._campaign_card_title(campaign),
-                bg="#121b29",
-                fg=palette["text"],
-                font=("Segoe UI Semibold", 9),
+                                                font=FONTS["body_bold"],
                 anchor="w",
             ).grid(row=0, column=0, sticky="w")
-            tk.Label(
+            ctk.CTkLabel(
                 body,
-                text=f"{len(campaign_adsets)} bundle nhóm · {len(campaign_bundles)} campaign trong kế hoạch",
-                bg="#121b29",
-                fg=palette["muted"],
-                font=("Segoe UI", 8),
+                text=f"{len(campaign_adsets)} nhóm khả dụng",
+                                                font=FONTS["small"],
                 anchor="e",
             ).grid(row=0, column=1, sticky="e")
 
@@ -1457,45 +1574,42 @@ class BulkAdsApp(tk.Tk):
                 interaction = item.get("interactionType") or "Chưa phân loại tương tác"
                 location_groups.setdefault(location, {}).setdefault(interaction, []).append(item)
 
-            location_picker = tk.Frame(body, bg="#121b29")
+            location_picker = ctk.CTkFrame(body)
             location_picker.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
             location_picker.grid_columnconfigure(0, weight=1)
             location_picker.grid_columnconfigure(1, weight=1)
-            location_picker.grid_columnconfigure(2, weight=1)
-            location_picker.grid_columnconfigure(3, weight=1)
 
             for location_index, location in enumerate(location_groups):
                 location_key = f"{campaign_code}:{location}"
                 if location_key not in self.planner_location_vars:
                     self.planner_location_vars[location_key] = tk.BooleanVar(value=False)
                 selected_location = self.planner_location_vars[location_key].get()
-                location_card = tk.Frame(
+                location_card = ctk.CTkFrame(
                     location_picker,
-                    bg=palette["line"] if selected_location else COLORS["canvas_line"],
                     cursor="hand2",
+                    fg_color=palette["line"] if selected_location else COLORS["field_border"],
+                    corner_radius=8,
                 )
                 location_card.grid(
-                    row=location_index // 4,
-                    column=location_index % 4,
+                    row=location_index // 2,
+                    column=location_index % 2,
                     sticky="ew",
                     padx=(0, 6),
                     pady=(0, 6),
                 )
-                location_body = tk.Frame(
+                location_body = ctk.CTkFrame(
                     location_card,
-                    bg=palette["bg"] if selected_location else "#182437",
-                    padx=7,
-                    pady=5,
                     cursor="hand2",
+                    fg_color=palette["bg"] if selected_location else COLORS["surface_alt"],
+                    corner_radius=7,
                 )
                 location_body.pack(fill="both", expand=True, padx=1, pady=1)
                 location_count = sum(len(items) for items in location_groups[location].values())
-                location_label = tk.Label(
+                location_label = ctk.CTkLabel(
                     location_body,
                     text=f"{location} · {location_count}",
-                    bg=palette["bg"] if selected_location else "#182437",
-                    fg=palette["text"],
-                    font=("Segoe UI Semibold", 8),
+                    font=FONTS["small_bold"],
+                    text_color=palette["text"] if selected_location else COLORS["text"],
                     anchor="w",
                     justify="left",
                     cursor="hand2",
@@ -1510,21 +1624,17 @@ class BulkAdsApp(tk.Tk):
                 location_key = f"{campaign_code}:{location}"
                 if not self.planner_location_vars.get(location_key) or not self.planner_location_vars[location_key].get():
                     continue
-                location_frame = tk.Frame(body, bg="#182437")
+                location_frame = ctk.CTkFrame(body)
                 location_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(8, 0))
                 location_frame.grid_columnconfigure(0, weight=1)
                 current_row += 1
 
-                tk.Label(
+                ctk.CTkLabel(
                     location_frame,
                     text=f"Vị trí chuyển đổi: {location}",
-                    bg="#182437",
-                    fg=palette["text"],
-                    font=("Segoe UI Semibold", 9),
+                                                            font=FONTS["body_bold"],
                     anchor="w",
-                    padx=10,
-                    pady=5,
-                ).grid(row=0, column=0, sticky="ew")
+                                                        ).grid(row=0, column=0, sticky="ew")
 
                 interaction_row = 1
                 simple_location_flow = (
@@ -1537,53 +1647,48 @@ class BulkAdsApp(tk.Tk):
                 )
                 for interaction, bundles in interaction_groups.items():
                     if simple_location_flow:
-                        list_frame = tk.Frame(location_frame, bg=COLORS["canvas_line"])
+                        list_frame = ctk.CTkFrame(location_frame)
                         list_frame.grid(row=interaction_row, column=0, sticky="ew", padx=8, pady=(0, 8))
                         interaction_row += 1
                     else:
-                        interaction_frame = tk.Frame(location_frame, bg="#101a2a")
+                        interaction_frame = ctk.CTkFrame(location_frame)
                         interaction_frame.grid(row=interaction_row, column=0, sticky="ew", padx=8, pady=(0, 8))
                         interaction_frame.grid_columnconfigure(0, weight=1)
                         interaction_row += 1
 
-                        tk.Label(
+                        ctk.CTkLabel(
                             interaction_frame,
                             text=f"Loại tương tác: {interaction}",
-                            bg="#101a2a",
-                            fg="#dbe6f7",
-                            font=("Segoe UI", 9),
+                                                                                    font=FONTS["body"],
                             anchor="w",
-                            padx=8,
-                            pady=6,
-                        ).grid(row=0, column=0, sticky="ew")
+                                                                                ).grid(row=0, column=0, sticky="ew")
 
-                        list_frame = tk.Frame(interaction_frame, bg=COLORS["canvas_line"])
+                        list_frame = ctk.CTkFrame(interaction_frame)
                         list_frame.grid(row=1, column=0, sticky="ew", padx=8, pady=(0, 8))
                     list_frame.grid_columnconfigure(0, weight=1)
 
-                    chip_host = tk.Frame(list_frame, bg=COLORS["canvas_soft"], padx=5, pady=5)
+                    chip_host = ctk.CTkFrame(list_frame)
                     chip_host.grid(row=0, column=0, sticky="ew", padx=1, pady=1)
-                    for col in range(3):
+                    for col in range(2):
                         chip_host.grid_columnconfigure(col, weight=1)
 
                     chips = []
                     for item_index, item in enumerate(bundles):
                         selected = item.get("code") in self.planner_selected_adset_codes
-                        chip = tk.Label(
+                        chip = ctk.CTkLabel(
                             chip_host,
                             text=item.get("performanceGoal") or item.get("name") or item.get("code"),
-                            bg=palette["line"] if selected else "#182437",
-                            fg="#ffffff" if selected else COLORS["canvas_text"],
-                            font=("Segoe UI Semibold", 8),
+                            font=FONTS["small_bold"],
                             anchor="w",
                             justify="left",
-                            padx=8,
-                            pady=5,
                             cursor="hand2",
+                            corner_radius=7,
+                            fg_color=palette["line"] if selected else COLORS["surface_alt"],
+                            text_color="#ffffff" if selected else COLORS["text"],
                         )
                         chip.grid(
-                            row=item_index // 3,
-                            column=item_index % 3,
+                            row=item_index // 2,
+                            column=item_index % 2,
                             sticky="ew",
                             padx=(0, 5),
                             pady=(0, 5),
@@ -1602,7 +1707,7 @@ class BulkAdsApp(tk.Tk):
         )
         if hasattr(self, "planner_bundle_heading_label"):
             self.planner_bundle_heading_label.configure(
-                text=f"Bundle nhóm quảng cáo · {len(campaign_bundles)} campaign · {len(self.planner_adset_bundles)} bundle"
+                text=f"2. CHỌN NHÓM QUẢNG CÁO · {len(self.planner_adset_bundles)} lựa chọn"
             )
         allowed_audiences = {
             code
@@ -1612,30 +1717,29 @@ class BulkAdsApp(tk.Tk):
         self.planner_audience_presets = [
             item for item in self.planner_catalog.get("audiencePresets", []) if item.get("code") in allowed_audiences
         ]
-        for item in self.planner_audience_presets:
-            label = item.get("name")
-            self.planner_audience_listbox.insert("end", label)
+        audience_values = ["Theo thiết lập nhóm quảng cáo"] + [
+            item.get("name") or item.get("code") for item in self.planner_audience_presets
+        ]
+        self.planner_audience_combo.configure(values=audience_values)
+        self.planner_audience_choice_var.set(audience_values[0])
         self.planner_dataset_presets = self.planner_catalog.get("datasetPresets", [])
-        for item in self.planner_dataset_presets:
-            self.planner_dataset_listbox.insert("end", item.get("name") or item.get("code"))
-        if self.planner_dataset_presets:
-            self.planner_dataset_listbox.selection_set(0)
+        dataset_values = [item.get("name") or item.get("code") for item in self.planner_dataset_presets]
+        self.planner_dataset_combo.configure(values=dataset_values or ["Chưa có lựa chọn"])
+        self.planner_dataset_choice_var.set(dataset_values[0] if dataset_values else "Chưa có lựa chọn")
         self.planner_budget_presets = self.planner_catalog.get("budgetPresets", [])
-        for item in self.planner_budget_presets:
-            self.planner_budget_listbox.insert("end", item.get("name") or item.get("code"))
-        if self.planner_budget_presets:
-            self.planner_budget_listbox.selection_set(0)
+        budget_values = [item.get("name") or item.get("code") for item in self.planner_budget_presets]
+        self.planner_budget_combo.configure(values=budget_values or ["Chưa có lựa chọn"])
+        self.planner_budget_choice_var.set(budget_values[0] if budget_values else "Chưa có lựa chọn")
         self.planner_placement_presets = self.planner_catalog.get("placementPresets", [])
-        for item in self.planner_placement_presets:
-            self.planner_placement_listbox.insert("end", item.get("name") or item.get("code"))
-        if self.planner_placement_presets:
-            self.planner_placement_listbox.selection_set(0)
+        placement_values = [item.get("name") or item.get("code") for item in self.planner_placement_presets]
+        self.planner_placement_combo.configure(values=placement_values or ["Chưa có lựa chọn"])
+        self.planner_placement_choice_var.set(placement_values[0] if placement_values else "Chưa có lựa chọn")
         self.planner_audience_summary_var.set(
             f"Có {len(self.planner_audience_presets)} tệp đối tượng dùng chung theo campaign đang chọn."
         )
         if hasattr(self, "planner_audience_heading_label"):
             self.planner_audience_heading_label.configure(
-                text=f"Tệp đối tượng · {len(self.planner_audience_presets)} mẫu"
+                text=f"Nhóm người xem · {len(self.planner_audience_presets)} lựa chọn"
             )
         self._refresh_matrix_summary()
 
@@ -1660,77 +1764,44 @@ class BulkAdsApp(tk.Tk):
             adset_lookup.get(code, {}).get("performanceGoal", ""),
         ))
         if not selected_codes:
-            tk.Label(
+            ctk.CTkLabel(
                 self.planner_selected_tags_host,
                 text="Chưa chọn tag nhóm",
-                bg=COLORS["canvas"],
-                fg="#8ea5c2",
-                font=("Segoe UI", 9),
+                                                font=FONTS["body"],
                 anchor="e",
             ).grid(row=0, column=0, sticky="e")
             return
 
         for index, code in enumerate(selected_codes[:6]):
             bundle = adset_lookup.get(code, {})
-            palette = self._campaign_palette(bundle.get("campaignBundleCode"))
-            tag = self._adset_flow_tag(bundle)
-            chip = tk.Frame(self.planner_selected_tags_host, bg=palette["line"])
-            chip.grid(row=index // 3, column=index % 3, sticky="e", padx=(4, 0), pady=(0, 4))
-            tk.Label(
-                chip,
-                text=tag,
-                bg=palette["line"],
-                fg="#ffffff",
-                font=("Segoe UI Semibold", 8),
-                padx=7,
-                pady=3,
-            ).pack(side="left")
-            close = tk.Label(
-                chip,
-                text="x",
-                bg=palette["line"],
-                fg="#ffffff",
-                font=("Segoe UI Semibold", 8),
-                padx=6,
-                pady=3,
-                cursor="hand2",
-            )
-            close.pack(side="left")
-            close.bind("<Button-1>", lambda _event, item_code=code: self._remove_selected_adset_code(item_code))
+            tags = self._adset_flow_tag(bundle)
+
+            # Create a container for the bundle
+            bundle_container = ctk.CTkFrame(self.planner_selected_tags_host, fg_color="transparent")
+            bundle_container.grid(row=index // 3, column=index % 3, sticky="e", padx=(8, 0), pady=(0, 4))
+
+            for t_idx, t in enumerate(tags):
+                chip = ctk.CTkFrame(bundle_container, fg_color=t["color"], corner_radius=12)
+                chip.pack(side="left", padx=2)
+                ctk.CTkLabel(
+                    chip,
+                    text=t["text"],
+                    font=FONTS["small_bold"],
+                    text_color="white",
+                ).pack(side="left", padx=(8, 4), pady=2)
+
+                # Only add close button to the last chip
+                if t_idx == len(tags) - 1:
+                    close = ctk.CTkLabel(chip, text="✕", font=FONTS["small_bold"], text_color="white", cursor="hand2")
+                    close.pack(side="left", padx=(0, 8), pady=2)
+                    close.bind("<Button-1>", lambda _event, item_code=code: self._remove_selected_adset_code(item_code))
         if len(selected_codes) > 6:
-            tk.Label(
+            ctk.CTkLabel(
                 self.planner_selected_tags_host,
                 text=f"+{len(selected_codes) - 6}",
-                bg="#132033",
-                fg="#dbe6f7",
-                font=("Segoe UI Semibold", 8),
-                padx=7,
-                pady=3,
-            ).grid(row=2, column=2, sticky="e", padx=(4, 0))
+                                                font=FONTS["small_bold"],
+                                            ).grid(row=2, column=2, sticky="e", padx=(4, 0))
 
-    def _selected_adset_bundle_codes(self):
-        adset_lookup = {
-            item.get("code"): item
-            for item in self.planner_catalog.get("adSetBundles", [])
-            if item.get("code")
-        }
-        return [
-            code
-            for code in self.planner_selected_adset_codes
-            if code in self._current_allowed_adset_codes() and code in adset_lookup
-        ]
-
-    def _selected_adset_bundles(self):
-        adset_lookup = {
-            item.get("code"): item
-            for item in self.planner_catalog.get("adSetBundles", [])
-            if item.get("code")
-        }
-        return [
-            adset_lookup[code]
-            for code in self._selected_adset_bundle_codes()
-            if code in adset_lookup
-        ]
 
     def _refresh_link_plan_preview(self):
         if not hasattr(self, "link_plan_preview_host"):
@@ -1739,117 +1810,163 @@ class BulkAdsApp(tk.Tk):
             child.destroy()
 
         links = self._current_import_links()
-        adset_bundles = self._selected_adset_bundles() if hasattr(self, "planner_adset_listboxes") else []
-        audience_count = len(self._selected_audience_preset_codes()) if hasattr(self, "planner_audience_listbox") else 0
-        multiplier = audience_count if audience_count else 1
-
         if not links:
+            ctk.CTkLabel(
+                self.link_plan_preview_host,
+                text="Chưa có bài viết.\nNhập đường dẫn ở bước 01 để bắt đầu.",
+                justify="left",
+                anchor="nw",
+                wraplength=300,
+                font=FONTS["body"],
+                text_color=COLORS["muted"],
+            ).grid(row=0, column=0, sticky="ew", padx=8, pady=10)
             return
 
-        tags = []
-        seen = set()
-        for bundle in adset_bundles:
-            tag = self._adset_flow_tag(bundle)
-            if tag not in seen:
-                seen.add(tag)
-                tags.append((tag, bundle.get("campaignBundleCode")))
+        flows = list(self.planner_flows)
+        first_flow = flows[0] if flows else {}
+        campaign_lookup = {
+            item.get("code"): item for item in self.planner_catalog.get("campaignBundles", [])
+        }
+        adset_lookup = {
+            item.get("code"): item for item in self.planner_catalog.get("adSetBundles", [])
+        }
+        campaign = campaign_lookup.get(first_flow.get("campaign_code"), {})
+        campaign_text = self._campaign_card_title(campaign) or "Chưa thêm"
+        adset = adset_lookup.get(first_flow.get("adset_code"), {})
+        adset_text = adset.get("performanceGoal") or adset.get("name") or "Chưa thêm"
+        if len(flows) > 1:
+            adset_text += f" +{len(flows) - 1}"
+        for prefix in ("Tối đa hóa số ", "Tối đa hóa ", "Tăng tối đa "):
+            if adset_text.startswith(prefix):
+                adset_text = adset_text[len(prefix):]
+                break
+        adset_text = (
+            adset_text
+            .replace("lượt xem ThruPlay", "lượt xem video lâu")
+            .replace("lượt phát video liên tục trong tối thiểu 2 giây", "lượt xem video từ 2 giây")
+        )
 
-        for row, link in enumerate(links[:8]):
-            card = tk.Frame(self.link_plan_preview_host, bg=COLORS["field_border"])
-            card.grid(row=row, column=0, sticky="ew", pady=(0, 8))
-            card.grid_columnconfigure(1, weight=1)
+        audience_codes = first_flow.get("audience_codes", [])
+        audience_lookup = {item.get("code"): item for item in self.planner_audience_presets}
+        audience_names = [
+            audience_lookup.get(code, {}).get("name") or code
+            for code in audience_codes
+        ]
+        audience_text = ", ".join(audience_names[:2]) or "Theo nhóm"
+        if len(audience_names) > 2:
+            audience_text += f" (+{len(audience_names) - 2})"
 
-            body = tk.Frame(card, bg="#ffffff", padx=12, pady=10)
-            body.grid(row=0, column=0, sticky="ew", padx=1, pady=1)
-            body.grid_columnconfigure(1, weight=1)
+        dataset_code = first_flow.get("dataset_code")
+        dataset_lookup = {item.get("code"): item for item in self.planner_dataset_presets}
+        dataset_text = dataset_lookup.get(dataset_code, {}).get("name") or dataset_code or "Chưa chọn"
+        dataset_text = dataset_text.replace("Không chọn tập dữ liệu", "Không chọn").replace("Tập dữ liệu ", "")
+        placement_code = first_flow.get("placement_code")
+        placement_lookup = {item.get("code"): item for item in self.planner_placement_presets}
+        placement_text = placement_lookup.get(placement_code, {}).get("name") or placement_code or "Chưa chọn"
+        budget_code = first_flow.get("budget_code")
+        custom_budget = first_flow.get("custom_budget_values", {})
+        budget_lookup = {item.get("code"): item for item in self.planner_budget_presets}
+        budget_text = (
+            self._budget_summary_text(None, custom_budget)
+            if custom_budget
+            else budget_lookup.get(budget_code, {}).get("name") or budget_code or "Chưa chọn"
+        )
+        budget_text = budget_text.replace("Ngân sách hằng ngày ", "").replace("Ngân sách trọn đời ", "Trọn đời ")
+        placement_text = placement_text.replace("Messenger", "Tin nhắn").replace("mobile", "di động")
 
-            tk.Label(
-                body,
-                text=f"Link {row + 1}",
-                bg="#ffffff",
-                fg=COLORS["primary"],
-                font=("Segoe UI Semibold", 9),
-            ).grid(row=0, column=0, sticky="w", padx=(0, 10))
-            tk.Label(
-                body,
-                text=link,
-                bg="#ffffff",
-                fg=COLORS["text"],
-                font=("Segoe UI", 9),
-                anchor="w",
-                wraplength=820,
-                justify="left",
-            ).grid(row=0, column=1, sticky="ew")
+        def compact(value, limit=17):
+            value = str(value)
+            return value if len(value) <= limit else value[: limit - 1] + "…"
 
-            tag_host = tk.Frame(body, bg="#ffffff")
-            tag_host.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
-            if tags:
-                for col, (tag, campaign_code) in enumerate(tags[:8]):
-                    palette = self._campaign_palette(campaign_code)
-                    chip = tk.Label(
-                        tag_host,
-                        text=tag,
-                        bg=palette["line"],
-                        fg="#ffffff",
-                        font=("Segoe UI Semibold", 9),
-                        padx=8,
-                        pady=4,
-                    )
-                    chip.grid(row=0, column=col, sticky="w", padx=(0, 6), pady=(0, 4))
-                if len(tags) > 8:
-                    tk.Label(
-                        tag_host,
-                        text=f"+{len(tags) - 8} luồng",
-                        bg=COLORS["surface_alt"],
-                        fg=COLORS["muted"],
-                        font=("Segoe UI", 9),
-                        padx=8,
-                        pady=4,
-                    ).grid(row=0, column=8, sticky="w")
-            else:
-                tk.Label(
-                    tag_host,
-                    text="Chưa chọn bundle nhóm",
-                    bg=COLORS["surface_alt"],
-                    fg=COLORS["muted"],
-                    font=("Segoe UI", 9),
-                    padx=8,
-                    pady=4,
-                ).grid(row=0, column=0, sticky="w")
-
-            rows_text = f"{len(tags) * multiplier} dòng Notion" if tags else "0 dòng Notion"
-            tk.Label(
-                body,
-                text=rows_text,
-                bg="#ffffff",
-                fg=COLORS["muted"],
-                font=("Segoe UI", 9),
-            ).grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 0))
-
-        if len(links) > 8:
-            tk.Label(
-                self.link_plan_preview_host,
-                text=f"Còn {len(links) - 8} link khác sẽ dùng cùng bộ tag đang chọn.",
-                bg=COLORS["surface"],
-                fg=COLORS["muted"],
-                font=("Segoe UI", 9),
-            ).grid(row=8, column=0, sticky="w")
-
-    def _selected_audience_preset_codes(self):
-        return [
-            self.planner_audience_presets[index].get("code")
-            for index in self.planner_audience_listbox.curselection()
-            if index < len(self.planner_audience_presets)
+        chip_specs = [
+            ("Mục tiêu", compact(campaign_text, 13), TAG_COLORS["objective"]),
+            ("Tối ưu", compact(adset_text, 13), TAG_COLORS["destination"]),
+            ("Người xem", compact(audience_text, 12), TAG_COLORS["audience"]),
+            ("Dữ liệu", compact(dataset_text, 12), TAG_COLORS["default"]),
+            ("Ngân sách", compact(budget_text, 11), TAG_COLORS["budget"]),
+            ("Vị trí", compact(placement_text, 13), TAG_COLORS["placement"]),
+        ]
+        link_palettes = [
+            ("#eef5ff", "#1768d1"),
+            ("#edfbf6", "#0f9f6e"),
+            ("#fff7e8", "#c77700"),
+            ("#f7efff", "#8b5cf6"),
         ]
 
+        for index, link in enumerate(links[:30]):
+            card_bg, accent = link_palettes[index % len(link_palettes)]
+            card = ctk.CTkFrame(
+                self.link_plan_preview_host,
+                fg_color=card_bg,
+                border_width=1,
+                border_color=accent,
+                corner_radius=10,
+            )
+            card.grid(row=index, column=0, sticky="ew", padx=3, pady=(0, 6))
+            card.grid_columnconfigure(0, weight=1)
+            card.grid_columnconfigure(1, weight=1)
+            ctk.CTkLabel(
+                card,
+                text=f"BÀI {index + 1}",
+                font=FONTS["small_bold"],
+                text_color=accent,
+                anchor="w",
+            ).grid(row=0, column=0, sticky="w", padx=(9, 4), pady=(7, 0))
+            ctk.CTkLabel(
+                card,
+                text=link if len(link) <= 46 else link[:43] + "…",
+                font=FONTS["small"],
+                text_color=COLORS["text"],
+                anchor="e",
+                justify="left",
+            ).grid(row=0, column=1, sticky="e", padx=(4, 9), pady=(7, 0))
+            for chip_index, (label, value, color) in enumerate(chip_specs):
+                chip = ctk.CTkLabel(
+                    card,
+                    text=f"{label}\n{value}",
+                    font=FONTS["small"],
+                    fg_color=color,
+                    text_color="#ffffff",
+                    corner_radius=7,
+                    anchor="center",
+                    justify="center",
+                    height=34,
+                )
+                chip.grid(
+                    row=1 + chip_index // 2,
+                    column=chip_index % 2,
+                    sticky="ew",
+                    padx=(8 if chip_index % 2 == 0 else 3, 3 if chip_index % 2 == 0 else 8),
+                    pady=(5 if chip_index < 2 else 2, 7 if chip_index >= 4 else 2),
+                )
+
+        if len(links) > 30:
+            ctk.CTkLabel(
+                self.link_plan_preview_host,
+                text=f"Còn {len(links) - 30} bài khác dùng cùng thiết lập.",
+                font=FONTS["small_bold"],
+                text_color=COLORS["muted"],
+            ).grid(row=30, column=0, sticky="w", padx=8, pady=8)
+
+    def _selected_audience_preset_codes(self):
+        code = self._preset_code_for_choice(
+            self.planner_audience_presets,
+            self.planner_audience_choice_var.get(),
+        )
+        return [code] if code else []
+
+    def _preset_code_for_choice(self, presets, choice):
+        for item in presets:
+            label = item.get("name") or item.get("code")
+            if label == choice:
+                return item.get("code")
+        return None
+
     def _selected_budget_preset_code(self):
-        selection = self.planner_budget_listbox.curselection()
-        if not selection:
-            return None
-        index = selection[0]
-        if index >= len(self.planner_budget_presets):
-            return None
-        return self.planner_budget_presets[index].get("code")
+        return self._preset_code_for_choice(
+            self.planner_budget_presets,
+            self.planner_budget_choice_var.get(),
+        )
 
     def _custom_budget_values(self):
         raw = self.planner_budget_amount_var.get().strip() if hasattr(self, "planner_budget_amount_var") else ""
@@ -1879,134 +1996,198 @@ class BulkAdsApp(tk.Tk):
         return budget_code or "chưa chọn"
 
     def _selected_dataset_preset_code(self):
-        selection = self.planner_dataset_listbox.curselection()
-        if not selection:
-            return None
-        index = selection[0]
-        if index >= len(self.planner_dataset_presets):
-            return None
-        return self.planner_dataset_presets[index].get("code")
+        return self._preset_code_for_choice(
+            self.planner_dataset_presets,
+            self.planner_dataset_choice_var.get(),
+        )
 
     def _selected_placement_preset_code(self):
-        selection = self.planner_placement_listbox.curselection()
-        if not selection:
-            return None
-        index = selection[0]
-        if index >= len(self.planner_placement_presets):
-            return None
-        return self.planner_placement_presets[index].get("code")
+        return self._preset_code_for_choice(
+            self.planner_placement_presets,
+            self.planner_placement_choice_var.get(),
+        )
+
+    def _planner_flow_summary(self, flow):
+        campaign_lookup = {
+            item.get("code"): item for item in self.planner_catalog.get("campaignBundles", [])
+        }
+        adset_lookup = {
+            item.get("code"): item for item in self.planner_catalog.get("adSetBundles", [])
+        }
+        campaign = campaign_lookup.get(flow.get("campaign_code"), {})
+        adset = adset_lookup.get(flow.get("adset_code"), {})
+        campaign_name = self._campaign_card_title(campaign) or "Chưa chọn chiến dịch"
+        conversion_location = adset.get("conversionLocation") or "Chưa chọn vị trí chuyển đổi"
+        goal = adset.get("performanceGoal") or adset.get("name") or "Chưa chọn cách tối ưu"
+        for prefix in ("Tối đa hóa số ", "Tối đa hóa ", "Tăng tối đa "):
+            if goal.startswith(prefix):
+                goal = goal[len(prefix):]
+                break
+        goal = goal.replace("lượt xem ThruPlay", "lượt xem video lâu")
+        return f"{campaign_name} → {conversion_location} → {goal}"
+
+    def add_current_planner_flow(self):
+        campaign_codes = self._selected_campaign_bundle_codes()
+        adset_codes = self._selected_adset_bundle_codes()
+        if len(campaign_codes) != 1:
+            self._message_warning(APP_TITLE, "Hãy chọn một chiến dịch.")
+            return
+        if len(adset_codes) != 1:
+            self._message_warning(APP_TITLE, "Hãy chọn một nhóm quảng cáo cho cách chạy này.")
+            return
+        self.planner_flow_sequence += 1
+        flow = {
+            "id": self.planner_flow_sequence,
+            "campaign_code": campaign_codes[0],
+            "adset_code": adset_codes[0],
+            "audience_codes": list(self._selected_audience_preset_codes()),
+            "dataset_code": self._selected_dataset_preset_code(),
+            "budget_code": self._selected_budget_preset_code(),
+            "custom_budget_values": dict(self._custom_budget_values()),
+            "placement_code": self._selected_placement_preset_code(),
+            "creative_mode": self._selected_creative_mode(),
+        }
+        self.planner_flows.append(flow)
+        self.planner_selected_adset_codes.clear()
+        for location_var in self.planner_location_vars.values():
+            location_var.set(False)
+        self._refresh_planner_adset_list()
+        self._show_planner_selection_stage()
+        self._refresh_planner_flows_panel()
+        self._refresh_matrix_summary()
+        self.log(f"Đã thêm cách chạy {flow['id']}: {self._planner_flow_summary(flow)}")
+
+    def delete_planner_flow(self, flow_id):
+        self.planner_flows = [flow for flow in self.planner_flows if flow.get("id") != flow_id]
+        self._refresh_planner_flows_panel()
+        self._refresh_matrix_summary()
+
+    def duplicate_planner_flow(self, flow_id):
+        source = next((flow for flow in self.planner_flows if flow.get("id") == flow_id), None)
+        if not source:
+            return
+        self.planner_flow_sequence += 1
+        duplicate = json.loads(json.dumps(source))
+        duplicate["id"] = self.planner_flow_sequence
+        self.planner_flows.append(duplicate)
+        self._refresh_planner_flows_panel()
+        self._refresh_matrix_summary()
+
+    def _refresh_planner_flows_panel(self):
+        if not hasattr(self, "planner_flows_host"):
+            return
+        for child in self.planner_flows_host.winfo_children():
+            child.destroy()
+        if not self.planner_flows:
+            ctk.CTkLabel(
+                self.planner_flows_host,
+                text="Chưa thêm cách chạy nào.",
+                font=FONTS["small"],
+                text_color=COLORS["muted"],
+                anchor="w",
+            ).grid(row=0, column=0, sticky="ew", padx=4, pady=4)
+            return
+        for row, flow in enumerate(self.planner_flows[:2]):
+            item = ctk.CTkFrame(self.planner_flows_host, fg_color=COLORS["surface"])
+            item.grid(row=row, column=0, sticky="ew", pady=(0, 4))
+            item.grid_columnconfigure(0, weight=1)
+            ctk.CTkLabel(
+                item,
+                text=f"{row + 1}. {self._planner_flow_summary(flow)}",
+                font=FONTS["small"],
+                anchor="w",
+            ).grid(row=0, column=0, sticky="ew", padx=6, pady=4)
+            ctk.CTkButton(
+                item,
+                text="Chép",
+                width=42,
+                height=24,
+                command=lambda item_id=flow.get("id"): self.duplicate_planner_flow(item_id),
+            ).grid(row=0, column=1, padx=2)
+            ctk.CTkButton(
+                item,
+                text="Xóa",
+                width=38,
+                height=24,
+                fg_color=COLORS["danger"],
+                hover_color="#a61f18",
+                command=lambda item_id=flow.get("id"): self.delete_planner_flow(item_id),
+            ).grid(row=0, column=2, padx=(0, 4))
+        if len(self.planner_flows) > 2:
+            ctk.CTkLabel(
+                self.planner_flows_host,
+                text=f"Còn {len(self.planner_flows) - 2} cách chạy khác.",
+                font=FONTS["small"],
+                text_color=COLORS["muted"],
+                anchor="w",
+            ).grid(row=2, column=0, sticky="w", padx=6, pady=2)
 
     def preview_planner_selection(self):
         links = self._current_import_links()
-        campaign_bundles = self._selected_campaign_bundles()
-        adset_codes = self._selected_adset_bundle_codes()
-        audience_codes = self._selected_audience_preset_codes()
-        dataset_code = self._selected_dataset_preset_code()
-        budget_code = self._selected_budget_preset_code()
-        custom_budget_values = self._custom_budget_values()
-        placement_code = self._selected_placement_preset_code()
-        if not campaign_bundles:
-            self._message_warning(APP_TITLE, "Cần chọn ít nhất 1 mẫu chiến dịch.")
+        if not self.planner_flows:
+            self._message_warning(APP_TITLE, "Hãy thêm ít nhất một cách chạy vào kế hoạch.")
             return
-        if not adset_codes:
-            self._message_warning(APP_TITLE, "Cần chọn ít nhất 1 mẫu nhóm quảng cáo.")
-            return
-        audience_multiplier = len(audience_codes) if audience_codes else 1
-        total_rows = len(links) * len(adset_codes) * audience_multiplier
+        total_units = sum(max(1, len(flow.get("audience_codes", []))) for flow in self.planner_flows)
+        total_rows = len(links) * total_units
+        flow_lines = "\n".join(
+            f"{index}. {self._planner_flow_summary(flow)}"
+            for index, flow in enumerate(self.planner_flows, start=1)
+        )
         message = (
-            f"Số mẫu chiến dịch: {len(campaign_bundles)}\n"
-            f"Kiểu nội dung: {self.planner_creative_mode_var.get()}\n"
-            f"Số link: {len(links)}\n"
-            f"Số mẫu nhóm: {len(adset_codes)}\n"
-            f"Số tệp đối tượng: {len(audience_codes) if audience_codes else 0}\n"
-            f"Tập dữ liệu: {dataset_code or 'chưa chọn'}\n"
-            f"Ngân sách: {self._budget_summary_text(budget_code, custom_budget_values)}\n"
-            f"Vị trí quảng cáo: {placement_code or 'chưa chọn'}\n"
-            f"Số dòng Notion dự kiến: {total_rows}"
+            f"Số bài viết: {len(links)}\n"
+            f"Số cách chạy: {len(self.planner_flows)}\n"
+            f"Số mục dự kiến tạo: {total_rows}\n\n"
+            f"{flow_lines}"
         )
         self.log(message.replace("\n", " | "))
-        self._message_info("Xem nhanh planner", message)
+        self._message_info("Xem nhanh kế hoạch", message)
 
     def import_links_with_planner(self):
         self.save_config()
         links = self._current_import_links()
         if not links:
-            messagebox.showwarning(APP_TITLE, "Cần dán ít nhất 1 link Facebook.")
+            messagebox.showwarning(APP_TITLE, "Cần dán ít nhất một đường dẫn bài viết Facebook.")
             return
-        campaign_bundles = self._selected_campaign_bundles()
-        adset_codes = self._selected_adset_bundle_codes()
-        audience_codes = self._selected_audience_preset_codes()
-        dataset_code = self._selected_dataset_preset_code()
-        budget_code = self._selected_budget_preset_code()
-        custom_budget_values = self._custom_budget_values()
-        placement_code = self._selected_placement_preset_code()
-        if not campaign_bundles:
-            messagebox.showwarning(APP_TITLE, "Cần chọn ít nhất 1 mẫu chiến dịch.")
-            return
-        if not adset_codes:
-            messagebox.showwarning(APP_TITLE, "Cần chọn ít nhất 1 mẫu nhóm quảng cáo.")
+        if not self.planner_flows:
+            messagebox.showwarning(APP_TITLE, "Hãy thêm ít nhất một cách chạy vào kế hoạch.")
             return
         self._run_background(
             self._import_links_with_planner_worker,
             links,
             self.import_name_var.get().strip(),
-            [bundle.get("code") for bundle in campaign_bundles],
-            adset_codes,
-            audience_codes,
-            dataset_code,
-            budget_code,
-            custom_budget_values,
-            placement_code,
-            self._selected_creative_mode(),
+            json.loads(json.dumps(self.planner_flows)),
         )
 
     def _import_links_with_planner_worker(
         self,
         links,
         ad_name,
-        campaign_bundle_codes,
-        adset_codes,
-        audience_codes,
-        dataset_code,
-        budget_code,
-        custom_budget_values,
-        placement_code,
-        creative_mode,
+        flows,
     ):
         data_source_id = os.environ.get("NOTION_DATA_SOURCE_ID") or os.environ.get("NOTION_DATABASE_ID") or tool.DEFAULT_DATA_SOURCE_ID
-        adset_lookup = {item.get("code"): item for item in self.planner_catalog.get("adSetBundles", [])}
-        campaign_to_adsets = {}
-        for code in adset_codes:
-            adset_bundle = adset_lookup.get(code)
-            if not adset_bundle:
-                continue
-            campaign_to_adsets.setdefault(adset_bundle.get("campaignBundleCode"), []).append(code)
         created = 0
         for index, link in enumerate(links, start=1):
             self.log(
-                f"Planner: đang tạo nháp {index}/{len(links)} với {len(campaign_to_adsets)} mẫu chiến dịch, {len(adset_codes)} mẫu nhóm và {len(audience_codes) if audience_codes else 0} tệp đối tượng..."
+                f"Đang tạo bản nháp {index}/{len(links)} với {len(flows)} cách chạy..."
             )
             name = ad_name if len(links) == 1 else ""
-            for campaign_code in campaign_bundle_codes:
-                scoped_adsets = campaign_to_adsets.get(campaign_code, [])
-                if not scoped_adsets:
-                    continue
+            for flow in flows:
                 result = tool.create_notion_ad_drafts_from_bundles(
                     data_source_id,
                     link,
-                    campaign_code,
-                    scoped_adsets,
-                    audience_preset_codes=audience_codes,
-                    dataset_preset_code=dataset_code,
-                    budget_preset_code=budget_code,
-                    custom_budget_values=custom_budget_values,
-                    placement_preset_code=placement_code,
-                    creative_mode=creative_mode,
+                    flow.get("campaign_code"),
+                    [flow.get("adset_code")],
+                    audience_preset_codes=flow.get("audience_codes", []),
+                    dataset_preset_code=flow.get("dataset_code"),
+                    budget_preset_code=flow.get("budget_code"),
+                    custom_budget_values=flow.get("custom_budget_values", {}),
+                    placement_preset_code=flow.get("placement_code"),
+                    creative_mode=flow.get("creative_mode", "existing_post"),
                     ad_name=name or None,
                 )
                 created += len(result)
-        self.log(f"Planner: đã tạo {created} dòng nháp trong Notion.")
-        self._message_info(APP_TITLE, f"Planner đã tạo {created} dòng nháp trong Notion.")
+        self.log(f"Đã tạo {created} mục nháp trong Notion.")
+        self._message_info(APP_TITLE, f"Đã tạo {created} mục nháp trong Notion.")
 
     def export_now(self):
         self.save_config()

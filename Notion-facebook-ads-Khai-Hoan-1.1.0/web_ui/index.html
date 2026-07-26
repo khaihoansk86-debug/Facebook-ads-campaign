@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Khải Hoàn Ads</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Đi thẳng đến vùng làm việc</a>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">f</div>
+        <div><strong>Khải Hoàn Ads</strong><span>Lập kế hoạch quảng cáo</span></div>
+      </div>
+      <div class="server-state" role="status" aria-live="polite"><i id="serverDot" aria-hidden="true"></i><span id="serverText">Đang kết nối máy chủ…</span></div>
+    </header>
+
+    <main class="planner" id="mainContent" tabindex="-1">
+      <section class="page-heading">
+        <div><h1 id="pageTitle">Lập kế hoạch quảng cáo</h1><p id="pageSubtitle">Chọn các bundle đã hoàn thiện để tạo kế hoạch.</p></div>
+        <div class="page-actions">
+          <button class="button secondary hidden" id="backToPlannerButton">← Lập kế hoạch</button>
+          <button class="button secondary" id="reviewExportButton">Duyệt & xuất CSV</button>
+          <button class="button secondary" id="resetButton">Làm kế hoạch mới</button>
+        </div>
+      </section>
+
+      <nav class="app-nav" aria-label="Khu vực làm việc">
+        <button class="app-nav-item active" type="button" data-app-view="planner">Planner</button>
+        <button class="app-nav-item" type="button" data-app-view="audiences">Tệp đối tượng</button>
+        <button class="app-nav-item" type="button" data-app-view="placements">Vị trí quảng cáo</button>
+        <button class="app-nav-item" type="button" data-app-view="budgets">Ngân sách</button>
+      </nav>
+
+      <section class="workspace" id="plannerWorkspace">
+        <aside class="links-panel panel">
+          <div class="panel-title"><span class="step">1</span><div><h2>Bài viết</h2><p>Mỗi dòng là một đường dẫn</p></div></div>
+          <textarea id="linksInput" placeholder="Dán các đường dẫn bài viết Facebook vào đây…"></textarea>
+          <label class="field-label" for="adNameInput">Tên quảng cáo <small>chỉ dùng khi có một bài</small></label>
+          <input id="adNameInput" type="text" placeholder="Có thể để trống">
+          <div class="link-count" id="linkCount" role="status" aria-live="polite">Chưa có bài viết</div>
+        </aside>
+
+        <section class="builder-panel panel">
+          <div class="panel-title"><span class="step">2</span><div><h2>Tạo cách chạy</h2><p>Mỗi cách chạy sẽ áp dụng cho tất cả bài viết</p></div></div>
+
+          <div id="selectionStage" class="selection-stage">
+            <div class="selection-column">
+              <h3>Chiến dịch</h3>
+              <div id="campaignList" class="choice-list"></div>
+            </div>
+            <div class="selection-column grow">
+              <h3>Vị trí chuyển đổi</h3>
+              <div id="locationList" class="location-list empty-state">Chọn chiến dịch trước</div>
+              <h3 class="goal-heading">Nhóm quảng cáo</h3>
+              <div id="adsetList" class="choice-list adset-list empty-state">Chọn vị trí chuyển đổi</div>
+            </div>
+          </div>
+
+          <div id="setupStage" class="setup-stage hidden">
+            <div class="selected-path"><strong id="selectedPath"></strong><button class="text-button" id="changeSelection">Đổi lựa chọn</button></div>
+            <div class="setup-grid">
+              <label>Nhóm người xem <small class="required-hint">Bắt buộc</small><select id="audienceSelect"></select></label>
+              <label>Nguồn dữ liệu <small id="datasetHint"></small><select id="datasetSelect"></select></label>
+              <label>Vị trí quảng cáo<select id="placementSelect"></select></label>
+              <label>Ngân sách mẫu<select id="budgetSelect"></select></label>
+              <label>Loại ngân sách<select id="budgetType"><option value="Ngân sách/ngày">Ngân sách/ngày</option><option value="Ngân sách trọn đời">Ngân sách trọn đời</option></select></label>
+              <label>Số tiền tùy chỉnh<input id="budgetAmount" inputmode="decimal" placeholder="Không bắt buộc"><small class="field-help">Nếu nhập, số tiền này sẽ thay ngân sách mẫu</small></label>
+            </div>
+            <button class="button primary full" id="addFlowButton">+ Thêm cách chạy vào kế hoạch</button>
+          </div>
+        </section>
+
+        <aside class="summary-panel panel">
+          <div class="panel-title"><span class="step">3</span><div><h2>Kế hoạch</h2><p id="summaryText">0 bài · 0 cách chạy · 0 mục</p></div></div>
+          <div class="readiness" id="readiness" role="status" aria-live="polite">Còn thiếu bài viết và cách chạy</div>
+          <h3>Cách chạy đã thêm</h3>
+          <div id="flowList" class="flow-list empty-state">Chưa có cách chạy</div>
+          <h3>Bài viết & thiết lập</h3>
+          <div id="articleList" class="article-list empty-state">Dán đường dẫn bài viết để bắt đầu</div>
+        </aside>
+      </section>
+
+      <section class="library-view hidden" id="libraryView">
+        <aside class="panel library-list-panel">
+          <div class="library-heading"><div><h2 id="libraryTitle">Tệp đối tượng</h2><p id="libraryCount">0 bundle đã lưu</p></div><button class="button primary" id="newPresetButton">+ Tạo bundle</button></div>
+          <div class="preset-list" id="presetList"></div>
+        </aside>
+        <section class="panel preset-editor">
+          <div class="empty-editor" id="emptyPresetEditor"><strong>Chọn một bundle để xem và chỉnh sửa</strong><span>Hoặc tạo bundle mới để dùng trong Planner.</span></div>
+          <form class="hidden" id="presetForm">
+            <div class="editor-heading"><div><h2 id="presetFormTitle">Tạo bundle mới</h2><p>Thông tin lưu tại đây sẽ xuất hiện trong Planner.</p></div><button type="button" class="text-button" id="cancelPresetButton">Đóng</button></div>
+            <div class="preset-base-grid">
+              <label>Mã bundle <small>Chữ in hoa, số và dấu gạch dưới</small><input id="presetCode" required placeholder="VD: AUD_KHACH_MOI"></label>
+              <label>Tên dễ nhận biết<input id="presetName" required placeholder="VD: Khách mới Phan Thiết"></label>
+              <label class="wide">Mô tả ngắn<textarea id="presetSummary" rows="2" placeholder="Dùng cho trường hợp nào?"></textarea></label>
+            </div>
+            <div class="preset-fields" id="presetFields"></div>
+            <div class="editor-actions"><span id="presetSaveHint">Bundle sẽ được lưu và dùng ngay trong Planner.</span><button class="button primary" type="submit" id="savePresetButton">Lưu bundle</button></div>
+          </form>
+        </section>
+      </section>
+
+      <section class="export-view panel hidden" id="exportView">
+        <div class="export-header">
+          <div><h2>Bài đã hoàn thành</h2><p>Chỉ hiển thị bài đã chuyển sang Hoàn thành trên Notion và chưa được xuất.</p></div>
+          <button class="button secondary" id="refreshCandidatesButton">Tải lại từ Notion</button>
+        </div>
+        <div class="export-toolbar">
+          <label><input type="checkbox" id="selectAllCandidates"> Chọn tất cả</label>
+          <span id="candidateCount">Chưa tải danh sách</span>
+          <button class="button primary" id="exportSelectedButton" disabled>Xuất các bài đã chọn</button>
+        </div>
+        <div class="candidate-list empty-state" id="candidateList">Bấm “Tải lại từ Notion” để xem bài chờ xuất.</div>
+        <div class="export-result hidden" id="exportResult"></div>
+      </section>
+
+      <footer class="actionbar" id="plannerActionbar">
+        <div><strong id="actionSummary">Chưa đủ dữ liệu</strong><span id="actionHint">Thêm bài viết và ít nhất một cách chạy</span></div>
+        <button class="button secondary" id="previewButton" disabled>Xem trước</button>
+        <button class="button primary" id="createDraftsButton" disabled>Tạo bản nháp trên Notion</button>
+      </footer>
+    </main>
+  </div>
+
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="previewDialog" aria-labelledby="previewTitle"><div class="dialog-head"><h2 id="previewTitle">Xem trước kế hoạch</h2><button id="closeDialog" aria-label="Đóng cửa sổ xem trước">×</button></div><div id="previewContent"></div></dialog>
+  <script src="app.js"></script>
+</body>
+</html>
