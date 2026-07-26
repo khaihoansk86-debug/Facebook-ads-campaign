@@ -1,6 +1,6 @@
 # Notion -> Facebook Ads Khai Hoan
 
-Desktop tool for preparing Facebook Ads Manager bulk import files from a Notion database.
+Local operations tool for preparing Facebook Ads Manager bulk import files from a Notion database. It includes a Windows desktop GUI and a browser-based local planner.
 
 The workflow is designed for an ads team where a manager reviews Facebook post links in Notion, selects campaign/ad set settings, then exports one Facebook-compatible CSV file for bulk import.
 
@@ -15,11 +15,12 @@ The workflow is designed for an ads team where a manager reviews Facebook post l
 - Mark exported Notion rows as done to avoid duplicate exports.
 - Optional Supabase sync after export for the web dashboard campaign tracker.
 - Optional Telegram notification after export.
+- Browser planner with preview, reusable presets, selective export, and safe retry protection.
 - Portable Windows GUI built with Python/Tkinter and PyInstaller.
 
 ## Workflow
 
-1. Paste one or many Facebook links into the desktop app.
+1. Paste one or many Facebook links into the desktop app or local web planner.
 2. The app creates draft rows in Notion with status `In progress`.
 3. The manager reviews each row in Notion and chooses:
    - `Ten nhom QC`
@@ -31,15 +32,9 @@ The workflow is designed for an ads team where a manager reviews Facebook post l
 7. If Supabase is configured, the app syncs a campaign/export summary to the web dashboard.
 8. Import the CSV into Facebook Ads Manager.
 
-## Current Notion Defaults
+## Notion Configuration
 
-The included setup is tuned for Khai Hoan's Facebook Ads workflow:
-
-- Page/database: `Facebook Ads Manager - Khai Hoan`
-- Data Source ID: `670be938-5dd2-497a-bd32-a9a5401c4789`
-- Parent Page ID: `0d89661f16ee43fcaa7abad46058b9bc`
-
-These IDs are defaults only. You can replace them in `.env` or in the app's `Cau hinh` tab.
+The repository does not contain a default Notion token or database ID. Copy `.env.example` to `.env`, then provide the IDs for the workspace being used. Existing installations keep their current values in their ignored `.env` file.
 
 ## Ad Set Dropdowns
 
@@ -59,6 +54,13 @@ Use the same campaign name and ad set name across multiple rows to group many ad
 ```text
 bulk_ads_tool.py              Core Notion, Facebook CSV and export logic
 gui_app.py                    Desktop GUI
+web_app.py                    Local HTTP API and static web server
+web_ui/                       Browser planner UI
+ads_core/planner_service.py   Planner validation and preview
+ads_core/draft_service.py     Safe Notion draft creation and retry ledger
+ads_core/export_service.py    Selective Facebook CSV export
+ads_core/preset_service.py    Audience, budget and placement preset management
+tests/                        Python and Playwright test suites
 sample/facebook_ads_template.csv
                               Facebook Ads Manager bulk import template
 notion_template_columns.csv   Human-readable Notion column reference
@@ -94,14 +96,14 @@ Then edit `.env`:
 
 ```env
 NOTION_TOKEN=ntn_xxx
-NOTION_DATA_SOURCE_ID=670be938-5dd2-497a-bd32-a9a5401c4789
-NOTION_DATABASE_ID=670be938-5dd2-497a-bd32-a9a5401c4789
-PARENT_PAGE_ID=0d89661f16ee43fcaa7abad46058b9bc
+NOTION_DATA_SOURCE_ID=your_notion_data_source_id
+NOTION_DATABASE_ID=
+PARENT_PAGE_ID=
 SAMPLE_CSV=sample/facebook_ads_template.csv
 TEMPLATE_ROW_INDEX=0
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
-SUPABASE_URL=https://kuelttmrhdkajclaaths.supabase.co
+SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_PUBLISHABLE_KEY=
 ADS_SYNC_TOKEN=
 # Optional fallback only if Supabase accepts service_role over REST.
@@ -115,7 +117,7 @@ The preferred desktop sync flow uses `SUPABASE_PUBLISHABLE_KEY` plus `ADS_SYNC_T
 ## Run The GUI
 
 ```powershell
-python gui_app.py
+.\run_tool.ps1
 ```
 
 Main tabs:
@@ -125,6 +127,20 @@ Main tabs:
 - `Cau hinh`: edit Notion, template CSV and Telegram settings.
 - `Notion mau`: create or open the Notion template database.
 - `Nhat ky`: inspect runtime logs.
+
+## Run The Local Web Planner
+
+```powershell
+.\run_web.bat
+```
+
+Or:
+
+```powershell
+python web_app.py
+```
+
+The server binds to `127.0.0.1:8000` by default. Plans in progress are kept in browser local storage. Completed Notion rows can be selected and exported from the review screen. Successfully created drafts are recorded in `.web_state/draft_ledger.json` so retries do not create duplicates.
 
 ## Command Line Export
 
@@ -148,7 +164,7 @@ exports/facebook_bulk_YYYYMMDD_HHMMSS.csv
 
 The CSV is UTF-16 with tab delimiters, matching Facebook Ads Manager bulk import format.
 
-When Supabase sync is configured, each export also upserts one `ads_plans` record, one `ads_exports` record, and a `sync_logs` success/error entry. If Supabase fails, the CSV export still completes and the warning is printed/logged.
+When Supabase sync is configured, each export also upserts `ads_plans`, `ads_plan_items`, `ads_exports`, and a `sync_logs` success/error entry. If Supabase fails, the CSV export still completes and the warning is printed/logged.
 
 ## Build Windows EXE
 
@@ -164,13 +180,15 @@ Build:
 .\build_exe.ps1
 ```
 
-Or run PyInstaller directly:
+The build helper verifies the installed requirements and bundles the CustomTkinter resources, application assets, planner catalog, and sample CSV. The EXE is generated under `dist/`.
+
+## Verify
 
 ```powershell
-python -m PyInstaller --onefile --windowed --name "Notion Facebook Ads Khai Hoan" --icon ".\assets\app_icon.ico" "gui_app.py"
+python -m unittest discover -s tests -p "test_*.py"
+npm install
+npm run test:e2e
 ```
-
-The EXE is generated under `dist/`.
 
 ## Security Notes
 
@@ -183,6 +201,7 @@ The EXE is generated under `dist/`.
 - Facebook post metadata resolution depends on Facebook's public page HTML structure and can break if Meta changes markup.
 - Some private or restricted Facebook posts may not expose enough data for automatic `Story ID` resolution.
 - Facebook Ads Manager remains the final validator for bulk import compatibility.
+- Live Notion, Facebook, Supabase, and Telegram integrations require valid credentials and are not exercised by the local automated tests.
 
 ## License
 

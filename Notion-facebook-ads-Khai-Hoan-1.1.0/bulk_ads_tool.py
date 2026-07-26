@@ -1363,7 +1363,11 @@ def export_command(args):
     if not database_id:
         database_id = DEFAULT_DATA_SOURCE_ID
 
-    sample_csv = args.sample_csv or os.environ.get("SAMPLE_CSV", DEFAULT_SAMPLE_CSV)
+    sample_csv = Path(args.sample_csv or os.environ.get("SAMPLE_CSV") or DEFAULT_SAMPLE_CSV)
+    if not sample_csv.is_absolute():
+        sample_csv = (Path(args.env).resolve().parent / sample_csv).resolve()
+    if not sample_csv.exists() and Path(DEFAULT_SAMPLE_CSV).exists():
+        sample_csv = Path(DEFAULT_SAMPLE_CSV)
     template_row_index = args.template_row_index
     if template_row_index is None:
         template_row_index = int(os.environ.get("TEMPLATE_ROW_INDEX", "0"))

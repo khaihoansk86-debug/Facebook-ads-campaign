@@ -1,6 +1,10 @@
+from pathlib import Path
+
+
 NOTION_VERSION = "2022-06-28"
 NOTION_DATA_SOURCE_VERSION = "2025-09-03"
-DEFAULT_SAMPLE_CSV = r"C:\Users\datdt\Downloads\export_20260630_0848.csv"
-DEFAULT_PARENT_PAGE_ID = "0d89661f16ee43fcaa7abad46058b9bc"
-DEFAULT_DATA_SOURCE_ID = "670be938-5dd2-497a-bd32-a9a5401c4789"
+APP_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_SAMPLE_CSV = str(APP_ROOT / "sample" / "facebook_ads_template.csv")
+DEFAULT_PARENT_PAGE_ID = ""
+DEFAULT_DATA_SOURCE_ID = ""
 STATE_FILE = ".sync_state.json"

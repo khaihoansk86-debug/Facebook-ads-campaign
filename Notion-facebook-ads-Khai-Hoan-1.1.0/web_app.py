@@ -24,7 +24,8 @@ from ads_core.preset_service import (
 
 
 APP_DIR = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
-WEB_UI_DIR = APP_DIR / "web_ui"
+RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
+WEB_UI_DIR = RESOURCE_DIR / "web_ui"
 ENV_PATH = APP_DIR / ".env"
 WEB_READY_STATUS_NAMES = ["Done"]
 
@@ -179,9 +180,16 @@ class ApiHandler(SimpleHTTPRequestHandler):
                     or os.environ.get("NOTION_DATABASE_ID")
                     or tool.DEFAULT_DATA_SOURCE_ID
                 )
-                sample_csv = Path(os.environ.get("SAMPLE_CSV") or APP_DIR / "sample" / "facebook_ads_template.csv")
+                sample_csv = Path(
+                    os.environ.get("SAMPLE_CSV")
+                    or RESOURCE_DIR / "sample" / "facebook_ads_template.csv"
+                )
                 if not sample_csv.is_absolute():
                     sample_csv = (APP_DIR / sample_csv).resolve()
+                if not sample_csv.exists():
+                    bundled_sample = RESOURCE_DIR / "sample" / "facebook_ads_template.csv"
+                    if bundled_sample.exists():
+                        sample_csv = bundled_sample
                 result = export_selected_pages(
                     database_id=database_id,
                     selected_page_ids=payload.get("page_ids") or [],

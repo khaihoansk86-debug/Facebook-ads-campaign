@@ -2,19 +2,30 @@
 setlocal
 cd /d "%~dp0"
 
-set "PYTHON_BIN=C:\Users\Admin\AppData\Local\Python\bin\python.exe"
-if exist "%PYTHON_BIN%" (
+set "PYTHON_BIN="
+for /d %%D in ("%LocalAppData%\Python\pythoncore-*") do set "PYTHON_BIN=%%~fD\python.exe"
+if defined PYTHON_BIN if exist "%PYTHON_BIN%" (
     "%PYTHON_BIN%" "%~dp0gui_app.py"
     goto :eof
 )
 
-set "PYTHON_BIN=C:\Users\Admin\AppData\Local\Python\pythoncore-3.14-64\python.exe"
-if exist "%PYTHON_BIN%" (
-    "%PYTHON_BIN%" "%~dp0gui_app.py"
+if exist "%LocalAppData%\Python\bin\python.exe" (
+    "%LocalAppData%\Python\bin\python.exe" "%~dp0gui_app.py"
+    goto :eof
+)
+
+where py >nul 2>nul
+if not errorlevel 1 (
+    py -3 "%~dp0gui_app.py"
+    goto :eof
+)
+
+where python >nul 2>nul
+if not errorlevel 1 (
+    python "%~dp0gui_app.py"
     goto :eof
 )
 
 echo Khong tim thay Python da cai.
-echo Hay mo PowerShell va chay:
-echo   where.exe python
+echo Hay cai Python 3.11 tro len, sau do chay lai file nay.
 pause

@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!ads-dashboard/.env.local.example
 
 .codegraph/
 
@@ -19,6 +20,7 @@ Notion-facebook-ads-Khai-Hoan-1.1.0/*.tmp
 
 ads-dashboard/.env.local
 ads-dashboard/.env*.local
+!ads-dashboard/.env.local.example
 ads-dashboard/node_modules/
 ads-dashboard/.next/
 ads-dashboard/out/
@@ -32,3 +34,4 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .mypy_cache/
+*.tsbuildinfo

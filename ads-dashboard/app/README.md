@@ -2,7 +2,7 @@
 
 Next.js App Router dashboard for campaign tracking.
 
-This app reads summary data from Supabase. It does not own planner logic yet; planner selection and CSV export still live in the desktop tool.
+This app reads summary and row-level ad data from Supabase. It does not own planner logic; planner selection and CSV export live in the local operations tool.
 
 ## Folders
 

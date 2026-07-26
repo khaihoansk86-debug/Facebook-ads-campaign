@@ -2,26 +2,28 @@
 
 This workspace is split into two products that should evolve independently.
 
-## Desktop Tool
+## Local Operations Tool
 
 Path: `Notion-facebook-ads-Khai-Hoan-1.1.0/`
 
 Purpose:
 
-- Keep the current offline planner/export workflow working.
-- Continue developing planner bundles, Notion draft creation, and Facebook CSV export.
-- Later, add a sync client that pushes summary data to Supabase.
+- Keep the offline planner/export workflow working.
+- Provide both the Windows desktop GUI and the browser-based local planner.
+- Create Notion drafts, export Facebook CSV files, and sync summaries to Supabase.
 
 Important areas:
 
 - `gui_app.py`: Tkinter desktop UI.
+- `web_app.py` + `web_ui/`: local browser UI and HTTP API.
 - `bulk_ads_tool.py`: legacy-compatible API surface for the desktop app.
 - `ads_core/`: extracted core modules for safer gradual refactors.
 - `config/planner_bundles.json`: offline planner catalog currently in active development.
+- `tests/`: Python unit/API tests and Playwright browser tests.
 
 Rule:
 
-- Do not move or rewrite planner offline logic while it is still being stabilized.
+- Keep planner validation and export behavior in the local tool.
 - Extract small modules only when the behavior can be verified quickly.
 
 ## Web Dashboard
@@ -51,11 +53,12 @@ Rule:
 
 ```text
 Desktop Tool
-  -> creates planner/export locally
-  -> later syncs summary to Supabase
+  -> creates planner and Notion drafts locally
+  -> exports Facebook CSV
+  -> syncs plans, items, exports, and logs to Supabase
 
 Supabase
-  -> stores ads_plans and ads_exports
+  -> stores ads_plans, ads_plan_items, ads_exports, and sync_logs
 
 Web Dashboard
   -> reads Supabase and shows tracking view
@@ -64,8 +67,8 @@ Web Dashboard
 ## Future Data Flow
 
 ```text
-Web App
-  -> owns planner and validation
+Hosted Web App
+  -> may own planner and validation after authentication is added
   -> writes Supabase
   -> exports Facebook CSV
   -> syncs overview to Notion

@@ -26,12 +26,14 @@ APP_TITLE = "Notion -> Facebook Ads Khải Hoàn"
 
 if getattr(sys, "frozen", False):
     APP_DIR = Path(sys.executable).resolve().parent
+    RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
 else:
     APP_DIR = Path(__file__).resolve().parent
+    RESOURCE_DIR = APP_DIR
 
 ENV_PATH = APP_DIR / ".env"
-ASSET_DIR = APP_DIR / "assets"
-SAMPLE_DIR = APP_DIR / "sample"
+ASSET_DIR = RESOURCE_DIR / "assets"
+SAMPLE_DIR = RESOURCE_DIR / "sample"
 APP_ICON = ASSET_DIR / "app_icon.ico"
 APP_LOGO = ASSET_DIR / "app_logo.png"
 PACKAGE_SAMPLE_CSV = SAMPLE_DIR / "facebook_ads_template.csv"
@@ -118,7 +120,7 @@ class BulkAdsApp(ctk.CTk):
             "SCAN_INTERVAL_SECONDS": tk.StringVar(value="300"),
             "READY_STATUS_NAMES": tk.StringVar(value="Ready,To-do,Not started"),
             "EXPORTED_STATUS_NAMES": tk.StringVar(value="Done,Complete,Exported"),
-            "SUPABASE_URL": tk.StringVar(value="https://kuelttmrhdkajclaaths.supabase.co"),
+            "SUPABASE_URL": tk.StringVar(),
             "SUPABASE_PUBLISHABLE_KEY": tk.StringVar(),
             "SUPABASE_SECRET_KEY": tk.StringVar(),
             "ADS_SYNC_TOKEN": tk.StringVar(),
