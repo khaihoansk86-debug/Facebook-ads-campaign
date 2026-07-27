@@ -49,12 +49,18 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn("link không hợp lệ", self.javascript)
 
     def test_notion_results_have_open_links(self):
-        self.assertIn("Mở trang Notion", self.javascript)
+        self.assertIn("Mở Notion", self.javascript)
 
     def test_export_review_ui_is_available(self):
-        self.assertIn("Duyệt & xuất CSV", self.html)
+        self.assertIn("CSV dự phòng", self.html)
         self.assertIn("loadCandidates", self.javascript)
         self.assertIn("exportSelected", self.javascript)
+
+    def test_meta_api_is_primary_publish_flow(self):
+        self.assertIn("/api/meta/preview", self.javascript)
+        self.assertIn("/api/meta/drafts", self.javascript)
+        self.assertIn("Tạo bản nháp PAUSED trên Meta", self.html)
+        self.assertIn("PAUSED", self.javascript)
 
 
 if __name__ == "__main__":

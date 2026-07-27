@@ -68,7 +68,7 @@ class WebApiTests(unittest.TestCase):
             content_type = response.headers.get("Content-Type", "")
             html = response.read().decode("utf-8")
         self.assertIn("charset=utf-8", content_type.lower())
-        self.assertIn("Duyệt & xuất CSV", html)
+        self.assertIn("CSV dự phòng", html)
 
     def test_preview_and_validation_error(self):
         status, result = self.request("/api/planner/preview", self.payload())
@@ -93,6 +93,35 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertNotIn("NOTION_TOKEN", result)
         self.assertNotIn("SUPABASE_SECRET_KEY", result)
+
+    def test_meta_status_does_not_expose_token(self):
+        safe_status = {
+            "configured": True,
+            "api_version": "v25.0",
+            "account_id": "act_1",
+            "template_codes": ["ENG_POST_COLD"],
+        }
+        with patch("web_app.get_meta_status", return_value=safe_status):
+            status, result = self.request("/api/meta/status")
+        self.assertEqual(status, 200)
+        self.assertTrue(result["configured"])
+        self.assertNotIn("META_ACCESS_TOKEN", result)
+
+    def test_meta_preview_and_paused_create_endpoints(self):
+        fake_preview = {
+            "summary": {"campaigns_count": 1, "adsets_count": 1, "ads_count": 2},
+            "write_mode": "PAUSED_ONLY",
+        }
+        with patch("web_app.preview_meta_plan", return_value=fake_preview):
+            status, result = self.request("/api/meta/preview", self.payload())
+        self.assertEqual(status, 200)
+        self.assertEqual(result["plan"]["write_mode"], "PAUSED_ONLY")
+
+        fake_created = {"status": "created", "created": 2, "skipped": 0, "failed": 0}
+        with patch("web_app.create_paused_meta_drafts", return_value=fake_created):
+            status, result = self.request("/api/meta/drafts", self.payload())
+        self.assertEqual(status, 200)
+        self.assertEqual(result["created"], 2)
 
     def test_export_candidates_endpoint(self):
         candidates = [{"id": "page-1", "name": "Bài đã duyệt", "status": "Ready"}]

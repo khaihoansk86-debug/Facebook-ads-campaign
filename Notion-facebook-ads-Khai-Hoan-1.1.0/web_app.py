@@ -9,11 +9,19 @@ import traceback
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import bulk_ads_tool as tool
 from ads_core.draft_service import create_drafts_safely
 from ads_core.export_service import ExportValidationError, export_selected_pages, list_export_candidates
+from ads_core.meta_service import (
+    MetaApiError,
+    MetaConfig,
+    MetaValidationError,
+    create_paused_meta_drafts,
+    get_meta_status,
+    preview_meta_plan,
+)
 from ads_core.planner_service import PlannerValidationError, preview_plan, public_catalog
 from ads_core.preset_service import (
     PresetValidationError,
@@ -77,7 +85,8 @@ class ApiHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_GET(self) -> None:
-        path = urlparse(self.path).path
+        parsed_url = urlparse(self.path)
+        path = parsed_url.path
         if path == "/api/health":
             self._json(200, {"ok": True, "mode": "local", "service": "Khai Hoan Ads"})
             return
@@ -93,6 +102,7 @@ class ApiHandler(SimpleHTTPRequestHandler):
             return
         if path == "/api/config/status":
             tool.load_env(ENV_PATH)
+            meta_config = MetaConfig.from_env()
             self._json(
                 200,
                 {
@@ -105,9 +115,21 @@ class ApiHandler(SimpleHTTPRequestHandler):
                         "telegram": bool(
                             os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")
                         ),
+                        "meta": bool(meta_config.access_token and meta_config.ad_account_id),
                     },
                 },
             )
+            return
+        if path == "/api/meta/status":
+            try:
+                tool.load_env(ENV_PATH)
+                config = MetaConfig.from_env()
+                verify = parse_qs(parsed_url.query).get("verify", ["false"])[0].lower() in {"1", "true", "yes"}
+                self._json(200, {"ok": True, **get_meta_status(config, verify=verify)})
+            except MetaValidationError as exc:
+                self._error(400, str(exc))
+            except MetaApiError as exc:
+                self._error(502, str(exc))
             return
         if path == "/api/export/candidates":
             try:
@@ -156,6 +178,20 @@ class ApiHandler(SimpleHTTPRequestHandler):
             if path == "/api/planner/preview":
                 result = preview_plan(_read_json(self))
                 self._json(200, {"ok": True, "plan": result})
+                return
+            if path == "/api/meta/preview":
+                payload = _read_json(self)
+                tool.load_env(ENV_PATH)
+                config = MetaConfig.from_env()
+                result = preview_meta_plan(payload, config)
+                self._json(200, {"ok": True, "plan": result})
+                return
+            if path == "/api/meta/drafts":
+                payload = _read_json(self)
+                tool.load_env(ENV_PATH)
+                config = MetaConfig.from_env()
+                result = create_paused_meta_drafts(payload, config)
+                self._json(200, {"ok": True, **result})
                 return
             if path == "/api/planner/drafts":
                 payload = _read_json(self)
@@ -213,6 +249,10 @@ class ApiHandler(SimpleHTTPRequestHandler):
             self._error(400, str(exc))
         except PresetValidationError as exc:
             self._error(400, str(exc))
+        except MetaValidationError as exc:
+            self._error(400, str(exc))
+        except MetaApiError as exc:
+            self._error(502, str(exc))
         except Exception as exc:
             traceback.print_exc()
             self._error(500, f"Không thể hoàn tất yêu cầu: {exc}")

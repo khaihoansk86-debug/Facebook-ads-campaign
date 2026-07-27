@@ -9,7 +9,7 @@ async function openVideoFlow(page) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#serverText')).toContainText('API Python đang chạy');
+  await expect(page.locator('#serverText')).toContainText('Backend');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await expect(page.locator('#campaignList .choice').first()).toBeVisible();
@@ -76,7 +76,7 @@ test('cấu hình ngân sách và lịch chạy ngay trong Planner', async ({ pa
 
   await page.locator('#endTime').fill('2030-12-31T23:55');
   await page.locator('#addFlowButton').click();
-  await expect(page.locator('.flow-card')).toContainText('800 PHP · Trọn đời');
+  await expect(page.locator('.flow-card')).toContainText('800 · Trọn đời (theo tiền tệ TKQC)');
 });
 
 test('tạo bundle đối tượng ở khu vực riêng', async ({ page }) => {
@@ -103,25 +103,46 @@ test('tạo bundle đối tượng ở khu vực riêng', async ({ page }) => {
   await expect(page.locator('#plannerWorkspace')).toBeVisible();
 });
 
-test('thực thi đầy đủ thao tác tạo bản nháp và hiện liên kết Notion', async ({ page }) => {
+test('xem trước rồi tạo đầy đủ bản nháp PAUSED trên Meta', async ({ page }) => {
   let submittedPayload;
-  await page.route('**/api/planner/drafts', async route => {
+  await page.route('**/api/meta/preview', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        plan: {
+          account: { id: 'act_1', name: 'TKQC test', currency: 'USD', timezone_name: 'America/Los_Angeles' },
+          summary: { campaigns_count: 1, adsets_count: 1, ads_count: 1 },
+          flows: [{
+            campaign_name: 'Tương tác',
+            adset_name: 'Xem video',
+            budget_major: '800',
+            currency: 'USD',
+            source_adset_id: 'source-1',
+          }],
+        },
+      }),
+    });
+  });
+  await page.route('**/api/meta/drafts', async route => {
     submittedPayload = route.request().postDataJSON();
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         ok: true,
-        total: 1,
+        status: 'created',
         created: 1,
         skipped: 0,
         failed: 0,
-        results: [{
-          position: 1,
-          status: 'created',
-          link: 'https://facebook.com/post-a',
-          page_urls: ['https://notion.so/mock-page'],
-        }],
+        objects: {
+          1: {
+            campaign_id: 'campaign-1',
+            adset_id: 'adset-1',
+            ads: { story_1: { ad_id: 'ad-1', creative_id: 'creative-1' } },
+          },
+        },
       }),
     });
   });
@@ -129,12 +150,16 @@ test('thực thi đầy đủ thao tác tạo bản nháp và hiện liên kết
   await page.locator('#linksInput').fill('https://facebook.com/post-a');
   await openVideoFlow(page);
   await page.locator('#addFlowButton').click();
+  await page.locator('#previewButton').click();
+  await expect(page.locator('#previewContent')).toContainText('Tất cả campaign, ad set và ads đều được tạo ở trạng thái PAUSED');
+  await page.locator('#closeDialog').click();
   page.once('dialog', dialog => dialog.accept());
   await page.locator('#createDraftsButton').click();
 
   await expect(page.locator('#previewDialog')).toBeVisible();
-  await expect(page.locator('#previewContent')).toContainText('1 mục đã tạo');
-  await expect(page.getByRole('link', { name: 'Mở trang Notion 1' })).toHaveAttribute('href', 'https://notion.so/mock-page');
+  await expect(page.locator('#previewContent')).toContainText('1 ads đã tạo');
+  await expect(page.locator('#previewContent')).toContainText('Campaign: campaign-1');
+  await expect(page.locator('#previewContent')).toContainText('Ad ad-1 · Creative creative-1');
   expect(submittedPayload.links).toEqual(['https://facebook.com/post-a']);
   expect(submittedPayload.flows).toHaveLength(1);
   expect(submittedPayload.flows[0].audience_codes).toEqual(['AUD_BROAD_PHAN_THIET']);

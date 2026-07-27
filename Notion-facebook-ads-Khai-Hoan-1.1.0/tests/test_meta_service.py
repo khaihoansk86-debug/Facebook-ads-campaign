@@ -1,0 +1,168 @@
+import tempfile
+import unittest
+from pathlib import Path
+
+from ads_core.meta_service import (
+    MetaConfig,
+    MetaValidationError,
+    create_paused_meta_drafts,
+    get_meta_status,
+    preview_meta_plan,
+)
+
+
+class FakeMetaClient:
+    def __init__(self, fail_ad_once=False):
+        self.get_calls = []
+        self.post_calls = []
+        self.next_id = 0
+        self.fail_ad_once = fail_ad_once
+
+    def get(self, path, **params):
+        self.get_calls.append((path, params))
+        if path.startswith("act_"):
+            return {
+                "id": "act_1",
+                "name": "Test account",
+                "account_status": 1,
+                "currency": "USD",
+                "timezone_name": "America/Los_Angeles",
+            }
+        if path == "page-1_123456":
+            return {
+                "id": "page-1_123456",
+                "permalink_url": "https://www.facebook.com/page/posts/123456",
+            }
+        if path == "source-adset-1":
+            return {
+                "id": "source-adset-1",
+                "name": "Source ad set",
+                "account_id": "1",
+                "effective_status": "ACTIVE",
+            }
+        raise AssertionError(f"Unexpected GET {path}")
+
+    def post(self, path, **params):
+        self.post_calls.append((path, params))
+        self.next_id += 1
+        if path.endswith("/campaigns"):
+            return {"id": "campaign-1"}
+        if path.endswith("/copies"):
+            return {"copied_adset_id": "adset-1"}
+        if path == "adset-1":
+            return {"success": True}
+        if path.endswith("/adcreatives"):
+            return {"id": f"creative-{self.next_id}"}
+        if path.endswith("/ads"):
+            if self.fail_ad_once:
+                self.fail_ad_once = False
+                raise RuntimeError("temporary ad failure")
+            return {"id": f"ad-{self.next_id}"}
+        raise AssertionError(f"Unexpected POST {path}")
+
+
+def config():
+    return MetaConfig(
+        access_token="secret-token",
+        api_version="v25.0",
+        ad_account_id="act_1",
+        page_id="page-1",
+        adset_template_map={"ENG_POST_COLD": "source-adset-1"},
+        default_adset_template_id="",
+        allow_default_template=False,
+        test_mode=True,
+    )
+
+
+def payload():
+    return {
+        "links": ["https://www.facebook.com/page/posts/123456"],
+        "flows": [
+            {
+                "campaign_code": "ENG_BASE",
+                "adset_code": "ENG_POST_COLD",
+                "audience_codes": ["AUD_BROAD_PHAN_THIET"],
+                "dataset_code": "DATASET_NONE",
+                "budget_code": "BUD_DAILY_800_PHP",
+                "custom_budget_values": {"Ngân sách/ngày": "50"},
+                "start_time": "2026-07-28T09:00:00+07:00",
+                "end_time": None,
+                "placement_code": "PLC_FB_MSG_MOBILE",
+                "creative_mode": "existing_post",
+            }
+        ],
+        "ad_name": "API test",
+    }
+
+
+class MetaServiceTests(unittest.TestCase):
+    def test_status_is_safe_and_never_returns_token(self):
+        status = get_meta_status(config(), FakeMetaClient(), verify=True)
+        self.assertTrue(status["connected"])
+        self.assertEqual(status["account"]["currency"], "USD")
+        self.assertNotIn("access_token", status)
+        self.assertNotIn("secret-token", str(status))
+
+    def test_preview_is_read_only_and_converts_budget_to_minor_units(self):
+        client = FakeMetaClient()
+        result = preview_meta_plan(payload(), config(), client)
+        self.assertEqual(result["write_mode"], "PAUSED_ONLY")
+        self.assertEqual(result["summary"]["ads_count"], 1)
+        self.assertEqual(result["links"][0]["object_story_id"], "page-1_123456")
+        self.assertEqual(result["flows"][0]["budget_minor"], 5000)
+        self.assertEqual(client.post_calls, [])
+
+    def test_missing_exact_template_mapping_is_rejected(self):
+        bad_config = MetaConfig(
+            access_token="token",
+            api_version="v25.0",
+            ad_account_id="act_1",
+            page_id="page-1",
+            adset_template_map={},
+            default_adset_template_id="source-default",
+            allow_default_template=False,
+            test_mode=True,
+        )
+        with self.assertRaises(MetaValidationError):
+            preview_meta_plan(payload(), bad_config, FakeMetaClient())
+
+    def test_create_is_paused_and_idempotent(self):
+        client = FakeMetaClient()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "meta-ledger.json"
+            created = create_paused_meta_drafts(payload(), config(), client, ledger_path)
+            repeated = create_paused_meta_drafts(payload(), config(), client, ledger_path)
+
+        self.assertEqual(created["status"], "created")
+        self.assertEqual(created["created"], 1)
+        self.assertEqual(repeated["status"], "skipped")
+        self.assertEqual(repeated["skipped"], 1)
+
+        campaign_call = next(params for path, params in client.post_calls if path.endswith("/campaigns"))
+        self.assertEqual(campaign_call["status"], "PAUSED")
+        self.assertFalse(campaign_call["is_adset_budget_sharing_enabled"])
+        copy_call = next(params for path, params in client.post_calls if path.endswith("/copies"))
+        self.assertEqual(copy_call["status_option"], "PAUSED")
+        update_call = next(params for path, params in client.post_calls if path == "adset-1")
+        self.assertEqual(update_call["status"], "PAUSED")
+        self.assertEqual(update_call["daily_budget"], 5000)
+        ad_call = next(params for path, params in client.post_calls if path.endswith("/ads"))
+        self.assertEqual(ad_call["status"], "PAUSED")
+
+    def test_retry_after_ad_failure_reuses_campaign_adset_and_creative(self):
+        client = FakeMetaClient(fail_ad_once=True)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "meta-ledger.json"
+            with self.assertRaises(RuntimeError):
+                create_paused_meta_drafts(payload(), config(), client, ledger_path)
+            result = create_paused_meta_drafts(payload(), config(), client, ledger_path)
+
+        self.assertEqual(result["status"], "created")
+        self.assertEqual(sum(path.endswith("/campaigns") for path, _ in client.post_calls), 1)
+        self.assertEqual(sum(path.endswith("/copies") for path, _ in client.post_calls), 1)
+        self.assertEqual(sum(path.endswith("/adcreatives") for path, _ in client.post_calls), 1)
+        self.assertEqual(sum(path.endswith("/ads") for path, _ in client.post_calls), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

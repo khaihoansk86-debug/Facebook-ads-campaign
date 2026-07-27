@@ -140,7 +140,29 @@ Or:
 python web_app.py
 ```
 
-The server binds to `127.0.0.1:8000` by default. Plans in progress are kept in browser local storage. Completed Notion rows can be selected and exported from the review screen. Successfully created drafts are recorded in `.web_state/draft_ledger.json` so retries do not create duplicates.
+The server binds to `127.0.0.1:8000` by default. Plans in progress are kept in browser local storage.
+
+The Planner now uses Meta Marketing API as the primary publish flow:
+
+1. `Xem trước` validates the ad account, currency, existing-post story IDs, and mapped source ad sets without writing.
+2. `Tạo bản nháp PAUSED trên Meta` creates one campaign and one ad set per Planner flow, then one ad per Facebook link.
+3. Campaigns, ad sets, and ads are always created as `PAUSED`.
+4. `.web_state/meta_publish_ledger.json` stores every Meta object ID after each successful step, so a retry resumes instead of creating duplicates.
+5. `CSV dự phòng` keeps the old Notion review/export workflow available during migration.
+
+Configure Meta only in the backend `.env`:
+
+```env
+META_ACCESS_TOKEN=
+META_API_VERSION=v25.0
+META_AD_ACCOUNT_ID=act_123456789
+META_PAGE_ID=123456789
+META_TEST_MODE=true
+META_ADSET_TEMPLATE_MAP={"ENG_POST_COLD":"123456789"}
+META_ALLOW_DEFAULT_TEMPLATE=false
+```
+
+Each Planner ad-set bundle must be mapped to a proven Meta source ad set before it can publish. This deliberately blocks an unsupported bundle instead of silently copying the wrong optimization, promoted object, targeting, or placement settings. Use a System User token for the fixed backend; short-lived Graph API Explorer tokens are for testing only. Never expose `META_ACCESS_TOKEN` in Vercel or browser code.
 
 ## Command Line Export
 
@@ -198,10 +220,10 @@ npm run test:e2e
 
 ## Known Limitations
 
-- Facebook post metadata resolution depends on Facebook's public page HTML structure and can break if Meta changes markup.
-- Some private or restricted Facebook posts may not expose enough data for automatic `Story ID` resolution.
-- Facebook Ads Manager remains the final validator for bulk import compatibility.
-- Live Notion, Facebook, Supabase, and Telegram integrations require valid credentials and are not exercised by the local automated tests.
+- Standard Page post URLs can be converted directly to `page_id_post_id`. Short links, share links, and some Reel URLs need `META_PAGE_ID` plus Page read access so the backend can resolve them.
+- Only Planner ad-set codes present in `META_ADSET_TEMPLATE_MAP` can publish. Add mappings gradually after each source ad set is regression-tested.
+- The current local HTTP server has no employee authentication and must not be exposed directly to the public internet. Put authentication and HTTPS in front of it before office-wide deployment.
+- CSV export remains the fallback while the Meta API mappings are expanded.
 
 ## License
 
