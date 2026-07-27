@@ -16,6 +16,7 @@ class FakeMetaClient:
         self.get_calls = []
         self.post_calls = []
         self.next_id = 0
+        self.copy_count = 0
         self.fail_ad_once = fail_ad_once
 
     def get(self, path, **params):
@@ -33,12 +34,17 @@ class FakeMetaClient:
                 "id": "page-1_123456",
                 "permalink_url": "https://www.facebook.com/page/posts/123456",
             }
-        if path == "source-adset-1":
+        if path.startswith("source-adset-"):
             return {
-                "id": "source-adset-1",
+                "id": path,
                 "name": "Source ad set",
                 "account_id": "1",
                 "effective_status": "ACTIVE",
+                "billing_event": "IMPRESSIONS",
+                "optimization_goal": "POST_ENGAGEMENT",
+                "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+                "targeting": {"age_min": 18, "age_max": 45},
+                "destination_type": "ON_POST",
             }
         raise AssertionError(f"Unexpected GET {path}")
 
@@ -47,9 +53,10 @@ class FakeMetaClient:
         self.next_id += 1
         if path.endswith("/campaigns"):
             return {"id": "campaign-1"}
-        if path.endswith("/copies"):
-            return {"copied_adset_id": "adset-1"}
-        if path == "adset-1":
+        if path.endswith("/adsets"):
+            self.copy_count += 1
+            return {"id": f"adset-{self.copy_count}"}
+        if path.startswith("adset-"):
             return {"success": True}
         if path.endswith("/adcreatives"):
             return {"id": f"creative-{self.next_id}"}
@@ -131,21 +138,22 @@ class MetaServiceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             ledger_path = Path(temp_dir) / "meta-ledger.json"
             created = create_paused_meta_drafts(payload(), config(), client, ledger_path)
+            get_count_after_create = len(client.get_calls)
             repeated = create_paused_meta_drafts(payload(), config(), client, ledger_path)
 
         self.assertEqual(created["status"], "created")
         self.assertEqual(created["created"], 1)
         self.assertEqual(repeated["status"], "skipped")
         self.assertEqual(repeated["skipped"], 1)
+        self.assertEqual(len(client.get_calls), get_count_after_create)
 
         campaign_call = next(params for path, params in client.post_calls if path.endswith("/campaigns"))
         self.assertEqual(campaign_call["status"], "PAUSED")
         self.assertFalse(campaign_call["is_adset_budget_sharing_enabled"])
-        copy_call = next(params for path, params in client.post_calls if path.endswith("/copies"))
-        self.assertEqual(copy_call["status_option"], "PAUSED")
-        update_call = next(params for path, params in client.post_calls if path == "adset-1")
-        self.assertEqual(update_call["status"], "PAUSED")
-        self.assertEqual(update_call["daily_budget"], 5000)
+        adset_call = next(params for path, params in client.post_calls if path.endswith("/adsets"))
+        self.assertEqual(adset_call["status"], "PAUSED")
+        self.assertEqual(adset_call["daily_budget"], 5000)
+        self.assertEqual(adset_call["start_time"], "2026-07-28T09:00+07:00")
         ad_call = next(params for path, params in client.post_calls if path.endswith("/ads"))
         self.assertEqual(ad_call["status"], "PAUSED")
 
@@ -159,8 +167,41 @@ class MetaServiceTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "created")
         self.assertEqual(sum(path.endswith("/campaigns") for path, _ in client.post_calls), 1)
-        self.assertEqual(sum(path.endswith("/copies") for path, _ in client.post_calls), 1)
+        self.assertEqual(sum(path.endswith("/adsets") for path, _ in client.post_calls), 1)
         self.assertEqual(sum(path.endswith("/adcreatives") for path, _ in client.post_calls), 1)
+        self.assertEqual(sum(path.endswith("/ads") for path, _ in client.post_calls), 2)
+
+    def test_multiple_formats_share_one_campaign(self):
+        multi_payload = payload()
+        second_flow = {
+            **multi_payload["flows"][0],
+            "adset_code": "ENG_VIDEO_COLD",
+            "budget_code": "BUD_DAILY_800_PHP",
+            "custom_budget_values": {"Ngân sách/ngày": "10"},
+            "end_time": None,
+        }
+        multi_payload["flows"].append(second_flow)
+        multi_config = MetaConfig(
+            **{
+                **config().__dict__,
+                "adset_template_map": {
+                    "ENG_POST_COLD": "source-adset-1",
+                    "ENG_VIDEO_COLD": "source-adset-2",
+                },
+            }
+        )
+        client = FakeMetaClient()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = create_paused_meta_drafts(
+                multi_payload,
+                multi_config,
+                client,
+                Path(temp_dir) / "meta-ledger.json",
+            )
+
+        self.assertEqual(result["created"], 2)
+        self.assertEqual(sum(path.endswith("/campaigns") for path, _ in client.post_calls), 1)
+        self.assertEqual(sum(path.endswith("/adsets") for path, _ in client.post_calls), 2)
         self.assertEqual(sum(path.endswith("/ads") for path, _ in client.post_calls), 2)
 
 

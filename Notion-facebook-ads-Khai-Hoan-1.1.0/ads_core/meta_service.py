@@ -44,6 +44,22 @@ ZERO_DECIMAL_CURRENCIES = {
     "XOF",
     "XPF",
 }
+ADSET_TEMPLATE_FIELDS = (
+    "id,name,account_id,effective_status,billing_event,optimization_goal,"
+    "bid_strategy,bid_amount,targeting,promoted_object,destination_type,"
+    "attribution_spec,optimization_sub_event,is_dynamic_creative,pacing_type"
+)
+ADSET_CREATE_FIELDS = (
+    "billing_event",
+    "optimization_goal",
+    "bid_strategy",
+    "bid_amount",
+    "targeting",
+    "promoted_object",
+    "destination_type",
+    "is_dynamic_creative",
+    "pacing_type",
+)
 
 
 class MetaValidationError(ValueError):
@@ -337,7 +353,7 @@ def preview_meta_plan(
     flows = [_flow_intent(flow, currency, config) for flow in plan["flows"]]
     templates: dict[str, dict[str, Any]] = {}
     for template_id in {flow["source_adset_id"] for flow in flows}:
-        template = api.get(template_id, fields="id,name,account_id,effective_status")
+        template = api.get(template_id, fields=ADSET_TEMPLATE_FIELDS)
         if not template.get("id"):
             raise MetaValidationError(f"Không đọc được ad set mẫu Meta {template_id}.")
         template_account = template.get("account_id")
@@ -355,6 +371,11 @@ def preview_meta_plan(
             "id": str(template["id"]),
             "name": template.get("name", ""),
             "effective_status": template.get("effective_status"),
+            "create_spec": {
+                key: template[key]
+                for key in ADSET_CREATE_FIELDS
+                if key in template and template[key] not in (None, "", [])
+            },
         }
     for flow in flows:
         flow["source_adset"] = templates[flow["source_adset_id"]]
@@ -364,7 +385,7 @@ def preview_meta_plan(
         "account": _safe_account(account, config),
         "summary": {
             **plan["summary"],
-            "campaigns_count": len(flows),
+            "campaigns_count": len({flow["campaign_code"] for flow in flows}),
             "adsets_count": len(flows),
             "ads_count": len(plan["links"]) * len(flows),
         },
@@ -410,16 +431,6 @@ def _today_name(name: str) -> str:
     return f"{name} · {datetime.now().strftime('%Y-%m-%d')}"
 
 
-def _extract_copied_adset_id(result: dict[str, Any]) -> str:
-    copied_id = result.get("copied_adset_id") or result.get("id")
-    if copied_id:
-        return str(copied_id)
-    copies = result.get("adset_copies") or result.get("copied_adsets") or []
-    if copies and isinstance(copies[0], dict) and copies[0].get("copied_adset_id"):
-        return str(copies[0]["copied_adset_id"])
-    raise MetaApiError("Meta không trả về ID ad set vừa sao chép.")
-
-
 def create_paused_meta_drafts(
     payload: dict[str, Any],
     config: MetaConfig,
@@ -427,36 +438,41 @@ def create_paused_meta_drafts(
     ledger_path: Path = DEFAULT_META_LEDGER_PATH,
 ) -> dict[str, Any]:
     api = client or MetaClient(config)
-    preview = preview_meta_plan(payload, config, api)
     operation_key = _ledger_key(payload, config.ad_account_id)
     ad_name = str(payload.get("ad_name") or "").strip()
     with _META_LEDGER_LOCK:
         ledger = _read_ledger(Path(ledger_path))
+        existing_operation = ledger["operations"].get(operation_key)
+        if existing_operation and existing_operation.get("status") == "completed":
+            existing_flows = existing_operation.get("flows", {})
+            existing_ads = sum(len(flow.get("ads", {})) for flow in existing_flows.values())
+            return {
+                "operation_key": operation_key,
+                "status": "skipped",
+                "reason": "Kế hoạch này đã được tạo trên Meta trước đó.",
+                "created": 0,
+                "skipped": existing_ads,
+                "failed": 0,
+                "objects": existing_flows,
+            }
+        preview = preview_meta_plan(payload, config, api)
         operation = ledger["operations"].setdefault(
             operation_key,
             {
                 "created_at": datetime.now().isoformat(timespec="seconds"),
                 "account_id": config.ad_account_id,
                 "status": "in_progress",
+                "campaigns": {},
                 "flows": {},
             },
         )
-        if operation.get("status") == "completed":
-            return {
-                "operation_key": operation_key,
-                "status": "skipped",
-                "reason": "Kế hoạch này đã được tạo trên Meta trước đó.",
-                "created": 0,
-                "skipped": preview["summary"]["ads_count"],
-                "failed": 0,
-                "objects": operation.get("flows", {}),
-            }
-
         try:
             for flow in preview["flows"]:
                 flow_key = str(flow["position"])
                 state = operation["flows"].setdefault(flow_key, {"ads": {}})
-                if not state.get("campaign_id"):
+                campaigns = operation.setdefault("campaigns", {})
+                campaign_state = campaigns.setdefault(flow["campaign_code"], {})
+                if not campaign_state.get("campaign_id"):
                     campaign = api.post(
                         f"{config.ad_account_id}/campaigns",
                         name=_today_name(flow["campaign_name"]),
@@ -465,28 +481,38 @@ def create_paused_meta_drafts(
                         special_ad_categories=[],
                         is_adset_budget_sharing_enabled=False,
                     )
-                    state["campaign_id"] = str(campaign["id"])
+                    campaign_state["campaign_id"] = str(campaign["id"])
                     _write_ledger(Path(ledger_path), ledger)
+                state["campaign_id"] = campaign_state["campaign_id"]
                 if not state.get("adset_id"):
-                    copied = api.post(
-                        f"{flow['source_adset_id']}/copies",
-                        campaign_id=state["campaign_id"],
-                        deep_copy=False,
-                        status_option="PAUSED",
-                    )
-                    state["adset_id"] = _extract_copied_adset_id(copied)
-                    _write_ledger(Path(ledger_path), ledger)
-                if not state.get("adset_configured"):
-                    update = {
+                    adset_params = {
+                        "campaign_id": state["campaign_id"],
                         "name": _today_name(flow["adset_name"]),
                         "status": "PAUSED",
                         flow["budget_field"]: flow["budget_minor"],
                         "start_time": flow["start_time"],
                     }
                     if flow.get("end_time"):
+                        adset_params["end_time"] = flow["end_time"]
+                    adset_params.update(flow["source_adset"]["create_spec"])
+                    created_adset = api.post(f"{config.ad_account_id}/adsets", **adset_params)
+                    state["adset_id"] = str(created_adset["id"])
+                    state["adset_configured"] = True
+                    _write_ledger(Path(ledger_path), ledger)
+                elif not state.get("adset_configured"):
+                    # Compatibility for a partially completed operation created by the
+                    # former copy-based implementation. Meta does not allow changing
+                    # start_time after a copied ad set has already started.
+                    update = {
+                        "name": _today_name(flow["adset_name"]),
+                        "status": "PAUSED",
+                        flow["budget_field"]: flow["budget_minor"],
+                    }
+                    if flow.get("end_time"):
                         update["end_time"] = flow["end_time"]
                     api.post(state["adset_id"], **update)
                     state["adset_configured"] = True
+                    state["schedule_warning"] = "Meta giữ start_time do ad set này được tạo dở bằng cơ chế copy cũ."
                     _write_ledger(Path(ledger_path), ledger)
                 for link_index, link in enumerate(preview["links"], start=1):
                     story_id = link["object_story_id"]
@@ -501,7 +527,14 @@ def create_paused_meta_drafts(
                         )
                         ad_state["creative_id"] = str(creative["id"])
                         _write_ledger(Path(ledger_path), ledger)
-                    chosen_name = ad_name if len(preview["links"]) == 1 and ad_name else f"Bài quảng cáo {link_index}"
+                    if len(preview["links"]) == 1 and ad_name:
+                        chosen_name = (
+                            ad_name
+                            if len(preview["flows"]) == 1
+                            else f"{ad_name} · {flow['adset_name']}"
+                        )
+                    else:
+                        chosen_name = f"Bài quảng cáo {link_index} · {flow['adset_name']}"
                     ad = api.post(
                         f"{config.ad_account_id}/ads",
                         name=chosen_name,
