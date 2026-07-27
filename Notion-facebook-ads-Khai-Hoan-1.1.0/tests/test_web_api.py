@@ -1,4 +1,6 @@
 import json
+import os
+import tempfile
 import threading
 import unittest
 import urllib.error
@@ -12,6 +14,11 @@ import web_app
 class WebApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.temp_dir = tempfile.TemporaryDirectory()
+        cls.previous_approver_key = os.environ.get("PLANNER_APPROVER_KEY")
+        cls.previous_review_store = os.environ.get("PLANNER_REVIEW_STORE")
+        os.environ["PLANNER_APPROVER_KEY"] = "test-approver-key"
+        os.environ["PLANNER_REVIEW_STORE"] = os.path.join(cls.temp_dir.name, "reviews.json")
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), web_app.ApiHandler)
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -22,14 +29,23 @@ class WebApiTests(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
         cls.thread.join(timeout=2)
+        if cls.previous_approver_key is None:
+            os.environ.pop("PLANNER_APPROVER_KEY", None)
+        else:
+            os.environ["PLANNER_APPROVER_KEY"] = cls.previous_approver_key
+        if cls.previous_review_store is None:
+            os.environ.pop("PLANNER_REVIEW_STORE", None)
+        else:
+            os.environ["PLANNER_REVIEW_STORE"] = cls.previous_review_store
+        cls.temp_dir.cleanup()
 
-    def request(self, path, payload=None, method=None):
+    def request(self, path, payload=None, method=None, headers=None):
         data = None if payload is None else json.dumps(payload).encode("utf-8")
         request = urllib.request.Request(
             self.base_url + path,
             data=data,
             method=method or ("GET" if payload is None else "POST"),
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", **(headers or {})},
         )
         try:
             with urllib.request.urlopen(request, timeout=3) as response:
@@ -39,6 +55,19 @@ class WebApiTests(unittest.TestCase):
                 return exc.code, json.loads(exc.read().decode("utf-8"))
             finally:
                 exc.close()
+
+    def approver_session(self):
+        data = json.dumps({"reviewer": "IT Test", "key": "test-approver-key"}).encode("utf-8")
+        request = urllib.request.Request(
+            self.base_url + "/api/auth/approver",
+            data=data,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=3) as response:
+            result = json.loads(response.read().decode("utf-8"))
+            cookie = response.headers["Set-Cookie"].split(";", 1)[0]
+        return cookie, result["csrf_token"]
 
     def payload(self):
         return {
@@ -120,8 +149,38 @@ class WebApiTests(unittest.TestCase):
         fake_created = {"status": "created", "created": 2, "skipped": 0, "failed": 0}
         with patch("web_app.create_paused_meta_drafts", return_value=fake_created):
             status, result = self.request("/api/meta/drafts", self.payload())
+        self.assertEqual(status, 403)
+        self.assertFalse(result["ok"])
+
+    def test_review_requires_approver_and_publishes_only_after_approval(self):
+        status, submitted = self.request("/api/reviews", self.payload())
+        self.assertEqual(status, 201)
+        review_id = submitted["review"]["id"]
+        self.assertEqual(submitted["review"]["status"], "PENDING_REVIEW")
+
+        status, _ = self.request(f"/api/reviews/{review_id}/approve", {"note": ""})
+        self.assertEqual(status, 403)
+
+        cookie, csrf = self.approver_session()
+        privileged_headers = {"Cookie": cookie, "X-CSRF-Token": csrf}
+        status, approved = self.request(
+            f"/api/reviews/{review_id}/approve",
+            {"note": "Đã kiểm tra"},
+            headers=privileged_headers,
+        )
         self.assertEqual(status, 200)
-        self.assertEqual(result["created"], 2)
+        self.assertEqual(approved["review"]["status"], "APPROVED")
+
+        fake_created = {"status": "created", "created": 2, "skipped": 0, "failed": 0}
+        with patch("web_app.create_paused_meta_drafts", return_value=fake_created):
+            status, published = self.request(
+                f"/api/reviews/{review_id}/publish",
+                {},
+                headers=privileged_headers,
+            )
+        self.assertEqual(status, 200)
+        self.assertEqual(published["review"]["status"], "META_CREATED")
+        self.assertEqual(published["review"]["meta_result"]["created"], 2)
 
     def test_export_candidates_endpoint(self):
         candidates = [{"id": "page-1", "name": "Bài đã duyệt", "status": "Ready"}]

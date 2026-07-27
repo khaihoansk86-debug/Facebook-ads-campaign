@@ -142,13 +142,15 @@ python web_app.py
 
 The server binds to `127.0.0.1:8000` by default. Plans in progress are kept in browser local storage.
 
-The Planner now uses Meta Marketing API as the primary publish flow:
+The Planner uses a two-stage review flow before the Meta Marketing API writes:
 
-1. `Xem trước` validates the ad account, currency, existing-post story IDs, and mapped source ad sets without writing.
-2. `Tạo bản nháp PAUSED trên Meta` groups flows with the same campaign objective into one campaign, creates one ad set per flow, then one ad per Facebook link in each ad set.
-3. Campaigns, ad sets, and ads are always created as `PAUSED`.
-4. `.web_state/meta_publish_ledger.json` stores every Meta object ID after each successful step, so a retry resumes instead of creating duplicates.
-5. `CSV dự phòng` keeps the old Notion review/export workflow available during migration.
+1. Content prepares the plan and selects `Gửi kế hoạch duyệt`.
+2. The server stores an immutable snapshot in `.web_state/planner_reviews.json`.
+3. IT/Ads Operator opens `Duyệt kế hoạch` and checks the Campaign → Ad set → Ads tree.
+4. Only an authenticated approver can approve/reject and create the approved plan on Meta.
+5. Campaigns, ad sets, and ads are always created as `PAUSED`.
+6. `.web_state/meta_publish_ledger.json` stores every Meta object ID after each successful step, so a retry resumes instead of creating duplicates.
+7. `CSV dự phòng` keeps the old Notion review/export workflow available during migration.
 
 Configure Meta only in the backend `.env`:
 
@@ -160,9 +162,13 @@ META_PAGE_ID=123456789
 META_TEST_MODE=true
 META_ADSET_TEMPLATE_MAP={"ENG_POST_COLD":"123456789"}
 META_ALLOW_DEFAULT_TEMPLATE=false
+PLANNER_APPROVER_KEY=use-a-long-private-key
+PLANNER_SESSION_SECRET=use-another-long-random-secret
 ```
 
 Each Planner ad-set bundle must be mapped to a proven Meta source ad set before it can publish. This deliberately blocks an unsupported bundle instead of silently copying the wrong optimization, promoted object, targeting, or placement settings. Use a System User token for the fixed backend; short-lived Graph API Explorer tokens are for testing only. Never expose `META_ACCESS_TOKEN` in Vercel or browser code.
+
+Keep `PLANNER_APPROVER_KEY` and `PLANNER_SESSION_SECRET` on the backend only. Approver sessions use a signed HttpOnly, SameSite cookie plus a CSRF token. For a Vercel frontend, proxy `/api` through the same HTTPS site (or place both behind one internal HTTPS reverse proxy); do not expose these secrets as frontend environment variables.
 
 Planner reads each mapped ad set as a configuration template and creates a new ad set directly with the requested schedule, budget, and `PAUSED` status. See [Meta ad-set copy scheduling](../docs/meta-adset-copy-scheduling.md) for the Graph API limitation that led to this design.
 

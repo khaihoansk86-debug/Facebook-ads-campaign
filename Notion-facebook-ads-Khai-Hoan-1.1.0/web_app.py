@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import hashlib
+import hmac
 import json
 import os
+import secrets
 import sys
+import time
 import traceback
 import webbrowser
+from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
@@ -29,6 +35,15 @@ from ads_core.preset_service import (
     list_presets,
     update_preset,
 )
+from ads_core.review_service import (
+    DEFAULT_REVIEW_STORE_PATH,
+    ReviewValidationError,
+    decide_review,
+    get_review,
+    list_reviews,
+    publish_review,
+    submit_review,
+)
 
 
 APP_DIR = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
@@ -36,6 +51,81 @@ RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
 WEB_UI_DIR = RESOURCE_DIR / "web_ui"
 ENV_PATH = APP_DIR / ".env"
 WEB_READY_STATUS_NAMES = ["Done"]
+APPROVER_COOKIE = "kh_ads_approver"
+APPROVER_SESSION_SECONDS = 8 * 60 * 60
+
+
+class AuthorizationError(PermissionError):
+    pass
+
+
+def _review_store_path() -> Path:
+    configured = os.environ.get("PLANNER_REVIEW_STORE")
+    return Path(configured).resolve() if configured else DEFAULT_REVIEW_STORE_PATH
+
+
+def _approver_key() -> str:
+    return os.environ.get("PLANNER_APPROVER_KEY", "")
+
+
+def _session_secret() -> bytes:
+    secret = os.environ.get("PLANNER_SESSION_SECRET") or _approver_key()
+    return secret.encode("utf-8")
+
+
+def _b64encode(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).decode("ascii").rstrip("=")
+
+
+def _b64decode(value: str) -> bytes:
+    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+
+
+def _create_session(reviewer: str) -> tuple[str, dict]:
+    now = int(time.time())
+    session = {
+        "role": "approver",
+        "reviewer": str(reviewer or "IT/Ads Operator").strip()[:100] or "IT/Ads Operator",
+        "csrf": secrets.token_urlsafe(24),
+        "iat": now,
+        "exp": now + APPROVER_SESSION_SECONDS,
+    }
+    encoded = _b64encode(json.dumps(session, separators=(",", ":")).encode("utf-8"))
+    signature = _b64encode(hmac.new(_session_secret(), encoded.encode("ascii"), hashlib.sha256).digest())
+    return f"{encoded}.{signature}", session
+
+
+def _parse_session(handler: SimpleHTTPRequestHandler) -> dict | None:
+    if not _session_secret():
+        return None
+    cookie = SimpleCookie()
+    try:
+        cookie.load(handler.headers.get("Cookie", ""))
+        token = cookie[APPROVER_COOKIE].value
+        encoded, supplied_signature = token.split(".", 1)
+        expected_signature = _b64encode(
+            hmac.new(_session_secret(), encoded.encode("ascii"), hashlib.sha256).digest()
+        )
+        if not hmac.compare_digest(supplied_signature, expected_signature):
+            return None
+        session = json.loads(_b64decode(encoded).decode("utf-8"))
+        if session.get("role") != "approver" or int(session.get("exp", 0)) <= int(time.time()):
+            return None
+        return session
+    except (KeyError, ValueError, TypeError, json.JSONDecodeError):
+        return None
+
+
+def _require_approver(handler: SimpleHTTPRequestHandler) -> dict:
+    if not _approver_key():
+        raise AuthorizationError("Máy chủ chưa cấu hình khóa dành cho người duyệt.")
+    session = _parse_session(handler)
+    if not session:
+        raise AuthorizationError("Cần đăng nhập với quyền IT/Ads Operator.")
+    supplied_csrf = handler.headers.get("X-CSRF-Token", "")
+    if not hmac.compare_digest(str(session.get("csrf") or ""), supplied_csrf):
+        raise AuthorizationError("Phiên xác thực không hợp lệ. Hãy đăng nhập lại.")
+    return session
 
 
 def _read_json(handler: SimpleHTTPRequestHandler) -> dict:
@@ -66,13 +156,15 @@ class ApiHandler(SimpleHTTPRequestHandler):
             return f"{content_type}; charset=utf-8"
         return content_type
 
-    def _json(self, status: int, data: dict) -> None:
+    def _json(self, status: int, data: dict, extra_headers: dict[str, str] | None = None) -> None:
         payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(payload)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
+        for name, value in (extra_headers or {}).items():
+            self.send_header(name, value)
         self.end_headers()
         self.wfile.write(payload)
 
@@ -92,6 +184,31 @@ class ApiHandler(SimpleHTTPRequestHandler):
             return
         if path == "/api/planner/catalog":
             self._json(200, {"ok": True, "catalog": public_catalog()})
+            return
+        if path == "/api/auth/me":
+            tool.load_env(ENV_PATH)
+            session = _parse_session(self)
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "configured": bool(_approver_key()),
+                    "authenticated": bool(session),
+                    "role": session.get("role") if session else "content",
+                    "reviewer": session.get("reviewer") if session else None,
+                    "csrf_token": session.get("csrf") if session else None,
+                },
+            )
+            return
+        if path == "/api/reviews":
+            self._json(200, {"ok": True, "reviews": list_reviews(_review_store_path())})
+            return
+        if path.startswith("/api/reviews/"):
+            review_id = unquote(path.removeprefix("/api/reviews/")).strip("/")
+            try:
+                self._json(200, {"ok": True, "review": get_review(review_id, _review_store_path())})
+            except ReviewValidationError as exc:
+                self._error(404, str(exc))
             return
         if path.startswith("/api/presets/"):
             kind = path.removeprefix("/api/presets/").strip("/")
@@ -170,6 +287,70 @@ class ApiHandler(SimpleHTTPRequestHandler):
     def do_POST(self) -> None:
         path = urlparse(self.path).path
         try:
+            if path == "/api/auth/approver":
+                tool.load_env(ENV_PATH)
+                configured_key = _approver_key()
+                if not configured_key:
+                    self._error(503, "Máy chủ chưa cấu hình PLANNER_APPROVER_KEY.")
+                    return
+                credentials = _read_json(self)
+                supplied_key = str(credentials.get("key") or "")
+                if not hmac.compare_digest(configured_key, supplied_key):
+                    self._error(401, "Khóa người duyệt không đúng.")
+                    return
+                token, session = _create_session(credentials.get("reviewer") or "IT/Ads Operator")
+                secure = self.headers.get("X-Forwarded-Proto", "").lower() == "https"
+                cookie = (
+                    f"{APPROVER_COOKIE}={token}; Path=/; HttpOnly; SameSite=Strict; "
+                    f"Max-Age={APPROVER_SESSION_SECONDS}"
+                )
+                if secure:
+                    cookie += "; Secure"
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "authenticated": True,
+                        "role": session["role"],
+                        "reviewer": session["reviewer"],
+                        "csrf_token": session["csrf"],
+                    },
+                    {"Set-Cookie": cookie},
+                )
+                return
+            if path == "/api/reviews":
+                review, deduplicated = submit_review(_read_json(self), _review_store_path())
+                self._json(
+                    200 if deduplicated else 201,
+                    {"ok": True, "review": review, "deduplicated": deduplicated},
+                )
+                return
+            review_parts = path.strip("/").split("/")
+            if len(review_parts) == 4 and review_parts[:2] == ["api", "reviews"]:
+                _, _, review_id, action = review_parts
+                session = _require_approver(self)
+                action_payload = _read_json(self)
+                if action in {"approve", "reject"}:
+                    decision = "APPROVED" if action == "approve" else "REJECTED"
+                    review = decide_review(
+                        unquote(review_id),
+                        decision,
+                        session["reviewer"],
+                        action_payload.get("note") or "",
+                        _review_store_path(),
+                    )
+                    self._json(200, {"ok": True, "review": review})
+                    return
+                if action == "publish":
+                    tool.load_env(ENV_PATH)
+                    config = MetaConfig.from_env()
+                    review = publish_review(
+                        unquote(review_id),
+                        lambda review_payload: create_paused_meta_drafts(review_payload, config),
+                        _review_store_path(),
+                    )
+                    self._json(200, {"ok": True, "review": review})
+                    return
             if path.startswith("/api/presets/"):
                 kind = path.removeprefix("/api/presets/").strip("/")
                 preset = create_preset(kind, _read_json(self))
@@ -187,6 +368,7 @@ class ApiHandler(SimpleHTTPRequestHandler):
                 self._json(200, {"ok": True, "plan": result})
                 return
             if path == "/api/meta/drafts":
+                _require_approver(self)
                 payload = _read_json(self)
                 tool.load_env(ENV_PATH)
                 config = MetaConfig.from_env()
@@ -253,9 +435,29 @@ class ApiHandler(SimpleHTTPRequestHandler):
             self._error(400, str(exc))
         except MetaApiError as exc:
             self._error(502, str(exc))
+        except ReviewValidationError as exc:
+            self._error(409, str(exc))
+        except AuthorizationError as exc:
+            self._error(403, str(exc))
         except Exception as exc:
             traceback.print_exc()
             self._error(500, f"Không thể hoàn tất yêu cầu: {exc}")
+
+    def do_DELETE(self) -> None:
+        path = urlparse(self.path).path
+        if path == "/api/auth/session":
+            self._json(
+                200,
+                {"ok": True, "authenticated": False},
+                {
+                    "Set-Cookie": (
+                        f"{APPROVER_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; "
+                        "Max-Age=0"
+                    )
+                },
+            )
+            return
+        self._error(404, "Không tìm thấy API.")
 
     def do_PUT(self) -> None:
         path = urlparse(self.path).path

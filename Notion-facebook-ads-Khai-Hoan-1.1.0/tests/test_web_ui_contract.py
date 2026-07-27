@@ -56,10 +56,11 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn("loadCandidates", self.javascript)
         self.assertIn("exportSelected", self.javascript)
 
-    def test_meta_api_is_primary_publish_flow(self):
-        self.assertIn("/api/meta/preview", self.javascript)
-        self.assertIn("/api/meta/drafts", self.javascript)
-        self.assertIn("Tạo bản nháp PAUSED trên Meta", self.html)
+    def test_review_is_primary_publish_flow(self):
+        self.assertIn("/api/reviews", self.javascript)
+        self.assertIn("Gửi kế hoạch duyệt", self.html)
+        self.assertIn("Duyệt kế hoạch", self.html)
+        self.assertIn("publishReviewButton", self.html)
         self.assertIn("PAUSED", self.javascript)
 
 

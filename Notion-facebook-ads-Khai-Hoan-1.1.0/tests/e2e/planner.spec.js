@@ -103,69 +103,139 @@ test('tạo bundle đối tượng ở khu vực riêng', async ({ page }) => {
   await expect(page.locator('#plannerWorkspace')).toBeVisible();
 });
 
-test('xem trước rồi tạo đầy đủ bản nháp PAUSED trên Meta', async ({ page }) => {
+test('Content gửi kế hoạch và xem cây đang chờ duyệt', async ({ page }, testInfo) => {
   let submittedPayload;
-  await page.route('**/api/meta/preview', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        ok: true,
-        plan: {
-          account: { id: 'act_1', name: 'TKQC test', currency: 'USD', timezone_name: 'America/Los_Angeles' },
-          summary: { campaigns_count: 1, adsets_count: 1, ads_count: 1 },
-          flows: [{
-            campaign_name: 'Tương tác',
-            adset_name: 'Xem video',
-            budget_major: '800',
-            currency: 'USD',
-            source_adset_id: 'source-1',
-          }],
-        },
-      }),
-    });
-  });
-  await page.route('**/api/meta/drafts', async route => {
-    submittedPayload = route.request().postDataJSON();
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        ok: true,
-        status: 'created',
-        created: 1,
-        skipped: 0,
-        failed: 0,
-        objects: {
-          1: {
-            campaign_id: 'campaign-1',
-            adset_id: 'adset-1',
-            ads: { story_1: { ad_id: 'ad-1', creative_id: 'creative-1' } },
-          },
-        },
-      }),
-    });
+  const review = {
+    id: 'review-1',
+    status: 'PENDING_REVIEW',
+    submitted_by: 'Content',
+    submitted_at: '2026-07-27T08:00:00+00:00',
+    reviewer_note: '',
+    summary: { campaigns_count: 1, adsets_count: 1, ads_count: 1 },
+    tree: [{
+      code: 'ENG_BASE',
+      name: 'Tương tác',
+      adsets: [{
+        position: 1,
+        code: 'ENG_VIDEO_COLD',
+        name: 'Xem video',
+        conversion_location: 'Trên quảng cáo của bạn',
+        performance_goal: 'Tối đa hóa lượt xem video',
+        audiences: ['Khách lạnh Phan Thiết'],
+        custom_budget_values: { 'Ngân sách/ngày': '800' },
+        budget: '800/ngày',
+        placement: 'Facebook mobile',
+        start_time: '2026-07-27T15:00+07:00',
+        end_time: null,
+        ads: [{ position: 1, name: 'Bài 1', link: 'https://facebook.com/post-a' }],
+      }],
+    }],
+  };
+  await page.route('**/api/reviews**', async route => {
+    const url = new URL(route.request().url());
+    if (route.request().method() === 'POST' && url.pathname === '/api/reviews') {
+      submittedPayload = route.request().postDataJSON();
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ ok: true, review, deduplicated: false }) });
+      return;
+    }
+    if (url.pathname === '/api/reviews') {
+      const { tree, ...summary } = review;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, reviews: [summary] }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, review }) });
   });
 
   await page.locator('#linksInput').fill('https://facebook.com/post-a');
   await openVideoFlow(page);
   await page.locator('#addFlowButton').click();
   await page.locator('#previewButton').click();
-  await expect(page.locator('#previewContent')).toContainText('Tất cả campaign, ad set và ads đều được tạo ở trạng thái PAUSED');
+  await expect(page.locator('#previewContent')).toContainText('IT/Ads Operator');
   await page.locator('#closeDialog').click();
-  page.once('dialog', dialog => dialog.accept());
   await page.locator('#createDraftsButton').click();
 
-  await expect(page.locator('#previewDialog')).toBeVisible();
-  await expect(page.locator('#previewContent')).toContainText('1 ads đã tạo');
-  await expect(page.locator('#previewContent')).toContainText('Campaign: campaign-1');
-  await expect(page.locator('#previewContent')).toContainText('Ad ad-1 · Creative creative-1');
+  await expect(page.locator('#reviewView')).toBeVisible();
+  await expect(page.locator('#reviewDetailStatus')).toHaveText('Chờ duyệt');
+  await expect(page.locator('#reviewTree')).toContainText('Campaign · Tương tác');
+  await expect(page.locator('#reviewTree')).toContainText('Nhóm quảng cáo 1 · Xem video');
+  await expect(page.locator('#reviewTree')).toContainText('Bài 1');
+  await page.screenshot({ path: testInfo.outputPath('duyet-ke-hoach.png'), fullPage: true });
   expect(submittedPayload.links).toEqual(['https://facebook.com/post-a']);
   expect(submittedPayload.flows).toHaveLength(1);
   expect(submittedPayload.flows[0].audience_codes).toEqual(['AUD_BROAD_PHAN_THIET']);
   expect(submittedPayload.flows[0].custom_budget_values).toEqual({ 'Ngân sách/ngày': '800' });
   expect(submittedPayload.flows[0].start_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   expect(submittedPayload.flows[0].end_time).toBeNull();
+});
+
+test('IT duyệt rồi tạo PAUSED qua phiên có CSRF', async ({ page }) => {
+  let currentStatus = 'PENDING_REVIEW';
+  let csrfHeader;
+  const fullReview = () => ({
+    id: 'review-it',
+    status: currentStatus,
+    submitted_by: 'Content',
+    submitted_at: '2026-07-27T08:00:00+00:00',
+    reviewer_note: '',
+    summary: { campaigns_count: 1, adsets_count: 1, ads_count: 1 },
+    tree: [{
+      code: 'ENG_BASE',
+      name: 'Tương tác',
+      adsets: [{
+        position: 1, code: 'ENG_VIDEO_COLD', name: 'Xem video',
+        conversion_location: 'Trên quảng cáo của bạn', performance_goal: 'Tối đa hóa lượt xem video',
+        audiences: ['Khách lạnh'], custom_budget_values: { 'Ngân sách/ngày': '800' },
+        placement: 'Facebook mobile', start_time: null, end_time: null,
+        ads: [{ position: 1, name: 'Bài 1', link: 'https://facebook.com/post-a' }],
+      }],
+    }],
+  });
+  await page.route('**/api/auth/me', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, configured: true, authenticated: false, role: 'content', csrf_token: null }),
+  }));
+  await page.route('**/api/auth/approver', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, authenticated: true, role: 'approver', reviewer: 'IT Test', csrf_token: 'csrf-test' }),
+  }));
+  await page.route('**/api/reviews**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (request.method() === 'POST' && path.endsWith('/approve')) {
+      csrfHeader = await request.headerValue('x-csrf-token');
+      currentStatus = 'APPROVED';
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, review: fullReview() }) });
+      return;
+    }
+    if (request.method() === 'POST' && path.endsWith('/publish')) {
+      csrfHeader = await request.headerValue('x-csrf-token');
+      currentStatus = 'META_CREATED';
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, review: fullReview() }) });
+      return;
+    }
+    if (path === '/api/reviews') {
+      const { tree, ...summary } = fullReview();
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, reviews: [summary] }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, review: fullReview() }) });
+  });
+
+  await page.getByRole('button', { name: 'Duyệt kế hoạch' }).click();
+  await page.locator('[data-review-id="review-it"]').click();
+  await expect(page.locator('#reviewActions')).toBeHidden();
+  await page.locator('#approverLoginButton').click();
+  await page.locator('#approverName').fill('IT Test');
+  await page.locator('#approverKey').fill('secret');
+  await page.locator('#approverSubmitButton').click();
+  await expect(page.locator('#approveReviewButton')).toBeVisible();
+  await page.locator('#approveReviewButton').click();
+  await expect(page.locator('#reviewDetailStatus')).toHaveText('Đã duyệt');
+  await expect(page.locator('#publishReviewButton')).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#publishReviewButton').click();
+  await expect(page.locator('#reviewDetailStatus')).toHaveText('Đã tạo PAUSED');
+  expect(csrfHeader).toBe('csrf-test');
 });
 
 test('duyệt xuất chỉ hiển thị dữ liệu đã hoàn thành', async ({ page }, testInfo) => {

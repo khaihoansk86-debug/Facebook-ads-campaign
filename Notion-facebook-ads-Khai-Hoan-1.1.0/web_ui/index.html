@@ -29,6 +29,7 @@
 
       <nav class="app-nav" aria-label="Khu vực làm việc">
         <button class="app-nav-item active" type="button" data-app-view="planner">Planner</button>
+        <button class="app-nav-item" type="button" data-app-view="reviews">Duyệt kế hoạch</button>
         <button class="app-nav-item" type="button" data-app-view="audiences">Tệp đối tượng</button>
         <button class="app-nav-item" type="button" data-app-view="placements">Vị trí quảng cáo</button>
         <button class="app-nav-item" type="button" data-app-view="budgets">Ngân sách</button>
@@ -111,6 +112,48 @@
         </section>
       </section>
 
+      <section class="review-view hidden" id="reviewView">
+        <aside class="panel review-list-panel">
+          <div class="review-list-heading">
+            <div><h2>Kế hoạch đã gửi</h2><p id="reviewCount">Đang tải danh sách…</p></div>
+            <button class="button secondary" type="button" id="refreshReviewsButton">Tải lại</button>
+          </div>
+          <div class="review-auth-card">
+            <div><strong id="reviewRole">Chế độ Content</strong><span id="reviewRoleHint">Có thể gửi và theo dõi kế hoạch.</span></div>
+            <button class="text-button" type="button" id="approverLoginButton">Đăng nhập người duyệt</button>
+            <button class="text-button hidden" type="button" id="approverLogoutButton">Đăng xuất</button>
+          </div>
+          <div class="review-filter" role="group" aria-label="Lọc trạng thái">
+            <button class="review-filter-button active" type="button" data-review-filter="ALL">Tất cả</button>
+            <button class="review-filter-button" type="button" data-review-filter="PENDING_REVIEW">Chờ duyệt</button>
+            <button class="review-filter-button" type="button" data-review-filter="APPROVED">Đã duyệt</button>
+          </div>
+          <div class="review-list empty-state" id="reviewList">Chưa có kế hoạch nào.</div>
+        </aside>
+        <section class="panel review-detail-panel">
+          <div class="empty-editor" id="emptyReviewDetail">
+            <strong>Chọn một kế hoạch để kiểm tra</strong>
+            <span>Cây Campaign → Nhóm quảng cáo → Quảng cáo sẽ hiển thị tại đây.</span>
+          </div>
+          <div class="hidden" id="reviewDetail">
+            <div class="review-detail-heading">
+              <div><span class="review-status" id="reviewDetailStatus">Chờ duyệt</span><h2 id="reviewDetailTitle">Kế hoạch</h2><p id="reviewDetailMeta"></p></div>
+              <div class="review-totals" id="reviewTotals"></div>
+            </div>
+            <div class="review-tree" id="reviewTree"></div>
+            <div class="review-note hidden" id="reviewNote"></div>
+            <div class="review-actions hidden" id="reviewActions">
+              <label for="reviewerNote">Ghi chú / lý do từ chối<textarea id="reviewerNote" rows="2" placeholder="Bắt buộc khi từ chối"></textarea></label>
+              <div>
+                <button class="button danger" type="button" id="rejectReviewButton">Từ chối</button>
+                <button class="button secondary" type="button" id="approveReviewButton">Duyệt kế hoạch</button>
+                <button class="button primary hidden" type="button" id="publishReviewButton">Tạo PAUSED trên Meta</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
       <section class="export-view panel hidden" id="exportView">
         <div class="export-header">
           <div><h2>Bài đã hoàn thành</h2><p>Chỉ hiển thị bài đã chuyển sang Hoàn thành trên Notion và chưa được xuất.</p></div>
@@ -128,13 +171,24 @@
       <footer class="actionbar" id="plannerActionbar">
         <div><strong id="actionSummary">Chưa đủ dữ liệu</strong><span id="actionHint">Thêm bài viết và ít nhất một cách chạy</span></div>
         <button class="button secondary" id="previewButton" disabled>Xem trước</button>
-        <button class="button primary" id="createDraftsButton" disabled>Tạo bản nháp PAUSED trên Meta</button>
+        <button class="button primary" id="createDraftsButton" disabled>Gửi kế hoạch duyệt</button>
       </footer>
     </main>
   </div>
 
   <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
   <dialog id="previewDialog" aria-labelledby="previewTitle"><div class="dialog-head"><h2 id="previewTitle">Xem trước kế hoạch</h2><button id="closeDialog" aria-label="Đóng cửa sổ xem trước">×</button></div><div id="previewContent"></div></dialog>
+  <dialog id="approverDialog" aria-labelledby="approverDialogTitle">
+    <form method="dialog" id="approverForm">
+      <div class="dialog-head"><h2 id="approverDialogTitle">Đăng nhập người duyệt</h2><button value="cancel" aria-label="Đóng cửa sổ đăng nhập">×</button></div>
+      <div class="login-form">
+        <p>Chỉ IT/Ads Operator được duyệt và tạo quảng cáo PAUSED trên Meta.</p>
+        <label>Tên người duyệt<input id="approverName" autocomplete="name" required placeholder="VD: Hoàn - IT"></label>
+        <label>Khóa người duyệt<input id="approverKey" type="password" autocomplete="current-password" required></label>
+        <button class="button primary" type="submit" id="approverSubmitButton">Đăng nhập</button>
+      </div>
+    </form>
+  </dialog>
   <script src="app.js"></script>
 </body>
 </html>

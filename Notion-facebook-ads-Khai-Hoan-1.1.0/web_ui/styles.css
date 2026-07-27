@@ -1,5 +1,5 @@
 :root{--bg:#eef2f7;--surface:#fff;--surface2:#f6f8fb;--line:#d8e0ea;--text:#162033;--muted:#65738a;--blue:#1769d2;--blue2:#0f56b3;--navy:#102033;--green:#0b9d72;--red:#dc3d3d;--shadow:0 10px 30px rgba(25,44,75,.08)}
-.skip-link{position:fixed;left:12px;top:8px;z-index:1000;transform:translateY(-150%);background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px}.skip-link:focus{transform:translateY(0)}button,a,input,select,textarea{touch-action:manipulation}.button,.choice,.location-chip,.icon-button,.text-button,.dialog-head button{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease}.button:focus-visible,.choice:focus-visible,.location-chip:focus-visible,.icon-button:focus-visible,.text-button:focus-visible,.dialog-head button:focus-visible,a:focus-visible{outline:3px solid rgba(23,105,210,.35);outline-offset:2px}.icon-button,.dialog-head button{min-width:44px;min-height:44px}.text-button{min-height:44px}.button{min-height:44px}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+.skip-link{position:fixed;left:12px;top:-100px;z-index:1000;background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px}.skip-link:focus{top:8px}button,a,input,select,textarea{touch-action:manipulation}.button,.choice,.location-chip,.icon-button,.text-button,.dialog-head button{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease}.button:focus-visible,.choice:focus-visible,.location-chip:focus-visible,.icon-button:focus-visible,.text-button:focus-visible,.dialog-head button:focus-visible,a:focus-visible{outline:3px solid rgba(23,105,210,.35);outline-offset:2px}.icon-button,.dialog-head button{min-width:44px;min-height:44px}.text-button{min-height:44px}.button{min-height:44px}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 .choice{min-width:0;width:100%;white-space:normal;overflow-wrap:anywhere}.selection-column{min-width:0}.location-list{flex-wrap:wrap;overflow:visible}.choice strong,.choice small{white-space:normal;overflow-wrap:anywhere}
 .setup-grid label small.field-help{color:var(--muted);font-weight:400}.flow-main{min-width:0}.flow-main>strong{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.flow-meta{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.flow-meta .tag{font-size:10px;padding:3px 5px}
 @media(max-width:560px){body{font-size:16px}.topbar{height:auto;min-height:68px;gap:8px}.brand span{display:none}.server-state{font-size:12px;text-align:right}.planner{height:auto;min-height:calc(100dvh - 68px);padding-bottom:168px}.page-heading{align-items:stretch;flex-direction:column;gap:10px}.page-actions{display:grid;grid-template-columns:1fr 1fr}.page-actions .button{padding-inline:8px}.choice,.location-chip,input,select,textarea{font-size:16px}.choice small{overflow-wrap:anywhere}.icon-button{padding:8px}.flow-card{grid-template-columns:minmax(0,1fr) auto auto auto}.toast{bottom:156px;left:12px;right:12px;max-width:none}.actionbar{bottom:8px}}
@@ -73,3 +73,34 @@ dialog{background:#121d30;color:var(--text);box-shadow:0 24px 90px rgba(0,0,0,.6
 .budget-schedule-grid input[type="datetime-local"]{min-width:0}
 @media(max-width:900px){.setup-stage{overflow:visible;padding-right:0}}
 @media(max-width:560px){.budget-schedule-grid{grid-template-columns:1fr}}
+
+/* Review workflow */
+.review-view{display:grid;grid-template-columns:minmax(300px,34%) minmax(500px,1fr);gap:14px;min-height:0;flex:1}
+.review-list-panel,.review-detail-panel{min-width:0;overflow:auto}
+.review-list-heading,.review-detail-heading,.review-auth-card,.review-actions,.review-actions>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.review-list-heading h2,.review-detail-heading h2{margin:0 0 4px}.review-list-heading p,.review-detail-heading p{margin:0;color:var(--muted)}
+.review-auth-card{margin:14px 0;padding:11px;border:1px solid #30445f;border-radius:11px;background:#101c2e}
+.review-auth-card div{display:grid;gap:2px}.review-auth-card span{font-size:12px;color:var(--muted)}
+.review-filter{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+.review-filter-button{min-height:38px;padding:0 12px;white-space:nowrap;border:1px solid #334966;border-radius:999px;background:#111e31;color:#aabbd2;cursor:pointer}
+.review-filter-button.active{border-color:#4f83d1;background:rgba(37,99,235,.24);color:#eaf3ff}
+.review-list{display:grid;gap:8px}.review-list.empty-state{display:block}
+.review-card{width:100%;padding:12px;text-align:left;border:1px solid #30425f;border-radius:11px;background:linear-gradient(145deg,#152238,#111c2e);color:var(--text);cursor:pointer}
+.review-card:hover,.review-card.selected{border-color:#5f86ba;background:#172a46}.review-card-head{display:flex;justify-content:space-between;gap:8px;align-items:start}
+.review-card strong{display:block}.review-card small{display:block;margin-top:5px;color:var(--muted)}.review-card .review-status{flex:none}
+.review-status{display:inline-flex;align-items:center;min-height:25px;padding:3px 8px;border-radius:999px;background:rgba(245,158,11,.16);color:#fbd08a;font-size:11px;font-weight:800}
+.review-status.approved{background:rgba(16,185,129,.16);color:#86efc5}.review-status.rejected{background:rgba(244,63,94,.16);color:#fda4af}.review-status.created{background:rgba(59,130,246,.18);color:#a8ceff}
+.review-detail-heading{align-items:flex-start;padding-bottom:13px;border-bottom:1px solid #2c3f5b}.review-detail-heading h2{margin-top:7px}
+.review-totals{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.review-total{padding:7px 9px;border:1px solid #344a69;border-radius:9px;background:#101c2e;color:#c8d7ea;font-size:12px}
+.review-tree{display:grid;gap:12px;margin-top:14px}.review-campaign{border:1px solid #365174;border-radius:12px;background:#101c2e;overflow:hidden}
+.review-campaign>header{padding:12px 14px;background:linear-gradient(135deg,rgba(37,99,235,.2),rgba(99,102,241,.13));border-bottom:1px solid #314761}.review-campaign>header small{display:block;color:#8fa8ca;margin-top:2px}
+.review-adset{margin:10px;border:1px solid #30445f;border-radius:10px;background:#142137;overflow:hidden}.review-adset>header{padding:10px 12px;border-bottom:1px solid #2d405c}
+.review-adset>header span{display:block;color:#a4b5cd;font-size:12px;margin-top:3px}.review-adset-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.review-ads{display:grid;gap:6px;padding:9px}.review-ad{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center;padding:8px;border-radius:8px;background:#0e192a}
+.review-ad i{width:26px;height:26px;display:grid;place-items:center;border-radius:7px;background:rgba(59,130,246,.18);color:#9cc7ff;font-style:normal;font-weight:800}.review-ad a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8ebcff}
+.review-note{margin-top:12px;padding:11px;border:1px solid #3d4f68;border-radius:9px;background:#111c2e;color:#cbd8ea}
+.review-actions{align-items:end;margin-top:14px;padding-top:14px;border-top:1px solid #2c3f5b}.review-actions label{display:grid;gap:6px;flex:1;font-weight:700}.review-actions textarea{min-height:70px;resize:vertical}
+.button.danger{background:#8f2941;color:#fff;border-color:#b4425e}.button.danger:hover{background:#a9324d}
+.login-form{display:grid;gap:13px;padding:16px}.login-form p{margin:0;color:var(--muted)}.login-form label{display:grid;gap:6px;font-weight:700}
+@media(max-width:900px){.review-view{grid-template-columns:1fr}.review-list-panel{max-height:430px}.review-detail-panel{overflow:visible}}
+@media(max-width:620px){.review-list-heading,.review-detail-heading,.review-auth-card,.review-actions{align-items:stretch;flex-direction:column}.review-actions>div{display:grid;grid-template-columns:1fr;width:100%}.review-totals{justify-content:flex-start}.review-detail-panel{padding:11px}}
