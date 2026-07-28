@@ -15,6 +15,22 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('#campaignList .choice').first()).toBeVisible();
 });
 
+test('có thể đóng đăng nhập người duyệt sau khi đã nhập dữ liệu', async ({ page }) => {
+  await page.locator('[data-app-view="reviews"]').click();
+  await page.locator('#approverLoginButton').click();
+  await page.locator('#approverName').fill('IT Test');
+  await page.locator('#approverKey').fill('khong-dang-nhap');
+
+  await page.locator('#approverDialog [aria-label="Đóng cửa sổ đăng nhập"]').click();
+
+  await expect(page.locator('#approverDialog')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#approverKey')).toHaveValue('');
+
+  await page.locator('#approverLoginButton').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#approverDialog')).not.toHaveAttribute('open', '');
+});
+
 test('lập hai bài với một cách chạy và hủy sửa an toàn', async ({ page }, testInfo) => {
   await page.locator('#linksInput').fill([
     'https://facebook.com/post-a',
