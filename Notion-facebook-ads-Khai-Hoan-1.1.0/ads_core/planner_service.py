@@ -210,6 +210,19 @@ def preview_plan(payload: dict[str, Any], catalog: dict[str, Any] | None = None)
     for position, flow in enumerate(flows, start=1):
         if not isinstance(flow, dict):
             raise PlannerValidationError(f"Cách chạy {position} không hợp lệ.")
+        requested_links = flow.get("link_urls")
+        if requested_links is None:
+            flow_links = list(links)
+        else:
+            selected = _clean_links(requested_links)
+            unknown = [link for link in selected if link not in links]
+            if unknown:
+                raise PlannerValidationError(
+                    f"Cách chạy {position} tham chiếu bài viết không có trong danh sách."
+                )
+            flow_links = [link for link in links if link in selected]
+        if not flow_links:
+            raise PlannerValidationError(f"Cách chạy {position} chưa được gán bài viết.")
         details = _flow_details(flow, catalog_index)
         units = details["audiences"] or [None]
         expanded_flows.append(
@@ -232,14 +245,15 @@ def preview_plan(payload: dict[str, Any], catalog: dict[str, Any] | None = None)
                 "placement": details["placement"].get("name") if details["placement"] else "Chưa chọn",
                 "creative_mode": details["creative_mode"],
                 "units": len(units),
+                "links": flow_links,
                 "notion_values": details["notion_values"],
             }
         )
 
     items = [
         {"link": link, "flow": flow}
-        for link in links
         for flow in expanded_flows
+        for link in flow["links"]
         for _ in range(flow["units"])
     ]
     return {

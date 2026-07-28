@@ -42,7 +42,7 @@ test('lập hai bài với một cách chạy và hủy sửa an toàn', async (
   await page.screenshot({ path: testInfo.outputPath('cau-hinh-planner-gon.png'), fullPage: true });
   await page.locator('#addFlowButton').click();
 
-  await expect(page.locator('#summaryText')).toContainText('2 bài · 1 cách chạy · 2 mục');
+  await expect(page.locator('#summaryText')).toContainText('2 bài · 1 flow · 2 mục');
   await expect(page.locator('.flow-card')).toContainText('Khách lạnh Phan Thiết');
   await expect(page.locator('.article-card')).toHaveCount(2);
 
@@ -58,6 +58,35 @@ test('lập hai bài với một cách chạy và hủy sửa an toàn', async (
   });
   expect(floatingLayers.toastBottom).toBeLessThanOrEqual(floatingLayers.actionTop);
   await page.screenshot({ path: testInfo.outputPath('planner-hoan-chinh.png'), fullPage: true });
+});
+
+test('áp dụng tuần tự một flow cho nhiều link rồi thêm flow riêng cho một link', async ({ page }) => {
+  await page.locator('#linksInput').fill([
+    'https://facebook.com/post-a',
+    'https://facebook.com/post-b',
+  ].join('\n'));
+  await expect(page.locator('#selectedLinkCount')).toHaveText('2/2 bài đang chọn');
+
+  await openVideoFlow(page);
+  await page.locator('#addFlowButton').click();
+  await expect(page.locator('.flow-card')).toHaveCount(1);
+  await expect(page.locator('.flow-card').first()).toContainText('2 bài');
+
+  await page.locator('[data-plan-link-index="1"]').uncheck();
+  await expect(page.locator('#selectedLinkCount')).toHaveText('1/2 bài đang chọn');
+  await page.locator('[data-campaign="AWARENESS_BASE"]').click();
+  await page.locator('#locationList [data-location]').first().click();
+  await page.locator('[data-adset="AWR_REACH"]').click();
+  await page.locator('#audienceSelect').selectOption('AUD_BROAD_PHAN_THIET');
+  await page.locator('#addFlowButton').click();
+
+  await expect(page.locator('.flow-card')).toHaveCount(2);
+  await expect(page.locator('#summaryText')).toContainText('2 bài · 2 flow · 3 mục');
+  await expect(page.locator('.article-card').nth(0).locator('.article-flow')).toHaveCount(2);
+  await expect(page.locator('.article-card').nth(1).locator('.article-flow')).toHaveCount(1);
+
+  await page.locator('#previewButton').click();
+  await expect(page.locator('#previewContent')).toContainText('2 campaign · 2 nhóm quảng cáo · 3 quảng cáo');
 });
 
 test('chặn ngân sách tùy chỉnh không hợp lệ ngay tại biểu mẫu', async ({ page }) => {

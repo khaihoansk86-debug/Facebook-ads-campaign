@@ -74,7 +74,7 @@ def _build_tree(plan: dict[str, Any]) -> list[dict[str, Any]]:
                         "link": link,
                         "creative_mode": flow["creative_mode"],
                     }
-                    for index, link in enumerate(plan["links"], start=1)
+                    for index, link in enumerate(flow["links"], start=1)
                 ],
             }
         )

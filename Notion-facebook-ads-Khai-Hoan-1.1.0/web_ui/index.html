@@ -39,13 +39,21 @@
         <aside class="links-panel panel">
           <div class="panel-title"><span class="step">1</span><div><h2>Bài viết</h2><p>Mỗi dòng là một đường dẫn</p></div></div>
           <textarea id="linksInput" placeholder="Dán các đường dẫn bài viết Facebook vào đây…"></textarea>
+          <div class="link-selection-toolbar">
+            <strong id="selectedLinkCount">0 bài đang chọn</strong>
+            <div>
+              <button class="text-button" type="button" id="selectAllLinksButton">Chọn tất cả</button>
+              <button class="text-button" type="button" id="clearLinkSelectionButton">Bỏ chọn</button>
+            </div>
+          </div>
+          <div id="linkSelectionList" class="link-selection-list empty-state">Dán link để chọn bài cần áp dụng</div>
           <label class="field-label" for="adNameInput">Tên quảng cáo <small>chỉ dùng khi có một bài</small></label>
           <input id="adNameInput" type="text" placeholder="Có thể để trống">
           <div class="link-count" id="linkCount" role="status" aria-live="polite">Chưa có bài viết</div>
         </aside>
 
         <section class="builder-panel panel">
-          <div class="panel-title"><span class="step">2</span><div><h2>Tạo cách chạy</h2><p>Mỗi cách chạy sẽ áp dụng cho tất cả bài viết</p></div></div>
+          <div class="panel-title"><span class="step">2</span><div><h2>Tạo cách chạy</h2><p>Cách chạy chỉ áp dụng cho các bài đang được chọn</p></div></div>
 
           <div id="selectionStage" class="selection-stage">
             <div class="selection-column">

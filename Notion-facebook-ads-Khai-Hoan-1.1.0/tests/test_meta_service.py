@@ -259,6 +259,33 @@ class MetaServiceTests(unittest.TestCase):
         self.assertEqual(sum(path.endswith("/adcreatives") for path, _ in client.post_calls), 1)
         self.assertEqual(sum(path.endswith("/ads") for path, _ in client.post_calls), 2)
 
+    def test_meta_create_respects_links_assigned_to_each_flow(self):
+        multi_payload = payload()
+        first_link = multi_payload["links"][0]
+        second_link = "https://www.facebook.com/page/posts/654321"
+        multi_payload["links"].append(second_link)
+        multi_payload["flows"][0]["link_urls"] = [first_link, second_link]
+        multi_payload["flows"].append(
+            {
+                **multi_payload["flows"][0],
+                "link_urls": [first_link],
+            }
+        )
+        client = FakeMetaClient()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = create_paused_meta_drafts(
+                multi_payload,
+                config(),
+                client,
+                Path(temp_dir) / "meta-ledger.json",
+            )
+
+        self.assertEqual(result["created"], 3)
+        self.assertEqual(sum(path.endswith("/campaigns") for path, _ in client.post_calls), 1)
+        self.assertEqual(sum(path.endswith("/adsets") for path, _ in client.post_calls), 2)
+        self.assertEqual(sum(path.endswith("/adcreatives") for path, _ in client.post_calls), 2)
+        self.assertEqual(sum(path.endswith("/ads") for path, _ in client.post_calls), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

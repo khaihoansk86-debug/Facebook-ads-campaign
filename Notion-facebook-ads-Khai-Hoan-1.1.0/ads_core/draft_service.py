@@ -54,10 +54,10 @@ def create_drafts_safely(
     flows = payload.get("flows", [])
     ad_name = str(payload.get("ad_name") or "").strip()
     tasks: list[dict[str, Any]] = []
-    for link in plan["links"]:
-        for flow_index, flow in enumerate(flows):
-            normalized_flow = plan["flows"][flow_index]
-            audience_codes = flow.get("audience_codes") or [None]
+    for flow_index, flow in enumerate(flows):
+        normalized_flow = plan["flows"][flow_index]
+        audience_codes = flow.get("audience_codes") or [None]
+        for link in normalized_flow["links"]:
             for audience_code in audience_codes:
                 task_name = ad_name if len(plan["links"]) == 1 else ""
                 tasks.append(

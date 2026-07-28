@@ -24,6 +24,33 @@ class PlannerServiceTests(unittest.TestCase):
         result = preview_plan(self.base_payload())
         self.assertEqual(result["summary"], {"links_count": 2, "flows_count": 1, "items_count": 2})
 
+    def test_each_flow_can_target_a_different_link_subset(self):
+        payload = self.base_payload()
+        first_flow = payload["flows"][0]
+        first_flow["link_urls"] = list(payload["links"])
+        payload["flows"].append(
+            {
+                **first_flow,
+                "link_urls": [payload["links"][0]],
+            }
+        )
+
+        result = preview_plan(payload)
+
+        self.assertEqual(result["summary"]["items_count"], 3)
+        self.assertEqual(result["flows"][0]["links"], payload["links"])
+        self.assertEqual(result["flows"][1]["links"], [payload["links"][0]])
+        self.assertEqual(
+            [item["link"] for item in result["items"]],
+            [payload["links"][0], payload["links"][1], payload["links"][0]],
+        )
+
+    def test_rejects_flow_without_assigned_links(self):
+        payload = self.base_payload()
+        payload["flows"][0]["link_urls"] = []
+        with self.assertRaisesRegex(PlannerValidationError, "chưa được gán bài viết"):
+            preview_plan(payload)
+
     def test_rejects_adset_from_another_campaign(self):
         payload = self.base_payload()
         payload["flows"][0]["adset_code"] = "TRAFFIC_WEBSITE_LPV"

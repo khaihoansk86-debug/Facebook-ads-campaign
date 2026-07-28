@@ -378,7 +378,14 @@ def preview_meta_plan(
     if not currency:
         raise MetaValidationError("Không đọc được đơn vị tiền tệ của tài khoản quảng cáo.")
     stories = resolve_existing_posts(plan["links"], config, api)
-    flows = [_flow_intent(flow, currency, config) for flow in plan["flows"]]
+    flows = []
+    for planned_flow in plan["flows"]:
+        flow = _flow_intent(planned_flow, currency, config)
+        flow["links"] = [
+            {"url": link, "object_story_id": stories[link]}
+            for link in planned_flow["links"]
+        ]
+        flows.append(flow)
     templates: dict[str, dict[str, Any]] = {}
     for template_id in {flow["source_adset_id"] for flow in flows}:
         template = api.get(template_id, fields=ADSET_TEMPLATE_FIELDS)
@@ -415,7 +422,7 @@ def preview_meta_plan(
             **plan["summary"],
             "campaigns_count": len({flow["campaign_code"] for flow in flows}),
             "adsets_count": len(flows),
-            "ads_count": len(plan["links"]) * len(flows),
+            "ads_count": len(plan["items"]),
         },
         "links": [{"url": link, "object_story_id": stories[link]} for link in plan["links"]],
         "flows": flows,
@@ -548,7 +555,7 @@ def create_paused_meta_drafts(
                     state["adset_configured"] = True
                     state["schedule_warning"] = "Meta giữ start_time do ad set này được tạo dở bằng cơ chế copy cũ."
                     _write_ledger(Path(ledger_path), ledger)
-                for link_index, link in enumerate(preview["links"], start=1):
+                for link_index, link in enumerate(flow["links"], start=1):
                     story_id = link["object_story_id"]
                     ad_state = state["ads"].setdefault(story_id, {"link": link["url"]})
                     if ad_state.get("ad_id"):

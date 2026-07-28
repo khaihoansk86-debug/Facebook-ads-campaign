@@ -42,7 +42,7 @@ class WebUiContractTests(unittest.TestCase):
     def test_article_preview_does_not_hide_after_three_flows(self):
         self.assertNotIn("flows.slice(0,3)", self.javascript)
         self.assertIn("Cách chạy ${flowIndex+1}", self.javascript)
-        self.assertIn("áp dụng cho tất cả bài viết", self.html)
+        self.assertIn("áp dụng cho các bài đang được chọn", self.html)
 
     def test_invalid_links_block_readiness(self):
         self.assertIn("isFacebookLink", self.javascript)

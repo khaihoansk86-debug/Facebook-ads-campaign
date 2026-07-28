@@ -40,6 +40,34 @@ class DraftServiceTests(unittest.TestCase):
         self.assertEqual((result["created"], result["skipped"], result["failed"]), (4, 0, 0))
         self.assertEqual(len(calls), 4)
 
+    def test_creates_only_links_assigned_to_each_flow(self):
+        calls = []
+
+        def create_func(_database, link, _campaign, adsets, **_kwargs):
+            calls.append((link, adsets[0]))
+            return [{"id": f"page-{len(calls)}"}]
+
+        first = sample_flow()
+        first["link_urls"] = ["https://facebook.com/a", "https://facebook.com/b"]
+        second = sample_flow("ENG_POST_COLD")
+        second["link_urls"] = ["https://facebook.com/a"]
+        payload = {
+            "links": ["https://facebook.com/a", "https://facebook.com/b"],
+            "flows": [first, second],
+        }
+
+        result = create_drafts_safely(payload, "database", create_func, self.ledger)
+
+        self.assertEqual(result["created"], 3)
+        self.assertEqual(
+            calls,
+            [
+                ("https://facebook.com/a", "ENG_VIDEO_COLD"),
+                ("https://facebook.com/b", "ENG_VIDEO_COLD"),
+                ("https://facebook.com/a", "ENG_POST_COLD"),
+            ],
+        )
+
     def test_returns_notion_urls_for_created_and_skipped_items(self):
         def create_func(*_args, **_kwargs):
             return [{"id": "page-1", "url": "https://notion.so/page-1"}]
