@@ -187,6 +187,9 @@ class MetaClient:
     def post(self, path: str, **params: Any) -> dict[str, Any]:
         return self.request("POST", path, params)
 
+    def delete(self, path: str, **params: Any) -> dict[str, Any]:
+        return self.request("DELETE", path, params)
+
     def with_access_token(self, access_token: str) -> "MetaClient":
         if not access_token:
             raise MetaValidationError("Meta không cấp Page Access Token cho Page đã chọn.")
@@ -491,6 +494,12 @@ def create_paused_meta_drafts(
                 "flows": {},
             },
         )
+        creative_by_story = {
+            story_id: str(ad_state["creative_id"])
+            for saved_flow in operation.get("flows", {}).values()
+            for story_id, ad_state in saved_flow.get("ads", {}).items()
+            if ad_state.get("creative_id")
+        }
         try:
             for flow in preview["flows"]:
                 flow_key = str(flow["position"])
@@ -545,12 +554,16 @@ def create_paused_meta_drafts(
                     if ad_state.get("ad_id"):
                         continue
                     if not ad_state.get("creative_id"):
-                        creative = api.post(
-                            f"{config.ad_account_id}/adcreatives",
-                            name=f"Planner existing post · {story_id}",
-                            object_story_id=story_id,
-                        )
-                        ad_state["creative_id"] = str(creative["id"])
+                        creative_id = creative_by_story.get(story_id)
+                        if not creative_id:
+                            creative = api.post(
+                                f"{config.ad_account_id}/adcreatives",
+                                name=f"Planner existing post · {story_id}",
+                                object_story_id=story_id,
+                            )
+                            creative_id = str(creative["id"])
+                            creative_by_story[story_id] = creative_id
+                        ad_state["creative_id"] = creative_id
                         _write_ledger(Path(ledger_path), ledger)
                     if len(preview["links"]) == 1 and ad_name:
                         chosen_name = (

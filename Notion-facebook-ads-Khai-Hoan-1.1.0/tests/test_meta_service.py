@@ -256,6 +256,7 @@ class MetaServiceTests(unittest.TestCase):
         self.assertEqual(result["created"], 2)
         self.assertEqual(sum(path.endswith("/campaigns") for path, _ in client.post_calls), 1)
         self.assertEqual(sum(path.endswith("/adsets") for path, _ in client.post_calls), 2)
+        self.assertEqual(sum(path.endswith("/adcreatives") for path, _ in client.post_calls), 1)
         self.assertEqual(sum(path.endswith("/ads") for path, _ in client.post_calls), 2)
 
 
