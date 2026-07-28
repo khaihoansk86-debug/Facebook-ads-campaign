@@ -132,9 +132,10 @@ class MetaConfig:
 
 
 class MetaClient:
-    def __init__(self, config: MetaConfig, timeout: int = 30):
+    def __init__(self, config: MetaConfig, timeout: int = 30, access_token: str | None = None):
         self.config = config
         self.timeout = timeout
+        self._access_token = access_token or config.access_token
 
     def request(self, method: str, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         safe_path = path.lstrip("/")
@@ -154,7 +155,7 @@ class MetaClient:
             data=body,
             method=method.upper(),
             headers={
-                "Authorization": f"Bearer {self.config.access_token}",
+                "Authorization": f"Bearer {self._access_token}",
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Accept": "application/json",
             },
@@ -185,6 +186,11 @@ class MetaClient:
 
     def post(self, path: str, **params: Any) -> dict[str, Any]:
         return self.request("POST", path, params)
+
+    def with_access_token(self, access_token: str) -> "MetaClient":
+        if not access_token:
+            raise MetaValidationError("Meta không cấp Page Access Token cho Page đã chọn.")
+        return MetaClient(self.config, timeout=self.timeout, access_token=access_token)
 
 
 def _safe_account(account: dict[str, Any], config: MetaConfig) -> dict[str, Any]:
@@ -259,11 +265,30 @@ def resolve_existing_posts(
     if not unresolved:
         return resolved
     config.validate(require_page=True)
+    accounts = client.get(
+        "me/accounts",
+        fields="id,name,tasks,access_token",
+        limit=100,
+    )
+    page_asset = next(
+        (item for item in accounts.get("data", []) if str(item.get("id") or "") == config.page_id),
+        None,
+    )
+    if not page_asset:
+        raise MetaValidationError(
+            f"System User chưa được gán quyền cho Page {config.page_id}."
+        )
+    page_token = str(page_asset.get("access_token") or "")
+    if not page_token:
+        raise MetaValidationError(
+            f"Meta không cấp Page Access Token cho Page {config.page_id}."
+        )
+    page_client = client.with_access_token(page_token)
     target_links = {_normalize_permalink(link): link for link in unresolved}
     path = f"{config.page_id}/published_posts"
     params: dict[str, Any] = {"fields": "id,permalink_url", "limit": 100}
     for _ in range(20):
-        page = client.get(path, **params)
+        page = page_client.get(path, **params)
         for post in page.get("data", []):
             permalink = post.get("permalink_url")
             story_id = post.get("id")

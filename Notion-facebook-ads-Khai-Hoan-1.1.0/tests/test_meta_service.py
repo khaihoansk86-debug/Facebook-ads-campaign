@@ -8,6 +8,7 @@ from ads_core.meta_service import (
     create_paused_meta_drafts,
     get_meta_status,
     preview_meta_plan,
+    resolve_existing_posts,
 )
 
 
@@ -68,6 +69,41 @@ class FakeMetaClient:
         raise AssertionError(f"Unexpected POST {path}")
 
 
+class FakePageTokenClient:
+    def __init__(self, page_assigned=True):
+        self.page_assigned = page_assigned
+        self.page_token_used = False
+
+    def get(self, path, **params):
+        if path == "me/accounts":
+            data = []
+            if self.page_assigned:
+                data.append(
+                    {
+                        "id": "page-1",
+                        "name": "Test Page",
+                        "tasks": ["ADVERTISE", "ANALYZE"],
+                        "access_token": "page-secret-token",
+                    }
+                )
+            return {"data": data}
+        if path == "page-1/published_posts" and self.page_token_used:
+            return {
+                "data": [
+                    {
+                        "id": "page-1_999",
+                        "permalink_url": "https://www.facebook.com/test-page/videos/example",
+                    }
+                ]
+            }
+        raise AssertionError(f"Unexpected GET {path}")
+
+    def with_access_token(self, access_token):
+        self.asserted_page_token = access_token
+        self.page_token_used = access_token == "page-secret-token"
+        return self
+
+
 def config():
     return MetaConfig(
         access_token="secret-token",
@@ -118,6 +154,24 @@ class MetaServiceTests(unittest.TestCase):
         self.assertEqual(result["links"][0]["object_story_id"], "page-1_123456")
         self.assertEqual(result["flows"][0]["budget_minor"], 5000)
         self.assertEqual(client.post_calls, [])
+
+    def test_unresolved_link_uses_in_memory_page_access_token(self):
+        client = FakePageTokenClient()
+        link = "https://www.facebook.com/test-page/videos/example"
+
+        resolved = resolve_existing_posts([link], config(), client)
+
+        self.assertEqual(resolved[link], "page-1_999")
+        self.assertTrue(client.page_token_used)
+
+    def test_unassigned_page_is_rejected_before_reading_posts(self):
+        client = FakePageTokenClient(page_assigned=False)
+        with self.assertRaisesRegex(MetaValidationError, "chưa được gán quyền"):
+            resolve_existing_posts(
+                ["https://www.facebook.com/test-page/videos/example"],
+                config(),
+                client,
+            )
 
     def test_missing_exact_template_mapping_is_rejected(self):
         bad_config = MetaConfig(
