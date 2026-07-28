@@ -236,8 +236,14 @@ def _normalize_permalink(value: str) -> str:
     return f"{host}{path}".lower()
 
 
-def _direct_story_id(link: str, page_id: str) -> str | None:
-    path_parts = [part for part in urlparse(link).path.split("/") if part]
+def story_id_from_link(link: str, page_id: str) -> str | None:
+    parsed = urlparse(link)
+    path_parts = [part for part in parsed.path.split("/") if part]
+    query = parse_qs(parsed.query)
+    story_fbid = (query.get("story_fbid") or query.get("fbid") or [""])[-1]
+    query_page_id = (query.get("id") or [""])[-1]
+    if story_fbid.isdigit() and query_page_id.isdigit():
+        return f"{query_page_id}_{story_fbid}"
     for part in reversed(path_parts):
         if "_" in part:
             left, _, right = part.partition("_")
@@ -249,13 +255,22 @@ def _direct_story_id(link: str, page_id: str) -> str | None:
                 index = path_parts.index(marker)
                 if index + 1 < len(path_parts) and path_parts[index + 1].isdigit():
                     return f"{page_id}_{path_parts[index + 1]}"
+    if "reel" in path_parts:
+        index = path_parts.index("reel")
+        if index + 1 < len(path_parts) and path_parts[index + 1].isdigit():
+            return path_parts[index + 1]
     return None
+
+
+_direct_story_id = story_id_from_link
 
 
 def resolve_existing_posts(
     links: list[str],
     config: MetaConfig,
     client: MetaClient,
+    *,
+    strict: bool = True,
 ) -> dict[str, str]:
     resolved: dict[str, str] = {}
     unresolved: list[str] = []
@@ -267,26 +282,8 @@ def resolve_existing_posts(
             unresolved.append(link)
     if not unresolved:
         return resolved
-    config.validate(require_page=True)
-    accounts = client.get(
-        "me/accounts",
-        fields="id,name,tasks,access_token",
-        limit=100,
-    )
-    page_asset = next(
-        (item for item in accounts.get("data", []) if str(item.get("id") or "") == config.page_id),
-        None,
-    )
-    if not page_asset:
-        raise MetaValidationError(
-            f"System User chưa được gán quyền cho Page {config.page_id}."
-        )
-    page_token = str(page_asset.get("access_token") or "")
-    if not page_token:
-        raise MetaValidationError(
-            f"Meta không cấp Page Access Token cho Page {config.page_id}."
-        )
-    page_client = client.with_access_token(page_token)
+
+    page_client = get_page_client(config, client)
     target_links = {_normalize_permalink(link): link for link in unresolved}
     path = f"{config.page_id}/published_posts"
     params: dict[str, Any] = {"fields": "id,permalink_url", "limit": 100}
@@ -308,13 +305,36 @@ def resolve_existing_posts(
         path = parsed.path.split(f"/{config.api_version}/", 1)[-1]
         params = {key: values[-1] for key, values in parse_qs(parsed.query).items() if values}
     missing = [link for link in links if link not in resolved]
-    if missing:
+    if missing and strict:
         raise MetaValidationError(
             "Không tìm thấy bài viết qua Meta API: "
             + ", ".join(missing[:3])
             + (f" (và {len(missing) - 3} link khác)" if len(missing) > 3 else "")
         )
     return resolved
+
+
+def get_page_client(config: MetaConfig, client: MetaClient) -> MetaClient:
+    config.validate(require_page=True)
+    accounts = client.get(
+        "me/accounts",
+        fields="id,name,tasks,access_token",
+        limit=100,
+    )
+    page_asset = next(
+        (item for item in accounts.get("data", []) if str(item.get("id") or "") == config.page_id),
+        None,
+    )
+    if not page_asset:
+        raise MetaValidationError(
+            f"System User chưa được gán quyền cho Page {config.page_id}."
+        )
+    page_token = str(page_asset.get("access_token") or "")
+    if not page_token:
+        raise MetaValidationError(
+            f"Meta không cấp Page Access Token cho Page {config.page_id}."
+        )
+    return client.with_access_token(page_token)
 
 
 def _minor_amount(value: Any, currency: str) -> int:

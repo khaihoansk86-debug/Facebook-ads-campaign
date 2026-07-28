@@ -8,11 +8,61 @@ async function openVideoFlow(page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/meta/creative-previews', async route => {
+    const payload = route.request().postDataJSON();
+    const previews = (payload.links || []).map(link => link.includes('creative-preview-test')
+      ? {
+          link,
+          status: 'ready',
+          page_name: 'Khải Hoàn Clinic',
+          message: 'Creative mẫu hiển thị ngay trong Planner',
+          media_type: 'photo',
+          thumbnail_url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%231877f2"/%3E%3C/svg%3E',
+          permalink_url: link,
+        }
+      : {
+          link,
+          status: 'unavailable',
+          message: '',
+          page_name: '',
+          media_type: '',
+          thumbnail_url: '',
+          permalink_url: link,
+        });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        previews,
+        summary: {
+          total: previews.length,
+          ready: previews.filter(item => item.status === 'ready').length,
+          unavailable: previews.filter(item => item.status !== 'ready').length,
+        },
+      }),
+    });
+  });
   await page.goto('/');
   await expect(page.locator('#serverText')).toContainText('Backend');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await expect(page.locator('#campaignList .choice').first()).toBeVisible();
+});
+
+test('hiển thị nhanh creative của bài viết nhưng không chặn link không đọc được', async ({ page }) => {
+  await page.locator('#linksInput').fill([
+    'https://facebook.com/page/posts/creative-preview-test',
+    'https://facebook.com/page/posts/no-access',
+  ].join('\n'));
+
+  await expect(page.locator('.creative-preview')).toHaveCount(1);
+  await expect(page.locator('.creative-preview')).toContainText('Khải Hoàn Clinic');
+  await expect(page.locator('.creative-preview')).toContainText('Creative mẫu hiển thị ngay trong Planner');
+  await expect(page.locator('.creative-preview img')).toHaveAttribute('loading', 'lazy');
+  await expect(page.locator('.creative-preview-status.unavailable')).toHaveCount(1);
+  await expect(page.locator('.creative-preview-status.unavailable')).toContainText('vẫn có thể lập kế hoạch');
+  await expect(page.locator('#selectedLinkCount')).toHaveText('2/2 bài đang chọn');
 });
 
 test('có thể đóng đăng nhập người duyệt sau khi đã nhập dữ liệu', async ({ page }) => {

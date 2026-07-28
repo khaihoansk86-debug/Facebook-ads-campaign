@@ -152,6 +152,30 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertFalse(result["ok"])
 
+    def test_creative_preview_endpoint_returns_only_safe_metadata(self):
+        fake_result = {
+            "previews": [
+                {
+                    "link": "https://facebook.com/page/posts/123",
+                    "status": "ready",
+                    "page_name": "Khải Hoàn",
+                    "message": "Bài thử",
+                    "thumbnail_url": "https://scontent.example.com/a.jpg",
+                }
+            ],
+            "summary": {"total": 1, "ready": 1, "unavailable": 0},
+        }
+        with patch("web_app.get_creative_previews", return_value=fake_result) as preview_mock:
+            status, result = self.request(
+                "/api/meta/creative-previews",
+                {"links": ["https://facebook.com/page/posts/123"]},
+            )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(result["summary"]["ready"], 1)
+        self.assertNotIn("access_token", result)
+        preview_mock.assert_called_once()
+
     def test_review_requires_approver_and_publishes_only_after_approval(self):
         status, submitted = self.request("/api/reviews", self.payload())
         self.assertEqual(status, 201)

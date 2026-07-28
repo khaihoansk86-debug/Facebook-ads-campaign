@@ -48,6 +48,12 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn("isFacebookLink", self.javascript)
         self.assertIn("link không hợp lệ", self.javascript)
 
+    def test_creative_previews_are_loaded_safely_and_lazily(self):
+        self.assertIn("/api/meta/creative-previews", self.javascript)
+        self.assertIn('loading="lazy"', self.javascript)
+        self.assertIn("vẫn có thể lập kế hoạch", self.javascript)
+        self.assertIn("creative-preview", self.javascript)
+
     def test_notion_results_have_open_links(self):
         self.assertIn("Mở Notion", self.javascript)
 

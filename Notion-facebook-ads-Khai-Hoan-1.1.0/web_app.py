@@ -18,6 +18,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 import bulk_ads_tool as tool
+from ads_core.creative_preview_service import get_creative_previews
 from ads_core.draft_service import create_drafts_safely
 from ads_core.export_service import ExportValidationError, export_selected_pages, list_export_candidates
 from ads_core.meta_service import (
@@ -359,6 +360,17 @@ class ApiHandler(SimpleHTTPRequestHandler):
             if path == "/api/planner/preview":
                 result = preview_plan(_read_json(self))
                 self._json(200, {"ok": True, "plan": result})
+                return
+            if path == "/api/meta/creative-previews":
+                payload = _read_json(self)
+                tool.load_env(ENV_PATH)
+                config = MetaConfig.from_env()
+                result = get_creative_previews(
+                    payload.get("links"),
+                    config,
+                    refresh=payload.get("refresh") is True,
+                )
+                self._json(200, {"ok": True, **result})
                 return
             if path == "/api/meta/preview":
                 payload = _read_json(self)
