@@ -253,12 +253,45 @@ def story_id_from_link(link: str, page_id: str) -> str | None:
         for marker in ("posts", "photos"):
             if marker in path_parts:
                 index = path_parts.index(marker)
-                if index + 1 < len(path_parts) and path_parts[index + 1].isdigit():
-                    return f"{page_id}_{path_parts[index + 1]}"
+                if index + 1 < len(path_parts):
+                    post_reference = path_parts[index + 1]
+                    if post_reference.isdigit():
+                        return f"{page_id}_{post_reference}"
+                    if (
+                        post_reference.startswith("pfbid")
+                        and post_reference.isalnum()
+                        and len(post_reference) <= 200
+                    ):
+                        return post_reference
     return None
 
 
 _direct_story_id = story_id_from_link
+
+
+def _read_objects_by_ids(
+    client: MetaClient,
+    object_ids: list[str],
+    *,
+    fields: str,
+) -> dict[str, dict[str, Any]]:
+    if not object_ids:
+        return {}
+    try:
+        response = client.get("", ids=",".join(object_ids), fields=fields)
+    except MetaApiError:
+        if len(object_ids) == 1:
+            return {}
+        midpoint = len(object_ids) // 2
+        return {
+            **_read_objects_by_ids(client, object_ids[:midpoint], fields=fields),
+            **_read_objects_by_ids(client, object_ids[midpoint:], fields=fields),
+        }
+    return {
+        object_id: item
+        for object_id, item in response.items()
+        if object_id in object_ids and isinstance(item, dict) and not item.get("error")
+    }
 
 
 def resolve_existing_posts(
@@ -269,17 +302,35 @@ def resolve_existing_posts(
     strict: bool = True,
 ) -> dict[str, str]:
     resolved: dict[str, str] = {}
+    opaque_references: dict[str, str] = {}
     unresolved: list[str] = []
     for link in links:
         direct = _direct_story_id(link, config.page_id)
-        if direct:
+        if direct and direct.startswith("pfbid"):
+            opaque_references[link] = direct
+        elif direct:
             resolved[link] = direct
         else:
             unresolved.append(link)
-    if not unresolved:
+    if not unresolved and not opaque_references:
         return resolved
 
     page_client = get_page_client(config, client)
+    if opaque_references:
+        opaque_objects = _read_objects_by_ids(
+            page_client,
+            list(dict.fromkeys(opaque_references.values())),
+            fields="id,permalink_url",
+        )
+        for link, reference in opaque_references.items():
+            story_id = str((opaque_objects.get(reference) or {}).get("id") or "")
+            if story_id:
+                resolved[link] = story_id
+            else:
+                unresolved.append(link)
+    if not unresolved:
+        return resolved
+
     target_links = {_normalize_permalink(link): link for link in unresolved}
     path = f"{config.page_id}/published_posts"
     params: dict[str, Any] = {"fields": "id,permalink_url", "limit": 100}

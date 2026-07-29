@@ -68,6 +68,22 @@ class FakeMixedBatchClient(FakeCreativeClient):
         return FakeCreativeClient.get(self, path, **params)
 
 
+class FakePfbidClient(FakeCreativeClient):
+    opaque_id = "pfbid0OpaquePostForTest"
+
+    def get(self, path, **params):
+        if path == "":
+            self.get_calls.append((path, params))
+            if params.get("ids") == self.opaque_id:
+                post = FakeCreativeClient.get(self, path, ids="111_123", fields=params.get("fields"))
+                return {self.opaque_id: post["111_123"]}
+            return {}
+        if path == "111/published_posts":
+            self.get_calls.append((path, params))
+            return {"data": []}
+        return FakeCreativeClient.get(self, path, **params)
+
+
 def config():
     return MetaConfig(
         access_token="secret-token",
@@ -146,6 +162,22 @@ class CreativePreviewServiceTests(unittest.TestCase):
             ["ready", "unavailable"],
         )
         self.assertEqual(result["summary"], {"total": 2, "ready": 1, "unavailable": 1})
+
+    def test_vanity_page_pfbid_link_resolves_to_creative(self):
+        link = (
+            "https://www.facebook.com/khsk.chamsocdachuyenkhoaphanthiet/posts/"
+            f"{FakePfbidClient.opaque_id}"
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = get_creative_previews(
+                [link],
+                config(),
+                FakePfbidClient(),
+                cache_path=Path(temp_dir) / "previews.json",
+            )
+
+        self.assertEqual(result["summary"]["ready"], 1)
+        self.assertEqual(result["previews"][0]["object_story_id"], "111_123")
 
     def test_rejects_non_facebook_links_and_oversized_batches(self):
         with self.assertRaisesRegex(MetaValidationError, "không hợp lệ"):

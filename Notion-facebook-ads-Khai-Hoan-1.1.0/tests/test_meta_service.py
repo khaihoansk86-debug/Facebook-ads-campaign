@@ -105,6 +105,17 @@ class FakePageTokenClient:
         return self
 
 
+class FakeOpaqueStoryClient(FakePageTokenClient):
+    opaque_id = "pfbid0OpaquePostForTest"
+
+    def get(self, path, **params):
+        if path == "" and params.get("ids") == self.opaque_id and self.page_token_used:
+            return {self.opaque_id: {"id": "page-1_777"}}
+        if path == "page-1/published_posts" and self.page_token_used:
+            return {"data": []}
+        return super().get(path, **params)
+
+
 def config():
     return MetaConfig(
         access_token="secret-token",
@@ -144,6 +155,25 @@ class MetaServiceTests(unittest.TestCase):
         self.assertIsNone(
             story_id_from_link("https://www.facebook.com/reel/1435481921725713/", "page-1")
         )
+
+    def test_vanity_page_pfbid_is_recognized_as_opaque_story_reference(self):
+        self.assertEqual(
+            story_id_from_link(
+                "https://www.facebook.com/khsk.chamsocdachuyenkhoaphanthiet/posts/"
+                "pfbid0OpaquePostForTest",
+                "page-1",
+            ),
+            "pfbid0OpaquePostForTest",
+        )
+
+    def test_pfbid_is_canonicalized_before_meta_ad_creation(self):
+        link = (
+            "https://www.facebook.com/khsk.chamsocdachuyenkhoaphanthiet/posts/"
+            f"{FakeOpaqueStoryClient.opaque_id}"
+        )
+        resolved = resolve_existing_posts([link], config(), FakeOpaqueStoryClient())
+
+        self.assertEqual(resolved[link], "page-1_777")
 
     def test_status_is_safe_and_never_returns_token(self):
         status = get_meta_status(config(), FakeMetaClient(), verify=True)
