@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from ads_core.creative_preview_service import get_creative_previews
-from ads_core.meta_service import MetaConfig, MetaValidationError
+from ads_core.meta_service import MetaApiError, MetaConfig, MetaValidationError
 
 
 class FakeCreativeClient:
@@ -53,6 +53,19 @@ class FakeCreativeClient:
     def with_access_token(self, access_token):
         self.page_token_used = access_token == "page-secret-token"
         return self
+
+
+class FakeMixedBatchClient(FakeCreativeClient):
+    def get(self, path, **params):
+        if path == "":
+            self.get_calls.append((path, params))
+            ids = str(params.get("ids") or "").split(",")
+            if len(ids) > 1:
+                raise MetaApiError("One object in the batch is invalid.")
+            if ids == ["111_123"]:
+                return FakeCreativeClient.get(self, path, **params)
+            return {}
+        return FakeCreativeClient.get(self, path, **params)
 
 
 def config():
@@ -116,6 +129,23 @@ class CreativePreviewServiceTests(unittest.TestCase):
         self.assertEqual(result["summary"]["unavailable"], 1)
         self.assertEqual(result["previews"][0]["status"], "unavailable")
         self.assertEqual(result["previews"][0]["permalink_url"], link)
+
+    def test_one_bad_object_does_not_hide_other_creatives_in_batch(self):
+        photo = "https://www.facebook.com/page/posts/123"
+        bad = "https://www.facebook.com/999_888"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = get_creative_previews(
+                [photo, bad],
+                config(),
+                FakeMixedBatchClient(),
+                cache_path=Path(temp_dir) / "previews.json",
+            )
+
+        self.assertEqual(
+            [preview["status"] for preview in result["previews"]],
+            ["ready", "unavailable"],
+        )
+        self.assertEqual(result["summary"], {"total": 2, "ready": 1, "unavailable": 1})
 
     def test_rejects_non_facebook_links_and_oversized_batches(self):
         with self.assertRaisesRegex(MetaValidationError, "không hợp lệ"):

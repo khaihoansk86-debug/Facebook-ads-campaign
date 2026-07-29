@@ -9,6 +9,7 @@ from ads_core.meta_service import (
     get_meta_status,
     preview_meta_plan,
     resolve_existing_posts,
+    story_id_from_link,
 )
 
 
@@ -139,6 +140,11 @@ def payload():
 
 
 class MetaServiceTests(unittest.TestCase):
+    def test_reel_permalink_must_be_resolved_to_page_story_id(self):
+        self.assertIsNone(
+            story_id_from_link("https://www.facebook.com/reel/1435481921725713/", "page-1")
+        )
+
     def test_status_is_safe_and_never_returns_token(self):
         status = get_meta_status(config(), FakeMetaClient(), verify=True)
         self.assertTrue(status["connected"])

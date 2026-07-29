@@ -255,10 +255,6 @@ def story_id_from_link(link: str, page_id: str) -> str | None:
                 index = path_parts.index(marker)
                 if index + 1 < len(path_parts) and path_parts[index + 1].isdigit():
                     return f"{page_id}_{path_parts[index + 1]}"
-    if "reel" in path_parts:
-        index = path_parts.index("reel")
-        if index + 1 < len(path_parts) and path_parts[index + 1].isdigit():
-            return path_parts[index + 1]
     return None
 
 

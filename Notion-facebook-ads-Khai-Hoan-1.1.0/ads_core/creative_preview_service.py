@@ -133,6 +133,33 @@ def _unavailable_preview(link: str, reason: str = "") -> dict[str, Any]:
     }
 
 
+def _fetch_story_batch(
+    api: MetaClient,
+    story_ids: list[str],
+    links_by_story: dict[str, list[str]],
+    previews: dict[str, dict[str, Any]],
+) -> None:
+    try:
+        response = api.get("", ids=",".join(story_ids), fields=_PREVIEW_FIELDS)
+    except MetaApiError:
+        if len(story_ids) > 1:
+            midpoint = len(story_ids) // 2
+            _fetch_story_batch(api, story_ids[:midpoint], links_by_story, previews)
+            _fetch_story_batch(api, story_ids[midpoint:], links_by_story, previews)
+            return
+        for link in links_by_story[story_ids[0]]:
+            previews[link] = _unavailable_preview(link)
+        return
+    for story_id in story_ids:
+        post = response.get(story_id)
+        if not isinstance(post, dict) or post.get("error"):
+            for link in links_by_story[story_id]:
+                previews[link] = _unavailable_preview(link)
+            continue
+        for link in links_by_story[story_id]:
+            previews[link] = _ready_preview(link, story_id, post)
+
+
 def get_creative_previews(
     raw_links: Any,
     config: MetaConfig,
@@ -190,21 +217,7 @@ def get_creative_previews(
             content_api = api
     for offset in range(0, len(story_ids), GRAPH_BATCH_SIZE):
         batch_ids = story_ids[offset : offset + GRAPH_BATCH_SIZE]
-        try:
-            response = content_api.get("", ids=",".join(batch_ids), fields=_PREVIEW_FIELDS)
-        except MetaApiError:
-            for story_id in batch_ids:
-                for link in links_by_story[story_id]:
-                    previews[link] = _unavailable_preview(link)
-            continue
-        for story_id in batch_ids:
-            post = response.get(story_id)
-            if not isinstance(post, dict) or post.get("error"):
-                for link in links_by_story[story_id]:
-                    previews[link] = _unavailable_preview(link)
-                continue
-            for link in links_by_story[story_id]:
-                previews[link] = _ready_preview(link, story_id, post)
+        _fetch_story_batch(content_api, batch_ids, links_by_story, previews)
 
     with _CACHE_LOCK:
         latest_cache = _read_cache(cache_path)
