@@ -79,7 +79,7 @@
                 <div class="budget-schedule-grid">
                   <label>Mức thường dùng<select id="budgetSelect"></select></label>
                   <label>Loại ngân sách<select id="budgetType"><option value="Ngân sách/ngày">Ngân sách/ngày</option><option value="Ngân sách trọn đời">Ngân sách trọn đời</option></select></label>
-                  <label>Số tiền <small class="required-hint">Bắt buộc</small><span class="input-suffix"><input id="budgetAmount" inputmode="decimal" placeholder="Ví dụ: 800" aria-describedby="budgetHelp"><b>PHP</b></span><small class="field-help" id="budgetHelp">Mức thường dùng sẽ tự điền; số tiền này sẽ thay ngân sách mẫu</small></label>
+                  <label>Số tiền <small class="required-hint">Bắt buộc</small><span class="input-suffix"><input id="budgetAmount" inputmode="decimal" placeholder="Nhập theo tiền tệ TKQC" aria-describedby="budgetHelp"><b id="budgetCurrency">TKQC</b></span><small class="field-help" id="budgetHelp">Tiền tệ cố định theo tài khoản quảng cáo; không tự quy đổi VND/USD</small></label>
                   <label>Thời gian bắt đầu <small class="required-hint">Bắt buộc</small><input id="startTime" type="datetime-local"></label>
                   <label class="end-time-toggle"><input id="hasEndTime" type="checkbox"> Đặt thời gian kết thúc</label>
                   <label id="endTimeField" class="hidden">Thời gian kết thúc<input id="endTime" type="datetime-local"><small class="field-help">Bắt buộc khi dùng ngân sách trọn đời</small></label>

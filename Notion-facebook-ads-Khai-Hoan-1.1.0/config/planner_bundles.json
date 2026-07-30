@@ -1544,6 +1544,17 @@
   ],
   "budgetPresets": [
     {
+      "code": "BUD_DAILY_ACCOUNT_CURRENCY",
+      "name": "Ngân sách hằng ngày · nhập theo tiền tệ TKQC",
+      "summary": "Nhập số tiền theo đơn vị cố định của tài khoản quảng cáo đang kết nối (VND hoặc USD).",
+      "notionValues": {
+        "Loại ngân sách": "Daily",
+        "Ngân sách/ngày": "",
+        "Ngân sách trọn đời": 0,
+        "Tính phí theo": "IMPRESSIONS"
+      }
+    },
+    {
       "code": "BUD_DAILY_800_PHP",
       "name": "Ngân sách hằng ngày 800 PHP",
       "summary": "Thiết đặt ngân sách dùng chung cho nhóm quảng cáo.",
@@ -1567,6 +1578,30 @@
     }
   ],
   "placementPresets": [
+    {
+      "code": "PLC_FB_FEED_REELS_SEARCH_MOBILE",
+      "name": "Facebook · Feed + Reels + Tìm kiếm · Di động",
+      "summary": "Thiết lập thường dùng: chỉ Facebook, thiết bị di động, gồm Bảng feed, Reels và Kết quả tìm kiếm.",
+      "notionValues": {
+        "Nền tảng quảng cáo": "Facebook",
+        "Vị trí Facebook": "feed, facebook_reels, search",
+        "Vị trí Messenger": "",
+        "Thiết bị": "Di động",
+        "Mở rộng nhắm chọn": "custom_audience: Off, lookalike: Off"
+      }
+    },
+    {
+      "code": "PLC_FB_FEED_REELS_SEARCH_ALL",
+      "name": "Facebook · Feed + Reels + Tìm kiếm · Tất cả thiết bị",
+      "summary": "Chỉ Facebook, gồm Bảng feed, Reels và Kết quả tìm kiếm trên di động và máy tính.",
+      "notionValues": {
+        "Nền tảng quảng cáo": "Facebook",
+        "Vị trí Facebook": "feed, facebook_reels, search",
+        "Vị trí Messenger": "",
+        "Thiết bị": "Tất cả",
+        "Mở rộng nhắm chọn": "custom_audience: Off, lookalike: Off"
+      }
+    },
     {
       "code": "PLC_FB_MSG_MOBILE",
       "name": "Facebook + Messenger mobile",

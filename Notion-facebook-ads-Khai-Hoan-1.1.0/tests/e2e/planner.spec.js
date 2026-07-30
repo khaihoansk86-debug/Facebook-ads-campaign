@@ -5,9 +5,22 @@ async function openVideoFlow(page) {
   await page.locator('[data-location="Trên quảng cáo của bạn"]').click();
   await page.locator('[data-adset="ENG_VIDEO_COLD"]').click();
   await page.locator('#audienceSelect').selectOption('AUD_BROAD_PHAN_THIET');
+  if (!await page.locator('#budgetAmount').inputValue()) {
+    await page.locator('#budgetAmount').fill('10');
+  }
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/meta/status**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      configured: true,
+      connected: true,
+      account: { id: 'act_test', name: 'Tài khoản thử', currency: 'USD' },
+    }),
+  }));
   await page.route('**/api/meta/creative-previews', async route => {
     const payload = route.request().postDataJSON();
     const previews = (payload.links || []).map(link => link.includes('creative-preview-test')
@@ -63,6 +76,17 @@ test('hiển thị nhanh creative của bài viết nhưng không chặn link kh
   await expect(page.locator('.creative-preview-status.unavailable')).toHaveCount(1);
   await expect(page.locator('.creative-preview-status.unavailable')).toContainText('vẫn có thể lập kế hoạch');
   await expect(page.locator('#selectedLinkCount')).toHaveText('2/2 bài đang chọn');
+  const previewLayout = await page.locator('.creative-preview').evaluate(element => {
+    const image = element.querySelector('img').getBoundingClientRect();
+    const copy = element.querySelector('.creative-preview-copy').getBoundingClientRect();
+    const card = element.closest('.link-select-card').getBoundingClientRect();
+    return {
+      separated: image.right <= copy.left,
+      insideCard: copy.right <= card.right && image.bottom <= card.bottom,
+    };
+  });
+  expect(previewLayout.separated).toBeTruthy();
+  expect(previewLayout.insideCard).toBeTruthy();
 });
 
 test('có thể đóng đăng nhập người duyệt sau khi đã nhập dữ liệu', async ({ page }) => {
@@ -89,6 +113,8 @@ test('lập hai bài với một cách chạy và hủy sửa an toàn', async (
   await openVideoFlow(page);
   await expect(page.locator('#placementSelect')).toBeVisible();
   await expect(page.locator('#budgetSelect')).toBeVisible();
+  await expect(page.locator('#placementSelect')).toHaveValue('PLC_FB_FEED_REELS_SEARCH_MOBILE');
+  await expect(page.locator('#budgetCurrency')).toHaveText('USD');
   await page.screenshot({ path: testInfo.outputPath('cau-hinh-planner-gon.png'), fullPage: true });
   await page.locator('#addFlowButton').click();
 
@@ -128,6 +154,7 @@ test('áp dụng tuần tự một flow cho nhiều link rồi thêm flow riêng
   await page.locator('#locationList [data-location]').first().click();
   await page.locator('[data-adset="AWR_REACH"]').click();
   await page.locator('#audienceSelect').selectOption('AUD_BROAD_PHAN_THIET');
+  await page.locator('#budgetAmount').fill('10');
   await page.locator('#addFlowButton').click();
 
   await expect(page.locator('.flow-card')).toHaveCount(2);
@@ -154,7 +181,7 @@ test('cấu hình ngân sách và lịch chạy ngay trong Planner', async ({ pa
   await page.locator('#linksInput').fill('https://facebook.com/post-a');
   await openVideoFlow(page);
 
-  await expect(page.locator('#budgetAmount')).toHaveValue('800');
+  await expect(page.locator('#budgetAmount')).toHaveValue('10');
   await expect(page.locator('#startTime')).not.toHaveValue('');
   await expect(page.locator('#endTimeField')).toBeHidden();
 
@@ -171,7 +198,7 @@ test('cấu hình ngân sách và lịch chạy ngay trong Planner', async ({ pa
 
   await page.locator('#endTime').fill('2030-12-31T23:55');
   await page.locator('#addFlowButton').click();
-  await expect(page.locator('.flow-card')).toContainText('800 · Trọn đời (theo tiền tệ TKQC)');
+  await expect(page.locator('.flow-card')).toContainText('10 USD · Trọn đời');
 });
 
 test('tạo bundle đối tượng ở khu vực riêng', async ({ page }) => {
@@ -258,7 +285,7 @@ test('Content gửi kế hoạch và xem cây đang chờ duyệt', async ({ pag
   expect(submittedPayload.links).toEqual(['https://facebook.com/post-a']);
   expect(submittedPayload.flows).toHaveLength(1);
   expect(submittedPayload.flows[0].audience_codes).toEqual(['AUD_BROAD_PHAN_THIET']);
-  expect(submittedPayload.flows[0].custom_budget_values).toEqual({ 'Ngân sách/ngày': '800' });
+  expect(submittedPayload.flows[0].custom_budget_values).toEqual({ 'Ngân sách/ngày': '10' });
   expect(submittedPayload.flows[0].start_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   expect(submittedPayload.flows[0].end_time).toBeNull();
 });

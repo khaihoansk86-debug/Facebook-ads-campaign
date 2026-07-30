@@ -10,6 +10,7 @@ class WebUiContractTests(unittest.TestCase):
     def setUpClass(cls):
         cls.html = (ROOT / "web_ui" / "index.html").read_text(encoding="utf-8")
         cls.javascript = (ROOT / "web_ui" / "app.js").read_text(encoding="utf-8")
+        cls.styles = (ROOT / "web_ui" / "styles.css").read_text(encoding="utf-8")
 
     def test_audience_is_visibly_required(self):
         self.assertIn("Nhóm người xem", self.html)
@@ -28,7 +29,10 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn("placement.name", self.javascript)
 
     def test_custom_budget_has_guidance_and_validation(self):
-        self.assertIn("sẽ thay ngân sách mẫu", self.html)
+        self.assertIn('id="budgetCurrency"', self.html)
+        self.assertNotIn("<b>PHP</b>", self.html)
+        self.assertIn("/api/meta/status?verify=true", self.javascript)
+        self.assertIn("meta.account?.currency", self.javascript)
         self.assertIn("Số tiền tùy chỉnh phải là một số lớn hơn 0", self.javascript)
 
     def test_presets_have_separate_management_areas(self):
@@ -53,6 +57,8 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn('loading="lazy"', self.javascript)
         self.assertIn("vẫn có thể lập kế hoạch", self.javascript)
         self.assertIn("creative-preview", self.javascript)
+        self.assertIn(".link-select-content{min-width:0;overflow:hidden}", self.styles)
+        self.assertIn("align-items:start", self.styles)
 
     def test_notion_results_have_open_links(self):
         self.assertIn("Mở Notion", self.javascript)

@@ -91,6 +91,14 @@ class WebApiTests(unittest.TestCase):
         self.assertTrue(health["ok"])
         self.assertEqual(len(catalog["catalog"]["campaigns"]), 5)
         self.assertEqual(len(catalog["catalog"]["adsets"]), 70)
+        self.assertEqual(
+            catalog["catalog"]["placements"][0]["code"],
+            "PLC_FB_FEED_REELS_SEARCH_MOBILE",
+        )
+        self.assertEqual(
+            catalog["catalog"]["budgets"][0]["code"],
+            "BUD_DAILY_ACCOUNT_CURRENCY",
+        )
 
     def test_static_html_declares_utf8(self):
         with urllib.request.urlopen(self.base_url + "/", timeout=3) as response:
@@ -129,11 +137,13 @@ class WebApiTests(unittest.TestCase):
             "api_version": "v25.0",
             "account_id": "act_1",
             "template_codes": ["ENG_POST_COLD"],
+            "account": {"id": "act_1", "currency": "USD"},
         }
         with patch("web_app.get_meta_status", return_value=safe_status):
-            status, result = self.request("/api/meta/status")
+            status, result = self.request("/api/meta/status?verify=true")
         self.assertEqual(status, 200)
         self.assertTrue(result["configured"])
+        self.assertEqual(result["account"]["currency"], "USD")
         self.assertNotIn("META_ACCESS_TOKEN", result)
 
     def test_meta_preview_and_paused_create_endpoints(self):

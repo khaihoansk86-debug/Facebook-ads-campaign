@@ -48,7 +48,11 @@ class FakeMetaClient:
                 "billing_event": "IMPRESSIONS",
                 "optimization_goal": "POST_ENGAGEMENT",
                 "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
-                "targeting": {"age_min": 18, "age_max": 45},
+                "targeting": {
+                    "age_min": 18,
+                    "age_max": 45,
+                    "instagram_positions": ["stream"],
+                },
                 "destination_type": "ON_POST",
             }
         raise AssertionError(f"Unexpected GET {path}")
@@ -321,6 +325,18 @@ class MetaServiceTests(unittest.TestCase):
         self.assertEqual(adset_call["status"], "PAUSED")
         self.assertEqual(adset_call["daily_budget"], 5000)
         self.assertEqual(adset_call["start_time"], "2026-07-28T09:00+07:00")
+        self.assertEqual(adset_call["targeting"]["age_min"], 18)
+        self.assertEqual(
+            adset_call["targeting"]["publisher_platforms"],
+            ["facebook", "messenger"],
+        )
+        self.assertEqual(adset_call["targeting"]["device_platforms"], ["mobile"])
+        self.assertEqual(
+            adset_call["targeting"]["facebook_positions"],
+            ["feed", "story", "search", "facebook_reels"],
+        )
+        self.assertEqual(adset_call["targeting"]["messenger_positions"], ["story"])
+        self.assertNotIn("instagram_positions", adset_call["targeting"])
         ad_call = next(params for path, params in client.post_calls if path.endswith("/ads"))
         self.assertEqual(ad_call["status"], "PAUSED")
 

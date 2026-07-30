@@ -486,6 +486,69 @@ def _minor_amount(value: Any, currency: str) -> int:
     return minor
 
 
+def _placement_targeting(notion_values: dict[str, Any]) -> dict[str, list[str]]:
+    platform_names = {
+        "facebook": "facebook",
+        "instagram": "instagram",
+        "messenger": "messenger",
+        "audience network": "audience_network",
+    }
+    raw_platforms = str(notion_values.get("Nền tảng quảng cáo") or "").casefold()
+    selected_platforms = [
+        api_name
+        for label, api_name in platform_names.items()
+        if label in raw_platforms
+    ]
+    targeting: dict[str, list[str]] = {}
+    if selected_platforms:
+        targeting["publisher_platforms"] = selected_platforms
+
+    facebook_positions = [
+        value.strip()
+        for value in str(notion_values.get("Vị trí Facebook") or "").split(",")
+        if value.strip()
+    ]
+    if facebook_positions:
+        targeting["facebook_positions"] = facebook_positions
+
+    messenger_positions = [
+        value.strip()
+        for value in str(notion_values.get("Vị trí Messenger") or "").split(",")
+        if value.strip()
+    ]
+    if messenger_positions:
+        targeting["messenger_positions"] = messenger_positions
+
+    device = str(notion_values.get("Thiết bị") or "").casefold()
+    if "di động" in device:
+        targeting["device_platforms"] = ["mobile"]
+    elif "máy tính" in device:
+        targeting["device_platforms"] = ["desktop"]
+    elif "tất cả" in device:
+        targeting["device_platforms"] = ["mobile", "desktop"]
+    return targeting
+
+
+def _merge_placement_targeting(
+    source_targeting: dict[str, Any],
+    overrides: dict[str, list[str]],
+) -> dict[str, Any]:
+    targeting = dict(source_targeting)
+    selected_platforms = set(overrides.get("publisher_platforms") or [])
+    if selected_platforms:
+        position_fields = {
+            "facebook": "facebook_positions",
+            "instagram": "instagram_positions",
+            "messenger": "messenger_positions",
+            "audience_network": "audience_network_positions",
+        }
+        for platform, field in position_fields.items():
+            if platform not in selected_platforms:
+                targeting.pop(field, None)
+    targeting.update(overrides)
+    return targeting
+
+
 def _flow_intent(flow: dict[str, Any], currency: str, config: MetaConfig) -> dict[str, Any]:
     objective = OBJECTIVES.get(flow["campaign_code"])
     if not objective:
@@ -513,6 +576,7 @@ def _flow_intent(flow: dict[str, Any], currency: str, config: MetaConfig) -> dic
         "currency": currency,
         "start_time": flow.get("start_time"),
         "end_time": flow.get("end_time"),
+        "targeting_overrides": _placement_targeting(flow.get("notion_values") or {}),
         "status": "PAUSED",
     }
 
@@ -693,6 +757,11 @@ def create_paused_meta_drafts(
                     if flow.get("end_time"):
                         adset_params["end_time"] = flow["end_time"]
                     adset_params.update(flow["source_adset"]["create_spec"])
+                    if flow.get("targeting_overrides"):
+                        adset_params["targeting"] = _merge_placement_targeting(
+                            adset_params.get("targeting") or {},
+                            flow["targeting_overrides"],
+                        )
                     created_adset = api.post(f"{config.ad_account_id}/adsets", **adset_params)
                     state["adset_id"] = str(created_adset["id"])
                     state["adset_configured"] = True
