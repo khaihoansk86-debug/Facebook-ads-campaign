@@ -316,17 +316,17 @@ def _resolve_pfbid_via_embed(link: str, page_id: str) -> str | None:
         or not opaque_reference.startswith("pfbid")
     ):
         return None
+    canonical_link = parsed._replace(query="", fragment="").geturl()
     embed_url = "https://www.facebook.com/plugins/post.php?" + urlencode(
-        {"href": link, "show_text": "true", "width": "500"}
+        {"href": canonical_link, "show_text": "true", "width": "500"}
     )
     request = Request(
         embed_url,
         headers={
             "Accept": "text/html",
             "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/138.0.0.0 Safari/537.36"
+                "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) "
+                "WindowsPowerShell/5.1.26100.7019"
             ),
         },
     )

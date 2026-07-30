@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from ads_core.meta_service import (
     MetaConfig,
@@ -228,6 +228,29 @@ class MetaServiceTests(unittest.TestCase):
             )
 
         urlopen_mock.assert_not_called()
+
+    def test_embed_resolver_uses_windows_http_identity_and_parses_permalink(self):
+        link = (
+            "https://www.facebook.com/khsk.chamsocdachuanykhoaphanthiet/posts/"
+            "pfbid0LivePublicPostForTest?__cft__[0]=tracking&__tn__=test"
+        )
+        response = MagicMock()
+        response.geturl.return_value = "https://www.facebook.com/plugins/post.php"
+        response.read.return_value = (
+            '<a href="https://www.facebook.com/test-page/posts/777?ref=embed_post">'
+            "Thứ Ba</a>"
+        ).encode()
+        response.__enter__.return_value = response
+        _resolve_pfbid_via_embed.cache_clear()
+
+        with patch("ads_core.meta_service.urlopen", return_value=response) as urlopen_mock:
+            story_id = _resolve_pfbid_via_embed(link, "page-1")
+
+        request = urlopen_mock.call_args.args[0]
+        self.assertIn("WindowsPowerShell", request.get_header("User-agent"))
+        self.assertNotIn("__cft__", request.full_url)
+        self.assertEqual(story_id, "page-1_777")
+        _resolve_pfbid_via_embed.cache_clear()
 
     def test_status_is_safe_and_never_returns_token(self):
         status = get_meta_status(config(), FakeMetaClient(), verify=True)
