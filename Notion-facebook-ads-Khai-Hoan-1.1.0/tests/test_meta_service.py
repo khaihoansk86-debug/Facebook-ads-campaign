@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from ads_core.meta_service import (
     MetaConfig,
     MetaValidationError,
+    _placement_targeting,
     _resolve_pfbid_via_embed,
     _story_id_from_embed_html,
     create_paused_meta_drafts,
@@ -262,6 +263,29 @@ class MetaServiceTests(unittest.TestCase):
         self.assertEqual(status["account"]["currency"], "USD")
         self.assertNotIn("access_token", status)
         self.assertNotIn("secret-token", str(status))
+
+    def test_placement_targeting_supports_all_selectable_platforms(self):
+        targeting = _placement_targeting(
+            {
+                "Nền tảng quảng cáo": "Facebook + Instagram + Messenger + Audience Network",
+                "Vị trí Facebook": "feed, facebook_reels, search",
+                "Vị trí Instagram": "stream, reels, story",
+                "Vị trí Messenger": "messenger_home, story",
+                "Vị trí Audience Network": "classic, rewarded_video",
+                "Thiết bị": "Tất cả",
+            }
+        )
+
+        self.assertEqual(
+            targeting["publisher_platforms"],
+            ["facebook", "instagram", "messenger", "audience_network"],
+        )
+        self.assertEqual(targeting["instagram_positions"], ["stream", "reels", "story"])
+        self.assertEqual(
+            targeting["audience_network_positions"],
+            ["classic", "rewarded_video"],
+        )
+        self.assertEqual(targeting["device_platforms"], ["mobile", "desktop"])
 
     def test_preview_is_read_only_and_converts_budget_to_minor_units(self):
         client = FakeMetaClient()

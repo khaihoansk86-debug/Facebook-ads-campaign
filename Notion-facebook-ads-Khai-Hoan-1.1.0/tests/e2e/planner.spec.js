@@ -260,6 +260,45 @@ test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý 
   await expect(page.locator('#plannerWorkspace')).toBeVisible();
 });
 
+test('tạo vị trí quảng cáo bằng lựa chọn thiết bị nền tảng và placement như Meta', async ({ page }, testInfo) => {
+  let created;
+  await page.setViewportSize({ width: 760, height: 820 });
+  await page.route('**/api/presets/placements', async route => {
+    if (route.request().method() === 'POST') {
+      created = route.request().postDataJSON();
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ ok: true, preset: created }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, presets: created ? [created] : [] }) });
+  });
+
+  await page.getByRole('button', { name: 'Vị trí quảng cáo' }).click();
+  await page.locator('#newPresetButton').click();
+  await expect(page.getByRole('heading', { name: 'Thiết bị' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nền tảng' })).toBeVisible();
+  await expect(page.locator('#presetFields').getByRole('heading', { name: 'Vị trí quảng cáo', exact: true })).toBeVisible();
+  await expect(page.locator('#presetCodeField')).toBeHidden();
+  await expect(page.locator('[data-preset-field="Thiết bị"]')).toHaveValue('Di động');
+  await expect(page.locator('[data-preset-field="Nền tảng quảng cáo"]')).toHaveValue('Facebook');
+  await expect(page.locator('[data-preset-field="Vị trí Facebook"]')).toHaveValue('feed, facebook_reels, search');
+  await expect(page.locator('[data-placement-group="instagram"]')).toBeHidden();
+
+  await page.getByRole('button', { name: 'Tất cả', exact: true }).click();
+  await page.locator('[data-placement-platform="instagram"]').check();
+  await expect(page.locator('[data-placement-group="instagram"]')).toBeVisible();
+  await page.locator('[data-placement-group="instagram"] [value="story"]').uncheck();
+  await page.screenshot({ path: testInfo.outputPath('vi-tri-quang-cao-760px.png'), fullPage: true });
+  await page.locator('#savePresetButton').click();
+
+  await expect(page.locator('#presetList')).toContainText('Facebook + Instagram · Tất cả');
+  expect(created.code).toMatch(/^PLC_/);
+  expect(created.notionValues['Thiết bị']).toBe('Tất cả');
+  expect(created.notionValues['Nền tảng quảng cáo']).toBe('Facebook + Instagram');
+  expect(created.notionValues['Vị trí Facebook']).toBe('feed, facebook_reels, search');
+  expect(created.notionValues['Vị trí Instagram']).toBe('stream, reels');
+  expect(created.notionValues).not.toHaveProperty('Vị trí Messenger');
+});
+
 test('Content gửi kế hoạch và xem cây đang chờ duyệt', async ({ page }, testInfo) => {
   let submittedPayload;
   const review = {

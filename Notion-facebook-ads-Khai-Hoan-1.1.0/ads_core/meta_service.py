@@ -511,6 +511,14 @@ def _placement_targeting(notion_values: dict[str, Any]) -> dict[str, list[str]]:
     if facebook_positions:
         targeting["facebook_positions"] = facebook_positions
 
+    instagram_positions = [
+        value.strip()
+        for value in str(notion_values.get("Vị trí Instagram") or "").split(",")
+        if value.strip()
+    ]
+    if instagram_positions:
+        targeting["instagram_positions"] = instagram_positions
+
     messenger_positions = [
         value.strip()
         for value in str(notion_values.get("Vị trí Messenger") or "").split(",")
@@ -518,6 +526,14 @@ def _placement_targeting(notion_values: dict[str, Any]) -> dict[str, list[str]]:
     ]
     if messenger_positions:
         targeting["messenger_positions"] = messenger_positions
+
+    audience_network_positions = [
+        value.strip()
+        for value in str(notion_values.get("Vị trí Audience Network") or "").split(",")
+        if value.strip()
+    ]
+    if audience_network_positions:
+        targeting["audience_network_positions"] = audience_network_positions
 
     device = str(notion_values.get("Thiết bị") or "").casefold()
     if "di động" in device:

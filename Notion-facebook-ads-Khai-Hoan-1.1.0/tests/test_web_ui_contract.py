@@ -55,6 +55,16 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn("Không bắt buộc · có thể để trống", self.javascript)
         self.assertIn("segmented-control", self.styles)
 
+    def test_placement_library_uses_selectable_meta_like_controls(self):
+        self.assertIn("placementFieldsHtml", self.javascript)
+        self.assertIn("Thiết bị", self.javascript)
+        self.assertIn("Nền tảng", self.javascript)
+        self.assertIn("Bảng feed", self.javascript)
+        self.assertIn("Facebook Reels", self.javascript)
+        self.assertIn("Kết quả tìm kiếm", self.javascript)
+        self.assertIn('data-preset-field="Vị trí Instagram"', self.javascript)
+        self.assertIn("placement-platform-card", self.styles)
+
     def test_article_preview_does_not_hide_after_three_flows(self):
         self.assertNotIn("flows.slice(0,3)", self.javascript)
         self.assertIn("Cách chạy ${flowIndex+1}", self.javascript)
