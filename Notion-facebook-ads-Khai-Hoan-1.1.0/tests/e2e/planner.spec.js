@@ -201,8 +201,9 @@ test('cấu hình ngân sách và lịch chạy ngay trong Planner', async ({ pa
   await expect(page.locator('.flow-card')).toContainText('10 USD · Trọn đời');
 });
 
-test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý như Meta', async ({ page }) => {
+test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý như Meta', async ({ page }, testInfo) => {
   let created;
+  await page.setViewportSize({ width: 760, height: 820 });
   await page.route('**/api/presets/audiences', async route => {
     if (route.request().method() === 'POST') {
       created = route.request().postDataJSON();
@@ -216,6 +217,28 @@ test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý 
   await page.locator('#newPresetButton').click();
   await expect(page.getByRole('heading', { name: 'Kiểm soát đối tượng' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Gợi ý đối tượng' })).toBeVisible();
+  const audienceLayout = await page.locator('.audience-composer').evaluate(composer => {
+    const sections = [...composer.querySelectorAll('.audience-section')];
+    const firstNumber = sections[0].querySelector('.audience-section-number').getBoundingClientRect();
+    const firstTitle = sections[0].querySelector('h3').getBoundingClientRect();
+    const editor = composer.closest('.preset-editor').getBoundingClientRect();
+    return {
+      numberAligned: Math.abs(firstNumber.top - firstTitle.top) <= 6,
+      sectionsInsideEditor: sections.every(section => {
+        const box = section.getBoundingClientRect();
+        return box.left >= editor.left && box.right <= editor.right;
+      }),
+      sectionsSeparated: sections[1].getBoundingClientRect().top >= sections[0].getBoundingClientRect().bottom,
+      noHorizontalOverflow: composer.scrollWidth <= composer.clientWidth,
+    };
+  });
+  expect(audienceLayout).toEqual({
+    numberAligned: true,
+    sectionsInsideEditor: true,
+    sectionsSeparated: true,
+    noHorizontalOverflow: true,
+  });
+  await page.screenshot({ path: testInfo.outputPath('tep-doi-tuong-760px.png'), fullPage: true });
   await expect(page.locator('#presetCodeField')).toBeHidden();
   await page.locator('#presetName').fill('Khách mới Phan Thiết');
   await page.locator('[data-preset-field="Vị trí địa lý"]').selectOption('Phan Thiet, Bình Thuận Province, Vietnam +25km');

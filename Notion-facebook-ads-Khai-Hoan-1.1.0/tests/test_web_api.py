@@ -107,6 +107,12 @@ class WebApiTests(unittest.TestCase):
         self.assertIn("charset=utf-8", content_type.lower())
         self.assertIn("CSV dự phòng", html)
 
+    def test_static_ui_assets_disable_browser_cache(self):
+        with urllib.request.urlopen(self.base_url + "/styles.css", timeout=3) as response:
+            response.read()
+            cache_control = response.headers.get("Cache-Control", "")
+        self.assertIn("no-store", cache_control)
+
     def test_preview_and_validation_error(self):
         status, result = self.request("/api/planner/preview", self.payload())
         self.assertEqual(status, 200)

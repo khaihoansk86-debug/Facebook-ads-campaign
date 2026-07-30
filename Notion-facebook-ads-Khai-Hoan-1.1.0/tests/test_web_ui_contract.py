@@ -17,6 +17,10 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn("required-hint", self.html)
         self.assertIn("Hãy chọn một nhóm người xem", self.javascript)
 
+    def test_static_assets_are_versioned_to_avoid_stale_layout(self):
+        self.assertRegex(self.html, r'href="styles\.css\?v=[^"]+"')
+        self.assertRegex(self.html, r'src="app\.js\?v=[^"]+"')
+
     def test_flows_can_be_edited(self):
         self.assertIn("data-edit", self.javascript)
         self.assertIn("Lưu thay đổi cách chạy", self.javascript)

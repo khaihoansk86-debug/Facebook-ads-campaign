@@ -173,6 +173,9 @@ class ApiHandler(SimpleHTTPRequestHandler):
         self._json(status, {"ok": False, "error": message})
 
     def end_headers(self) -> None:
+        request_path = urlparse(self.path).path
+        if request_path == "/" or Path(request_path).suffix.lower() in {".html", ".css", ".js"}:
+            self.send_header("Cache-Control", "no-store")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
         super().end_headers()
