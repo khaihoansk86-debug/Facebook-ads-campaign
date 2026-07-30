@@ -1,10 +1,13 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from ads_core.meta_service import (
     MetaConfig,
     MetaValidationError,
+    _resolve_pfbid_via_embed,
+    _story_id_from_embed_html,
     create_paused_meta_drafts,
     get_meta_status,
     preview_meta_plan,
@@ -116,6 +119,15 @@ class FakeOpaqueStoryClient(FakePageTokenClient):
         return super().get(path, **params)
 
 
+class FakeUnresolvableOpaqueStoryClient(FakePageTokenClient):
+    def get(self, path, **params):
+        if path == "" and self.page_token_used:
+            return {}
+        if path == "page-1/published_posts" and self.page_token_used:
+            return {"data": []}
+        return super().get(path, **params)
+
+
 def config():
     return MetaConfig(
         access_token="secret-token",
@@ -174,6 +186,48 @@ class MetaServiceTests(unittest.TestCase):
         resolved = resolve_existing_posts([link], config(), FakeOpaqueStoryClient())
 
         self.assertEqual(resolved[link], "page-1_777")
+
+    def test_embed_html_extracts_numeric_post_permalink(self):
+        html = """
+        <a href="https://www.facebook.com/test-page/posts/777?ref=embed_post">
+          vào Thứ Ba
+        </a>
+        """
+
+        self.assertEqual(_story_id_from_embed_html(html, "page-1"), "page-1_777")
+
+    def test_pfbid_falls_back_to_public_embed_permalink(self):
+        link = (
+            "https://www.facebook.com/khsk.chamsocdachuyenkhoaphanthiet/posts/"
+            "pfbid0OpaquePostForTest"
+        )
+        client = FakeUnresolvableOpaqueStoryClient()
+
+        with patch(
+            "ads_core.meta_service._resolve_pfbid_via_embed",
+            return_value="page-1_777",
+        ) as embed_resolver:
+            resolved = resolve_existing_posts([link], config(), client)
+
+        self.assertEqual(resolved[link], "page-1_777")
+        embed_resolver.assert_called_once_with(link, "page-1")
+
+    def test_embed_resolver_rejects_non_facebook_and_non_pfbid_urls(self):
+        with patch("ads_core.meta_service.urlopen") as urlopen_mock:
+            self.assertIsNone(
+                _resolve_pfbid_via_embed(
+                    "https://example.com/page/posts/pfbid0OpaquePostForTest",
+                    "page-1",
+                )
+            )
+            self.assertIsNone(
+                _resolve_pfbid_via_embed(
+                    "https://www.facebook.com/page/posts/777",
+                    "page-1",
+                )
+            )
+
+        urlopen_mock.assert_not_called()
 
     def test_status_is_safe_and_never_returns_token(self):
         status = get_meta_status(config(), FakeMetaClient(), verify=True)

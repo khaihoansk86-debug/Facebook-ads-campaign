@@ -3,10 +3,14 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from functools import lru_cache
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -269,6 +273,80 @@ def story_id_from_link(link: str, page_id: str) -> str | None:
 _direct_story_id = story_id_from_link
 
 
+class _EmbedPostLinkParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.links: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.lower() != "a":
+            return
+        href = next((value for key, value in attrs if key.lower() == "href"), None)
+        if href:
+            self.links.append(href)
+
+
+def _is_facebook_host(host: str) -> bool:
+    normalized = host.lower().rstrip(".")
+    return normalized == "facebook.com" or normalized.endswith(".facebook.com")
+
+
+def _story_id_from_embed_html(html: str, page_id: str) -> str | None:
+    parser = _EmbedPostLinkParser()
+    parser.feed(html)
+    for href in parser.links:
+        parsed = urlparse(href)
+        if not _is_facebook_host(parsed.hostname or ""):
+            continue
+        match = re.search(r"/posts/(\d+)(?:/|$)", parsed.path)
+        if match:
+            return f"{page_id}_{match.group(1)}"
+    return None
+
+
+@lru_cache(maxsize=512)
+def _resolve_pfbid_via_embed(link: str, page_id: str) -> str | None:
+    parsed = urlparse(link)
+    opaque_reference = story_id_from_link(link, page_id)
+    if (
+        parsed.scheme.lower() != "https"
+        or not _is_facebook_host(parsed.hostname or "")
+        or not page_id
+        or not opaque_reference
+        or not opaque_reference.startswith("pfbid")
+    ):
+        return None
+    embed_url = "https://www.facebook.com/plugins/post.php?" + urlencode(
+        {"href": link, "show_text": "true", "width": "500"}
+    )
+    request = Request(
+        embed_url,
+        headers={
+            "Accept": "text/html",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/138.0.0.0 Safari/537.36"
+            ),
+        },
+    )
+    try:
+        with urlopen(request, timeout=8) as response:
+            final_host = urlparse(response.geturl()).hostname or ""
+            if not _is_facebook_host(final_host):
+                return None
+            raw_html = response.read(1_000_001)
+    except (HTTPError, URLError, TimeoutError, OSError):
+        return None
+    if len(raw_html) > 1_000_000:
+        return None
+    try:
+        html = raw_html.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    return _story_id_from_embed_html(html, page_id)
+
+
 def _read_objects_by_ids(
     client: MetaClient,
     object_ids: list[str],
@@ -322,12 +400,24 @@ def resolve_existing_posts(
             list(dict.fromkeys(opaque_references.values())),
             fields="id,permalink_url",
         )
+        embed_links: list[str] = []
         for link, reference in opaque_references.items():
             story_id = str((opaque_objects.get(reference) or {}).get("id") or "")
             if story_id:
                 resolved[link] = story_id
             else:
-                unresolved.append(link)
+                embed_links.append(link)
+        if embed_links:
+            with ThreadPoolExecutor(max_workers=min(8, len(embed_links))) as executor:
+                embed_results = executor.map(
+                    lambda item: _resolve_pfbid_via_embed(item, config.page_id),
+                    embed_links,
+                )
+                for link, story_id in zip(embed_links, embed_results):
+                    if story_id:
+                        resolved[link] = story_id
+                    else:
+                        unresolved.append(link)
     if not unresolved:
         return resolved
 

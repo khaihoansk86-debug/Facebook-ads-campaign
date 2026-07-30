@@ -192,7 +192,11 @@ def get_creative_previews(
             pending.append(link)
 
     story_by_link = {link: story_id_from_link(link, config.page_id) for link in pending}
-    unresolved = [link for link, story_id in story_by_link.items() if not story_id]
+    unresolved = [
+        link
+        for link, story_id in story_by_link.items()
+        if not story_id or story_id.startswith("pfbid")
+    ]
     resolution_error = ""
     if unresolved:
         try:

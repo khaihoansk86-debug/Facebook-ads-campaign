@@ -74,9 +74,23 @@ class FakePfbidClient(FakeCreativeClient):
     def get(self, path, **params):
         if path == "":
             self.get_calls.append((path, params))
-            if params.get("ids") == self.opaque_id:
-                post = FakeCreativeClient.get(self, path, ids="111_123", fields=params.get("fields"))
-                return {self.opaque_id: post["111_123"]}
+            if (
+                params.get("ids") == self.opaque_id
+                and params.get("fields") == "id,permalink_url"
+            ):
+                return {
+                    self.opaque_id: {
+                        "id": "111_123",
+                        "permalink_url": "https://www.facebook.com/page/posts/123",
+                    }
+                }
+            if params.get("ids") == "111_123":
+                return FakeCreativeClient.get(
+                    self,
+                    path,
+                    ids="111_123",
+                    fields=params.get("fields"),
+                )
             return {}
         if path == "111/published_posts":
             self.get_calls.append((path, params))
@@ -168,16 +182,25 @@ class CreativePreviewServiceTests(unittest.TestCase):
             "https://www.facebook.com/khsk.chamsocdachuyenkhoaphanthiet/posts/"
             f"{FakePfbidClient.opaque_id}"
         )
+        client = FakePfbidClient()
         with tempfile.TemporaryDirectory() as temp_dir:
             result = get_creative_previews(
                 [link],
                 config(),
-                FakePfbidClient(),
+                client,
                 cache_path=Path(temp_dir) / "previews.json",
             )
 
         self.assertEqual(result["summary"]["ready"], 1)
         self.assertEqual(result["previews"][0]["object_story_id"], "111_123")
+        batch_calls = [
+            params
+            for path, params in client.get_calls
+            if path == ""
+        ]
+        self.assertEqual(batch_calls[0]["ids"], FakePfbidClient.opaque_id)
+        self.assertEqual(batch_calls[0]["fields"], "id,permalink_url")
+        self.assertEqual(batch_calls[-1]["ids"], "111_123")
 
     def test_rejects_non_facebook_links_and_oversized_batches(self):
         with self.assertRaisesRegex(MetaValidationError, "không hợp lệ"):
