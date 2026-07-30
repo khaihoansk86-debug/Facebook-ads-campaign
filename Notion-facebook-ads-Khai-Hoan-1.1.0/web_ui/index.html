@@ -110,9 +110,9 @@
           <form class="hidden" id="presetForm">
             <div class="editor-heading"><div><h2 id="presetFormTitle">Tạo bundle mới</h2><p>Thông tin lưu tại đây sẽ xuất hiện trong Planner.</p></div><button type="button" class="text-button" id="cancelPresetButton">Đóng</button></div>
             <div class="preset-base-grid">
-              <label>Mã bundle <small>Chữ in hoa, số và dấu gạch dưới</small><input id="presetCode" required placeholder="VD: AUD_KHACH_MOI"></label>
-              <label>Tên dễ nhận biết<input id="presetName" required placeholder="VD: Khách mới Phan Thiết"></label>
-              <label class="wide">Mô tả ngắn<textarea id="presetSummary" rows="2" placeholder="Dùng cho trường hợp nào?"></textarea></label>
+              <label id="presetCodeField">Mã bundle <small>Chữ in hoa, số và dấu gạch dưới</small><input id="presetCode" required placeholder="VD: AUD_KHACH_MOI"></label>
+              <label id="presetNameField">Tên dễ nhận biết<input id="presetName" required placeholder="VD: Khách mới Phan Thiết"></label>
+              <label class="wide" id="presetSummaryField">Mô tả ngắn<textarea id="presetSummary" rows="2" placeholder="Dùng cho trường hợp nào?"></textarea></label>
             </div>
             <div class="preset-fields" id="presetFields"></div>
             <div class="editor-actions"><span id="presetSaveHint">Bundle sẽ được lưu và dùng ngay trong Planner.</span><button class="button primary" type="submit" id="savePresetButton">Lưu bundle</button></div>

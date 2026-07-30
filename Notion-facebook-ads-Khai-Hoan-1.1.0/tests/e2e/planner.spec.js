@@ -201,7 +201,7 @@ test('cấu hình ngân sách và lịch chạy ngay trong Planner', async ({ pa
   await expect(page.locator('.flow-card')).toContainText('10 USD · Trọn đời');
 });
 
-test('tạo bundle đối tượng ở khu vực riêng', async ({ page }) => {
+test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý như Meta', async ({ page }) => {
   let created;
   await page.route('**/api/presets/audiences', async route => {
     if (route.request().method() === 'POST') {
@@ -214,13 +214,25 @@ test('tạo bundle đối tượng ở khu vực riêng', async ({ page }) => {
   await page.getByRole('button', { name: 'Tệp đối tượng' }).click();
   await expect(page.locator('#libraryView')).toBeVisible();
   await page.locator('#newPresetButton').click();
-  await page.locator('#presetCode').fill('AUD_KHACH_MOI');
+  await expect(page.getByRole('heading', { name: 'Kiểm soát đối tượng' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gợi ý đối tượng' })).toBeVisible();
+  await expect(page.locator('#presetCodeField')).toBeHidden();
   await page.locator('#presetName').fill('Khách mới Phan Thiết');
-  await page.locator('[data-preset-field="Tuổi min"]').fill('18');
-  await page.locator('[data-preset-field="Tuổi max"]').fill('45');
+  await page.locator('[data-preset-field="Vị trí địa lý"]').selectOption('Phan Thiet, Bình Thuận Province, Vietnam +25km');
+  await page.locator('[data-preset-field="Tuổi kiểm soát min"]').selectOption('18');
+  await page.locator('[data-preset-field="Tuổi min"]').selectOption('22');
+  await page.locator('[data-preset-field="Tuổi max"]').selectOption('45');
+  await page.getByRole('button', { name: 'Nữ', exact: true }).click();
+  await expect(page.locator('[data-preset-field="Loại trừ đối tượng"]')).toHaveValue('');
+  await expect(page.locator('[data-preset-field="Nhắm mục tiêu chi tiết"]')).toHaveValue('');
   await page.locator('#savePresetButton').click();
   await expect(page.locator('#presetList')).toContainText('Khách mới Phan Thiết');
-  expect(created.notionValues['Tuổi min']).toBe(18);
+  expect(created.code).toMatch(/^AUD_/);
+  expect(created.notionValues['Tuổi min']).toBe(22);
+  expect(created.notionValues['Tuổi max']).toBe(45);
+  expect(created.notionValues['Giới tính']).toBe('Nữ');
+  expect(created.notionValues).not.toHaveProperty('Loại trừ đối tượng');
+  expect(created.notionValues).not.toHaveProperty('Nhắm mục tiêu chi tiết');
   await page.getByRole('button', { name: 'Planner', exact: true }).click();
   await expect(page.locator('#plannerWorkspace')).toBeVisible();
 });

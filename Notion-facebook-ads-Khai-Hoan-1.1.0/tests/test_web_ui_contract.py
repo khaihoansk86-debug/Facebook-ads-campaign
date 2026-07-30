@@ -43,6 +43,14 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn("loadPresetLibrary", self.javascript)
         self.assertNotIn('data-config-tab=', self.html)
 
+    def test_audience_library_uses_meta_like_controls_and_suggestions(self):
+        self.assertIn("Kiểm soát đối tượng", self.javascript)
+        self.assertIn("Gợi ý đối tượng", self.javascript)
+        self.assertIn('data-preset-field="Loại trừ đối tượng"', self.javascript)
+        self.assertIn('data-preset-field="Nhắm mục tiêu chi tiết"', self.javascript)
+        self.assertIn("Không bắt buộc · có thể để trống", self.javascript)
+        self.assertIn("segmented-control", self.styles)
+
     def test_article_preview_does_not_hide_after_three_flows(self):
         self.assertNotIn("flows.slice(0,3)", self.javascript)
         self.assertIn("Cách chạy ${flowIndex+1}", self.javascript)
