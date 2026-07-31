@@ -205,6 +205,34 @@ class WebApiTests(unittest.TestCase):
         self.assertNotIn("access_token", result)
         preview_mock.assert_called_once()
 
+    def test_page_posts_endpoint_passes_date_range_and_returns_safe_metadata(self):
+        fake_result = {
+            "page_id": "111",
+            "page_name": "Khải Hoàn",
+            "since": "2026-07-01",
+            "until": "2026-07-07",
+            "posts": [
+                {
+                    "object_story_id": "111_123",
+                    "permalink_url": "https://facebook.com/page/posts/123",
+                    "status": "ready",
+                }
+            ],
+            "summary": {"total": 1, "truncated": False, "max_posts": 500},
+        }
+        with patch(
+            "web_app.get_page_posts_by_date", return_value=fake_result
+        ) as page_posts_mock:
+            status, result = self.request(
+                "/api/meta/page-posts?since=2026-07-01&until=2026-07-07"
+            )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(result["summary"]["total"], 1)
+        self.assertNotIn("access_token", str(result))
+        page_posts_mock.assert_called_once()
+        self.assertEqual(page_posts_mock.call_args.args[:2], ("2026-07-01", "2026-07-07"))
+
     def test_review_requires_approver_and_publishes_only_after_approval(self):
         status, submitted = self.request("/api/reviews", self.payload())
         self.assertEqual(status, 201)

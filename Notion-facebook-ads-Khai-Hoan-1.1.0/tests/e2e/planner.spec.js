@@ -89,6 +89,62 @@ test('hiển thị nhanh creative của bài viết nhưng không chặn link kh
   expect(previewLayout.insideCard).toBeTruthy();
 });
 
+test('imports Page posts by date without duplicating existing links', async ({ page }) => {
+  const firstLink = 'https://facebook.com/page/posts/creative-preview-test-1';
+  const secondLink = 'https://facebook.com/page/posts/creative-preview-test-2';
+  await page.route('**/api/meta/page-posts?**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      page_id: '111',
+      page_name: 'Khai Hoan Clinic',
+      since: '2026-07-01',
+      until: '2026-07-07',
+      posts: [
+        {
+          link: firstLink,
+          permalink_url: firstLink,
+          object_story_id: '111_1',
+          status: 'ready',
+          page_name: 'Khai Hoan Clinic',
+          message: 'Existing Planner post',
+          created_time: '2026-07-07T08:00:00+0000',
+          media_type: 'photo',
+          thumbnail_url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="72" height="72"%3E%3Crect width="72" height="72" fill="%231877f2"/%3E%3C/svg%3E',
+        },
+        {
+          link: secondLink,
+          permalink_url: secondLink,
+          object_story_id: '111_2',
+          status: 'ready',
+          page_name: 'Khai Hoan Clinic',
+          message: 'New post selected by date',
+          created_time: '2026-07-06T08:00:00+0000',
+          media_type: 'photo',
+          thumbnail_url: '',
+        },
+      ],
+      summary: { total: 2, truncated: false, max_posts: 500 },
+    }),
+  }));
+  await page.locator('#linksInput').fill(firstLink);
+  await page.locator('#openPagePostsButton').click();
+  await expect(page.locator('#pagePostsDialog')).toHaveAttribute('open', '');
+  await page.locator('#pagePostsSince').fill('2026-07-01');
+  await page.locator('#pagePostsUntil').fill('2026-07-07');
+  await page.locator('#loadPagePostsButton').click();
+
+  await expect(page.locator('.page-post-card')).toHaveCount(2);
+  await expect(page.locator('.page-post-card.already-added')).toHaveCount(1);
+  await expect(page.locator('#pagePostsStatus')).toContainText('1 bài đang chọn');
+  await page.locator('#addPagePostsButton').click();
+
+  await expect(page.locator('#linksInput')).toHaveValue(`${firstLink}\n${secondLink}`);
+  await expect(page.locator('.link-select-card')).toHaveCount(2);
+  await expect(page.locator('.creative-preview')).toHaveCount(2);
+});
+
 test('có thể đóng đăng nhập người duyệt sau khi đã nhập dữ liệu', async ({ page }) => {
   await page.locator('[data-app-view="reviews"]').click();
   await page.locator('#approverLoginButton').click();

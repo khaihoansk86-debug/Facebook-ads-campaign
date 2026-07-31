@@ -2,7 +2,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ads_core.creative_preview_service import get_creative_previews
+from datetime import datetime, timedelta, timezone
+
+from ads_core.creative_preview_service import (
+    get_creative_previews,
+    get_page_posts_by_date,
+)
 from ads_core.meta_service import MetaApiError, MetaConfig, MetaValidationError
 
 
@@ -98,6 +103,42 @@ class FakePfbidClient(FakeCreativeClient):
         return FakeCreativeClient.get(self, path, **params)
 
 
+class FakePagePostsClient(FakeCreativeClient):
+    def get(self, path, **params):
+        if path == "111/published_posts":
+            self.get_calls.append((path, params))
+            after = params.get("after")
+            if not after:
+                return {
+                    "data": [
+                        {
+                            "id": "111_123",
+                            "message": "Bài cũ",
+                            "permalink_url": "https://www.facebook.com/page/posts/123",
+                            "created_time": "2026-07-01T08:00:00+0000",
+                            "from": {"id": "111", "name": "Khải Hoàn"},
+                        }
+                    ],
+                    "paging": {
+                        "cursors": {"after": "next-page"},
+                        "next": "https://graph.facebook.com/next",
+                    },
+                }
+            if after == "next-page":
+                return {
+                    "data": [
+                        {
+                            "id": "111_456",
+                            "message": "Bài mới",
+                            "permalink_url": "https://www.facebook.com/page/posts/456",
+                            "created_time": "2026-07-03T08:00:00+0000",
+                            "from": {"id": "111", "name": "Khải Hoàn"},
+                        }
+                    ]
+                }
+        return super().get(path, **params)
+
+
 def config():
     return MetaConfig(
         access_token="secret-token",
@@ -112,6 +153,40 @@ def config():
 
 
 class CreativePreviewServiceTests(unittest.TestCase):
+    def test_page_posts_by_date_paginates_and_uses_inclusive_vietnam_days(self):
+        client = FakePagePostsClient()
+
+        result = get_page_posts_by_date("2026-07-01", "2026-07-03", config(), client)
+
+        page_calls = [
+            params for path, params in client.get_calls if path == "111/published_posts"
+        ]
+        vietnam = timezone(timedelta(hours=7))
+        self.assertEqual(
+            page_calls[0]["since"],
+            int(datetime(2026, 7, 1, tzinfo=vietnam).timestamp()),
+        )
+        self.assertEqual(
+            page_calls[0]["until"],
+            int(datetime(2026, 7, 4, tzinfo=vietnam).timestamp()),
+        )
+        self.assertEqual(page_calls[0]["after"], None)
+        self.assertEqual(page_calls[1]["after"], "next-page")
+        self.assertIn("attachments.limit(1)", page_calls[0]["fields"])
+        self.assertEqual(
+            [post["object_story_id"] for post in result["posts"]],
+            ["111_456", "111_123"],
+        )
+        self.assertEqual(result["summary"]["total"], 2)
+        self.assertNotIn("access_token", str(result))
+        self.assertNotIn("page-secret-token", str(result))
+
+    def test_page_posts_by_date_rejects_invalid_ranges(self):
+        with self.assertRaisesRegex(MetaValidationError, "bằng hoặc sau"):
+            get_page_posts_by_date("2026-07-03", "2026-07-01", config())
+        with self.assertRaisesRegex(MetaValidationError, "tối đa 90 ngày"):
+            get_page_posts_by_date("2026-01-01", "2026-04-01", config())
+
     def test_reads_creative_metadata_in_one_graph_batch_and_caches_it(self):
         link = "https://www.facebook.com/page/posts/123"
         with tempfile.TemporaryDirectory() as temp_dir:

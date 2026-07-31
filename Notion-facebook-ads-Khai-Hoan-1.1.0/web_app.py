@@ -18,7 +18,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 import bulk_ads_tool as tool
-from ads_core.creative_preview_service import get_creative_previews
+from ads_core.creative_preview_service import get_creative_previews, get_page_posts_by_date
 from ads_core.draft_service import create_drafts_safely
 from ads_core.export_service import ExportValidationError, export_selected_pages, list_export_candidates
 from ads_core.meta_service import (
@@ -258,6 +258,22 @@ class ApiHandler(SimpleHTTPRequestHandler):
                 tool.load_env(ENV_PATH)
                 config = MetaConfig.from_env()
                 self._json(200, {"ok": True, **get_meta_audiences(config)})
+            except MetaValidationError as exc:
+                self._error(400, str(exc))
+            except MetaApiError as exc:
+                self._error(502, str(exc))
+            return
+        if path == "/api/meta/page-posts":
+            try:
+                tool.load_env(ENV_PATH)
+                config = MetaConfig.from_env()
+                query = parse_qs(parsed_url.query)
+                result = get_page_posts_by_date(
+                    query.get("since", [""])[0],
+                    query.get("until", [""])[0],
+                    config,
+                )
+                self._json(200, {"ok": True, **result})
             except MetaValidationError as exc:
                 self._error(400, str(exc))
             except MetaApiError as exc:

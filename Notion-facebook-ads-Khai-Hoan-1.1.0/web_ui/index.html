@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Khải Hoàn Ads</title>
-  <link rel="stylesheet" href="styles.css?v=20260730-5">
+  <link rel="stylesheet" href="styles.css?v=20260731-1">
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Đi thẳng đến vùng làm việc</a>
@@ -38,6 +38,7 @@
       <section class="workspace" id="plannerWorkspace">
         <aside class="links-panel panel">
           <div class="panel-title"><span class="step">1</span><div><h2>Bài viết</h2><p>Mỗi dòng là một đường dẫn</p></div></div>
+          <button class="button secondary full page-posts-open" type="button" id="openPagePostsButton">Lấy bài từ Page theo ngày</button>
           <textarea id="linksInput" placeholder="Dán các đường dẫn bài viết Facebook vào đây…"></textarea>
           <div class="link-selection-toolbar">
             <strong id="selectedLinkCount">0 bài đang chọn</strong>
@@ -186,6 +187,29 @@
 
   <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
   <dialog id="previewDialog" aria-labelledby="previewTitle"><div class="dialog-head"><h2 id="previewTitle">Xem trước kế hoạch</h2><button id="closeDialog" aria-label="Đóng cửa sổ xem trước">×</button></div><div id="previewContent"></div></dialog>
+  <dialog id="pagePostsDialog" class="page-posts-dialog" aria-labelledby="pagePostsTitle">
+    <div class="dialog-head">
+      <div><h2 id="pagePostsTitle">Lấy bài viết từ Page</h2><p>Chọn khoảng ngày, sau đó tích các bài cần đưa vào Planner.</p></div>
+      <button type="button" id="closePagePostsDialog" aria-label="Đóng cửa sổ lấy bài viết">×</button>
+    </div>
+    <div class="page-posts-filter">
+      <label>Từ ngày<input id="pagePostsSince" type="date"></label>
+      <label>Đến ngày<input id="pagePostsUntil" type="date"></label>
+      <button class="button primary" type="button" id="loadPagePostsButton">Tìm bài viết</button>
+    </div>
+    <div class="page-posts-selection-toolbar">
+      <strong id="pagePostsStatus" role="status" aria-live="polite">Chọn ngày để tìm bài</strong>
+      <div>
+        <button class="text-button" type="button" id="selectAllPagePosts">Chọn tất cả</button>
+        <button class="text-button" type="button" id="clearPagePosts">Bỏ chọn</button>
+      </div>
+    </div>
+    <div id="pagePostsList" class="page-posts-list empty-state">Chưa tải bài viết</div>
+    <div class="page-posts-actions">
+      <button class="button secondary" type="button" id="cancelPagePostsButton">Hủy</button>
+      <button class="button primary" type="button" id="addPagePostsButton" disabled>Thêm bài đã chọn vào Planner</button>
+    </div>
+  </dialog>
   <dialog id="approverDialog" aria-labelledby="approverDialogTitle">
     <form method="dialog" id="approverForm">
       <div class="dialog-head"><h2 id="approverDialogTitle">Đăng nhập người duyệt</h2><button type="button" id="closeApproverDialog" aria-label="Đóng cửa sổ đăng nhập">×</button></div>
@@ -197,6 +221,6 @@
       </div>
     </form>
   </dialog>
-  <script src="app.js?v=20260730-5"></script>
+  <script src="app.js?v=20260731-1"></script>
 </body>
 </html>

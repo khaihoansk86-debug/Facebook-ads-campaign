@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from datetime import date, datetime, time as datetime_time, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -24,6 +25,8 @@ DEFAULT_CREATIVE_PREVIEW_CACHE_PATH = (
 CREATIVE_PREVIEW_CACHE_SECONDS = 6 * 60 * 60
 MAX_PREVIEW_LINKS = 100
 GRAPH_BATCH_SIZE = 50
+MAX_PAGE_POST_RANGE_DAYS = 90
+MAX_PAGE_POSTS = 500
 _CACHE_LOCK = threading.Lock()
 _PREVIEW_FIELDS = (
     "id,message,permalink_url,created_time,from{id,name},"
@@ -130,6 +133,93 @@ def _unavailable_preview(link: str, reason: str = "") -> dict[str, Any]:
         "thumbnail_url": "",
         "permalink_url": link,
         "error": reason or "Không đọc được bài viết bằng quyền Meta hiện tại.",
+    }
+
+
+def _page_post_range(since: Any, until: Any) -> tuple[date, date, int, int]:
+    try:
+        if len(str(since or "")) != 10 or len(str(until or "")) != 10:
+            raise ValueError
+        since_date = date.fromisoformat(str(since))
+        until_date = date.fromisoformat(str(until))
+    except ValueError as exc:
+        raise MetaValidationError("Ngày bắt đầu và kết thúc phải theo định dạng YYYY-MM-DD.") from exc
+    if until_date < since_date:
+        raise MetaValidationError("Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.")
+    days = (until_date - since_date).days + 1
+    if days > MAX_PAGE_POST_RANGE_DAYS:
+        raise MetaValidationError(
+            f"Mỗi lần chỉ lấy bài trong tối đa {MAX_PAGE_POST_RANGE_DAYS} ngày."
+        )
+    vietnam_timezone = timezone(timedelta(hours=7))
+    since_timestamp = int(
+        datetime.combine(since_date, datetime_time.min, vietnam_timezone).timestamp()
+    )
+    until_timestamp = int(
+        datetime.combine(until_date + timedelta(days=1), datetime_time.min, vietnam_timezone).timestamp()
+    )
+    return since_date, until_date, since_timestamp, until_timestamp
+
+
+def get_page_posts_by_date(
+    since: Any,
+    until: Any,
+    config: MetaConfig,
+    client: MetaClient | None = None,
+) -> dict[str, Any]:
+    """Read published Page posts in an inclusive Vietnam-local date range."""
+    since_date, until_date, since_timestamp, until_timestamp = _page_post_range(since, until)
+    config.validate(require_page=True)
+    api = client or MetaClient(config)
+    page_api = get_page_client(config, api)
+    posts: list[dict[str, Any]] = []
+    seen_links: set[str] = set()
+    after = ""
+    truncated = False
+
+    while len(posts) < MAX_PAGE_POSTS:
+        response = page_api.get(
+            f"{config.page_id}/published_posts",
+            fields=_PREVIEW_FIELDS,
+            since=since_timestamp,
+            until=until_timestamp,
+            limit=min(100, MAX_PAGE_POSTS - len(posts)),
+            after=after or None,
+        )
+        for raw_post in response.get("data", []):
+            if not isinstance(raw_post, dict):
+                continue
+            permalink = _safe_http_url(raw_post.get("permalink_url"))
+            story_id = str(raw_post.get("id") or "")
+            if not permalink or not story_id or permalink in seen_links:
+                continue
+            seen_links.add(permalink)
+            posts.append(_ready_preview(permalink, story_id, raw_post))
+            if len(posts) >= MAX_PAGE_POSTS:
+                break
+        paging = response.get("paging") if isinstance(response.get("paging"), dict) else {}
+        cursors = paging.get("cursors") if isinstance(paging.get("cursors"), dict) else {}
+        next_after = str(cursors.get("after") or "")
+        has_next = bool(paging.get("next") and next_after and next_after != after)
+        if len(posts) >= MAX_PAGE_POSTS:
+            truncated = has_next
+            break
+        if not has_next:
+            break
+        after = next_after
+
+    posts.sort(key=lambda item: item.get("created_time") or "", reverse=True)
+    return {
+        "page_id": config.page_id,
+        "page_name": next((post["page_name"] for post in posts if post["page_name"]), ""),
+        "since": since_date.isoformat(),
+        "until": until_date.isoformat(),
+        "posts": posts,
+        "summary": {
+            "total": len(posts),
+            "truncated": truncated,
+            "max_posts": MAX_PAGE_POSTS,
+        },
     }
 
 

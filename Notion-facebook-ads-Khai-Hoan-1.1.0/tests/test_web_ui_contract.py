@@ -86,6 +86,16 @@ class WebUiContractTests(unittest.TestCase):
         self.assertIn(".link-select-content{min-width:0;overflow:hidden}", self.styles)
         self.assertIn("align-items:start", self.styles)
 
+    def test_page_posts_can_be_imported_by_date_range(self):
+        self.assertIn('id="openPagePostsButton"', self.html)
+        self.assertIn('id="pagePostsDialog"', self.html)
+        self.assertIn('id="pagePostsSince"', self.html)
+        self.assertIn('id="pagePostsUntil"', self.html)
+        self.assertIn("/api/meta/page-posts?since=", self.javascript)
+        self.assertIn("addSelectedPagePosts", self.javascript)
+        self.assertIn(".page-posts-dialog", self.styles)
+        self.assertIn(".page-post-card", self.styles)
+
     def test_notion_results_have_open_links(self):
         self.assertIn("Mở Notion", self.javascript)
 
