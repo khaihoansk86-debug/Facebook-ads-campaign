@@ -152,6 +152,19 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(result["account"]["currency"], "USD")
         self.assertNotIn("META_ACCESS_TOKEN", result)
 
+    def test_meta_audiences_endpoint_returns_only_safe_assets(self):
+        safe_result = {
+            "account_id": "act_1",
+            "audiences": [
+                {"id": "123", "name": "Đã tương tác Page", "kind": "custom", "subtype": "ENGAGEMENT"}
+            ],
+        }
+        with patch("web_app.get_meta_audiences", return_value=safe_result):
+            status, result = self.request("/api/meta/audiences")
+        self.assertEqual(status, 200)
+        self.assertEqual(result["audiences"][0]["kind"], "custom")
+        self.assertNotIn("access_token", result)
+
     def test_meta_preview_and_paused_create_endpoints(self):
         fake_preview = {
             "summary": {"campaigns_count": 1, "adsets_count": 1, "ads_count": 2},

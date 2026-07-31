@@ -6,10 +6,12 @@ from unittest.mock import MagicMock, patch
 from ads_core.meta_service import (
     MetaConfig,
     MetaValidationError,
+    _audience_targeting,
     _placement_targeting,
     _resolve_pfbid_via_embed,
     _story_id_from_embed_html,
     create_paused_meta_drafts,
+    get_meta_audiences,
     get_meta_status,
     preview_meta_plan,
     resolve_existing_posts,
@@ -286,6 +288,50 @@ class MetaServiceTests(unittest.TestCase):
             ["classic", "rewarded_video"],
         )
         self.assertEqual(targeting["device_platforms"], ["mobile", "desktop"])
+
+    def test_audience_targeting_maps_custom_lookalike_and_exclusion_ids(self):
+        custom = _audience_targeting(
+            {
+                "Loại tệp đối tượng": "Đối tượng tùy chỉnh",
+                "Đối tượng tuỳ chỉnh": "120246010546010657:Đã tương tác trang",
+                "Loại trừ đối tượng": "120246011914780657:Đã gửi tin nhắn",
+            }
+        )
+        lookalike = _audience_targeting(
+            {
+                "Loại tệp đối tượng": "Đối tượng tương tự",
+                "Đối tượng tương tự": "120299999999999999:Lookalike 1%",
+            }
+        )
+
+        self.assertEqual(custom["custom_audiences"], [{"id": "120246010546010657"}])
+        self.assertEqual(
+            custom["excluded_custom_audiences"],
+            [{"id": "120246011914780657"}],
+        )
+        self.assertEqual(
+            lookalike["custom_audiences"],
+            [{"id": "120299999999999999"}],
+        )
+
+    def test_meta_audience_assets_are_classified_without_exposing_tokens(self):
+        client = MagicMock()
+        client.get.return_value = {
+            "data": [
+                {"id": "2", "name": "Tương tự 1%", "subtype": "LOOKALIKE", "lookalike_spec": {"ratio": 0.01}},
+                {"id": "1", "name": "Đã tương tác Page", "subtype": "ENGAGEMENT"},
+            ]
+        }
+
+        result = get_meta_audiences(config(), client)
+
+        self.assertEqual([item["kind"] for item in result["audiences"]], ["custom", "lookalike"])
+        self.assertNotIn("access_token", str(result))
+        client.get.assert_called_once_with(
+            "act_1/customaudiences",
+            fields=unittest.mock.ANY,
+            limit=200,
+        )
 
     def test_preview_is_read_only_and_converts_budget_to_minor_units(self):
         client = FakeMetaClient()

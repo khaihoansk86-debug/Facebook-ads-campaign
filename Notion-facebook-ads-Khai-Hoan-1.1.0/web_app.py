@@ -26,6 +26,7 @@ from ads_core.meta_service import (
     MetaConfig,
     MetaValidationError,
     create_paused_meta_drafts,
+    get_meta_audiences,
     get_meta_status,
     preview_meta_plan,
 )
@@ -247,6 +248,16 @@ class ApiHandler(SimpleHTTPRequestHandler):
                 config = MetaConfig.from_env()
                 verify = parse_qs(parsed_url.query).get("verify", ["false"])[0].lower() in {"1", "true", "yes"}
                 self._json(200, {"ok": True, **get_meta_status(config, verify=verify)})
+            except MetaValidationError as exc:
+                self._error(400, str(exc))
+            except MetaApiError as exc:
+                self._error(502, str(exc))
+            return
+        if path == "/api/meta/audiences":
+            try:
+                tool.load_env(ENV_PATH)
+                config = MetaConfig.from_env()
+                self._json(200, {"ok": True, **get_meta_audiences(config)})
             except MetaValidationError as exc:
                 self._error(400, str(exc))
             except MetaApiError as exc:

@@ -64,6 +64,10 @@ ADSET_CREATE_FIELDS = (
     "is_dynamic_creative",
     "pacing_type",
 )
+CUSTOM_AUDIENCE_FIELDS = (
+    "id,name,subtype,description,approximate_count_lower_bound,"
+    "approximate_count_upper_bound,delivery_status,operation_status,lookalike_spec"
+)
 
 
 class MetaValidationError(ValueError):
@@ -474,6 +478,46 @@ def get_page_client(config: MetaConfig, client: MetaClient) -> MetaClient:
     return client.with_access_token(page_token)
 
 
+def get_meta_audiences(
+    config: MetaConfig,
+    client: MetaClient | None = None,
+) -> dict[str, Any]:
+    """Return safe, selectable Custom/Lookalike Audience assets for the UI."""
+    config.validate()
+    api = client or MetaClient(config)
+    result = api.get(
+        f"{config.ad_account_id}/customaudiences",
+        fields=CUSTOM_AUDIENCE_FIELDS,
+        limit=200,
+    )
+    audiences = []
+    for item in result.get("data", []):
+        audience_id = str(item.get("id") or "").strip()
+        name = str(item.get("name") or "").strip()
+        if not audience_id or not name:
+            continue
+        subtype = str(item.get("subtype") or "").upper()
+        kind = "lookalike" if subtype == "LOOKALIKE" or item.get("lookalike_spec") else "custom"
+        audiences.append(
+            {
+                "id": audience_id,
+                "name": name,
+                "kind": kind,
+                "subtype": subtype,
+                "description": str(item.get("description") or ""),
+                "approximate_count_lower_bound": item.get("approximate_count_lower_bound"),
+                "approximate_count_upper_bound": item.get("approximate_count_upper_bound"),
+                "delivery_status": item.get("delivery_status"),
+                "operation_status": item.get("operation_status"),
+            }
+        )
+    audiences.sort(key=lambda item: (item["kind"], item["name"].casefold()))
+    return {
+        "account_id": config.ad_account_id,
+        "audiences": audiences,
+    }
+
+
 def _minor_amount(value: Any, currency: str) -> int:
     try:
         amount = Decimal(str(value).replace(",", "."))
@@ -545,6 +589,28 @@ def _placement_targeting(notion_values: dict[str, Any]) -> dict[str, list[str]]:
     return targeting
 
 
+def _audience_id(value: Any) -> str:
+    raw = str(value or "").strip()
+    candidate = raw.split(":", 1)[0].strip()
+    return candidate if candidate.isdigit() else ""
+
+
+def _audience_targeting(notion_values: dict[str, Any]) -> dict[str, Any]:
+    audience_type = str(notion_values.get("Loại tệp đối tượng") or "").casefold()
+    if "tương tự" in audience_type:
+        included_id = _audience_id(notion_values.get("Đối tượng tương tự"))
+    else:
+        included_id = _audience_id(notion_values.get("Đối tượng tuỳ chỉnh"))
+
+    targeting: dict[str, Any] = {}
+    if included_id:
+        targeting["custom_audiences"] = [{"id": included_id}]
+    excluded_id = _audience_id(notion_values.get("Loại trừ đối tượng"))
+    if excluded_id:
+        targeting["excluded_custom_audiences"] = [{"id": excluded_id}]
+    return targeting
+
+
 def _merge_placement_targeting(
     source_targeting: dict[str, Any],
     overrides: dict[str, list[str]],
@@ -592,7 +658,10 @@ def _flow_intent(flow: dict[str, Any], currency: str, config: MetaConfig) -> dic
         "currency": currency,
         "start_time": flow.get("start_time"),
         "end_time": flow.get("end_time"),
-        "targeting_overrides": _placement_targeting(flow.get("notion_values") or {}),
+        "targeting_overrides": {
+            **_placement_targeting(flow.get("notion_values") or {}),
+            **_audience_targeting(flow.get("notion_values") or {}),
+        },
         "status": "PAUSED",
     }
 

@@ -48,6 +48,10 @@ class WebUiContractTests(unittest.TestCase):
         self.assertNotIn('data-config-tab=', self.html)
 
     def test_audience_library_uses_meta_like_controls_and_suggestions(self):
+        self.assertIn("Đối tượng tùy chỉnh", self.javascript)
+        self.assertIn("Đối tượng tương tự", self.javascript)
+        self.assertIn("/api/meta/audiences", self.javascript)
+        self.assertIn("audience-kind-card", self.styles)
         self.assertIn("Kiểm soát đối tượng", self.javascript)
         self.assertIn("Gợi ý đối tượng", self.javascript)
         self.assertIn('data-preset-field="Loại trừ đối tượng"', self.javascript)

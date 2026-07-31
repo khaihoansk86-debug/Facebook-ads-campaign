@@ -204,6 +204,18 @@ test('cấu hình ngân sách và lịch chạy ngay trong Planner', async ({ pa
 test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý như Meta', async ({ page }, testInfo) => {
   let created;
   await page.setViewportSize({ width: 760, height: 820 });
+  await page.route('**/api/meta/audiences', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      account_id: 'act_1',
+      audiences: [
+        { id: '120246010546010657', name: 'Đã tương tác trang 365 ngày', kind: 'custom', subtype: 'ENGAGEMENT' },
+        { id: '120299999999999999', name: 'Tương tự khách tốt nhất 1%', kind: 'lookalike', subtype: 'LOOKALIKE' },
+      ],
+    }),
+  }));
   await page.route('**/api/presets/audiences', async route => {
     if (route.request().method() === 'POST') {
       created = route.request().postDataJSON();
@@ -215,6 +227,9 @@ test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý 
   await page.getByRole('button', { name: 'Tệp đối tượng' }).click();
   await expect(page.locator('#libraryView')).toBeVisible();
   await page.locator('#newPresetButton').click();
+  await expect(page.getByRole('button', { name: /Tệp rộng/ })).toHaveClass(/selected/);
+  await expect(page.getByRole('button', { name: /Đối tượng tùy chỉnh/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Đối tượng tương tự/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Kiểm soát đối tượng' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Gợi ý đối tượng' })).toBeVisible();
   const audienceLayout = await page.locator('.audience-composer').evaluate(composer => {
@@ -258,6 +273,45 @@ test('tạo tệp đối tượng bằng lựa chọn Kiểm soát và Gợi ý 
   expect(created.notionValues).not.toHaveProperty('Nhắm mục tiêu chi tiết');
   await page.getByRole('button', { name: 'Planner', exact: true }).click();
   await expect(page.locator('#plannerWorkspace')).toBeVisible();
+});
+
+test('tệp đối tượng tùy chỉnh và tương tự chọn trực tiếp tài sản Meta', async ({ page }) => {
+  const saved = [];
+  await page.route('**/api/meta/audiences', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      account_id: 'act_1',
+      audiences: [
+        { id: '120246010546010657', name: 'Đã tương tác trang 365 ngày', kind: 'custom', subtype: 'ENGAGEMENT' },
+        { id: '120299999999999999', name: 'Tương tự khách tốt nhất 1%', kind: 'lookalike', subtype: 'LOOKALIKE' },
+      ],
+    }),
+  }));
+  await page.route('**/api/presets/audiences', async route => {
+    if (route.request().method() === 'POST') {
+      saved.push(route.request().postDataJSON());
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ ok: true, preset: saved.at(-1) }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, presets: saved }) });
+  });
+
+  await page.getByRole('button', { name: 'Tệp đối tượng' }).click();
+  await page.locator('#newPresetButton').click();
+  await page.getByRole('button', { name: /Đối tượng tùy chỉnh/ }).click();
+  await page.locator('[data-preset-field="Đối tượng tuỳ chỉnh"]').selectOption({ label: 'Đã tương tác trang 365 ngày' });
+  await page.locator('#savePresetButton').click();
+  expect(saved[0].notionValues['Loại tệp đối tượng']).toBe('Đối tượng tùy chỉnh');
+  expect(saved[0].notionValues['Đối tượng tuỳ chỉnh']).toContain('120246010546010657');
+
+  await page.locator('#newPresetButton').click();
+  await page.getByRole('button', { name: /Đối tượng tương tự/ }).click();
+  await page.locator('[data-preset-field="Đối tượng tương tự"]').selectOption({ label: 'Tương tự khách tốt nhất 1%' });
+  await page.locator('#savePresetButton').click();
+  expect(saved[1].notionValues['Loại tệp đối tượng']).toBe('Đối tượng tương tự');
+  expect(saved[1].notionValues['Đối tượng tương tự']).toContain('120299999999999999');
 });
 
 test('tạo vị trí quảng cáo bằng lựa chọn thiết bị nền tảng và placement như Meta', async ({ page }, testInfo) => {
