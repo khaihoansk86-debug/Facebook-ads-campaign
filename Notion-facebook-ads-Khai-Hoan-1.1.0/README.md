@@ -16,6 +16,7 @@ The workflow is designed for an ads team where a manager reviews Facebook post l
 - Optional Supabase sync after export for the web dashboard campaign tracker.
 - Optional Telegram notification after export.
 - Browser planner with preview, reusable presets, selective export, and safe retry protection.
+- Private ChatGPT MCP server for catalog/post lookup, preset creation, plan preview, and review submission.
 - Portable Windows GUI built with Python/Tkinter and PyInstaller.
 
 ## Workflow
@@ -55,6 +56,8 @@ Use the same campaign name and ad set name across multiple rows to group many ad
 bulk_ads_tool.py              Core Notion, Facebook CSV and export logic
 gui_app.py                    Desktop GUI
 web_app.py                    Local HTTP API and static web server
+mcp_server.py                Private stdio MCP server for ChatGPT/Secure MCP Tunnel
+run_mcp_server.bat           Windows launcher for the MCP server
 web_ui/                       Browser planner UI
 ads_core/planner_service.py   Planner validation and preview
 ads_core/draft_service.py     Safe Notion draft creation and retry ledger
@@ -70,6 +73,9 @@ config/custom_mapping.example.json
 build_exe.ps1                 PyInstaller build helper
 INSTALL.md                    Portable install notes
 ```
+
+ChatGPT MCP setup and its safety boundary are documented in
+[`docs/chatgpt-mcp-setup.md`](docs/chatgpt-mcp-setup.md).
 
 ## Requirements
 
